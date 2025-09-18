@@ -5,49 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Training Logger</title>
 <style>
-/* Your existing styling retained here, with minor tweaks for tables */
-* {margin:0;padding:0;box-sizing:border-box;}
-body {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#e0e0e0;min-height:100vh;}
-.container{max-width:1200px;margin:0 auto;padding:20px;}
-.header{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:15px;padding:30px;margin-bottom:30px;text-align:center;border:1px solid rgba(255,255,255,0.1);}
-.header h1{font-size:2.5em;margin-bottom:10px;background:linear-gradient(45deg,#00d4ff,#5b86e5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.nav{display:flex;gap:15px;margin:30px 0;flex-wrap:wrap;justify-content:center;}
-.nav-btn{padding:12px 25px;background:linear-gradient(45deg,#667eea,#764ba2);border:none;border-radius:25px;color:white;cursor:pointer;font-weight:bold;transition:all 0.3s ease;box-shadow:0 4px 15px rgba(0,0,0,0.2);}
-.nav-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(102,126,234,0.4);}
-.nav-btn.active{background:linear-gradient(45deg,#00d4ff,#5b86e5);}
-.tab-content{display:none;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:15px;padding:30px;border:1px solid rgba(255,255,255,0.1);}
-.tab-content.active{display:block;}
-.form-group{margin-bottom:20px;}
-.form-group label{display:block;margin-bottom:8px;font-weight:bold;color:#00d4ff;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.1);color:#e0e0e0;font-size:16px;}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#00d4ff;box-shadow:0 0 0 2px rgba(0,212,255,0.2);}
-.btn{padding:12px 25px;background:linear-gradient(45deg,#667eea,#764ba2);border:none;border-radius:8px;color:white;cursor:pointer;font-weight:bold;transition:all 0.3s ease;margin:5px;}
-.btn:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(102,126,234,0.3);}
-.btn-danger{background:linear-gradient(45deg,#ff416c,#ff4b2b);}
-.btn-success{background:linear-gradient(45deg,#11998e,#38ef7d);}
-.exercise-card{background:rgba(255,255,255,0.1);border-radius:10px;padding:20px;margin-bottom:15px;border:1px solid rgba(255,255,255,0.1);}
-.exercise-header{display:flex;justify-content:between;align-items:center;margin-bottom:15px;}
-.exercise-name{font-weight:bold;color:#00d4ff;font-size:1.2em;}
-.sets-container{display:grid;gap:10px;}
-.set-row{display:grid;grid-template-columns:60px 80px 80px 80px 1fr 60px;gap:10px;align-items:center;background:rgba(255,255,255,0.05);padding:10px;border-radius:5px;}
-.set-input{padding:8px;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:rgba(255,255,255,0.1);color:#e0e0e0;text-align:center;}
-.video-upload{margin:20px 0;padding:20px;border:2px dashed rgba(0,212,255,0.3);border-radius:10px;text-align:center;}
-.video-preview{max-width:100%;border-radius:10px;margin-top:10px;}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:20px;}
-.stat-card{background:rgba(255,255,255,0.1);padding:20px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);}
-.search-bar{width:100%;padding:15px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.2);border-radius:25px;background:rgba(255,255,255,0.1);color:#e0e0e0;font-size:16px;}
-.program-list{display:grid;gap:15px;}
-.program-card{background:rgba(255,255,255,0.1);padding:20px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.3s ease;}
-.program-card:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px);}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;}
-.modal-content{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;padding:30px;border-radius:15px;max-width:90%;max-height:90%;overflow-y:auto;border:1px solid rgba(255,255,255,0.2);}
-.close{float:right;font-size:28px;font-weight:bold;color:#aaa;cursor:pointer;}
-.close:hover{color:#fff;}
-.history-item{background:rgba(255,255,255,0.05);padding:15px;border-radius:8px;margin-bottom:10px;border-left:3px solid #00d4ff;}
-table {width:100%;border-collapse:collapse;margin-top:15px;}
-table,th,td {border:1px solid rgba(255,255,255,0.2);}
-th,td {padding:10px;text-align:center;}
-@media (max-width:768px){.set-row{grid-template-columns:1fr;gap:5px;}.nav{flex-direction:column;align-items:center;}.stats-grid{grid-template-columns:1fr;}}
+/* Basic styles - keeping your original theme */
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #e0e0e0; margin: 0; padding: 0; }
+.container { max-width: 1200px; margin: auto; padding: 20px; }
+.header { text-align:center; padding:30px; background: rgba(255,255,255,0.05); border-radius:15px; margin-bottom:20px; }
+.nav { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+.nav-btn { padding:12px 25px; border:none; border-radius:25px; cursor:pointer; font-weight:bold; background: #667eea; color:white; transition:0.3s; }
+.nav-btn.active { background: #00d4ff; }
+.nav-btn:hover { transform:translateY(-2px); }
+.tab-content { display:none; padding:20px; background: rgba(255,255,255,0.05); border-radius:15px; }
+.tab-content.active { display:block; }
+.form-group { margin-bottom:15px; }
+.form-group label { display:block; margin-bottom:5px; color:#00d4ff; }
+.form-group input, .form-group textarea { width:100%; padding:8px; border-radius:5px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.1); color:#e0e0e0; }
+.btn { padding:10px 20px; border:none; border-radius:5px; cursor:pointer; margin:5px; background:#667eea; color:white; }
+.btn:hover { transform:translateY(-1px); }
+.btn-success { background:#11998e; }
+.btn-danger { background:#ff416c; }
+.exercise-card { background: rgba(255,255,255,0.1); border-radius:10px; padding:15px; margin-bottom:10px; }
+.set-row { display:grid; grid-template-columns:60px 80px 80px 80px 1fr 60px; gap:5px; align-items:center; margin-bottom:5px; }
+.set-input { padding:5px; border-radius:5px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.1); color:#e0e0e0; text-align:center; }
+.video-preview { width:300px; margin:5px; border-radius:5px; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; }
+.modal-content { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:20px; border-radius:15px; max-width:90%; max-height:90%; overflow-y:auto; border:1px solid rgba(255,255,255,0.2);}
+.close { float:right; cursor:pointer; color:#aaa; font-size:25px; }
+.close:hover { color:white; }
+.search-bar { width:100%; padding:10px; border-radius:25px; border:1px solid rgba(255,255,255,0.2); margin-bottom:10px; background: rgba(255,255,255,0.1); color:#e0e0e0; }
 </style>
 </head>
 <body>
@@ -56,6 +39,7 @@ th,td {padding:10px;text-align:center;}
         <h1>Training Logger</h1>
         <p>Track your workouts, analyze progress, optimize performance</p>
     </div>
+
     <nav class="nav">
         <button class="nav-btn active" onclick="showTab('programs')">Programs</button>
         <button class="nav-btn" onclick="showTab('workout')">Current Workout</button>
@@ -65,242 +49,240 @@ th,td {padding:10px;text-align:center;}
 
     <!-- Programs Tab -->
     <div id="programs" class="tab-content active">
-        <h2>Workout Programs</h2>
         <button class="btn btn-success" onclick="createProgram()">Create New Program</button>
-        <div class="search-bar-container">
-            <input type="text" class="search-bar" placeholder="Search programs..." oninput="searchPrograms(this.value)">
-        </div>
-        <div id="programList" class="program-list"></div>
+        <input type="text" class="search-bar" placeholder="Search programs..." oninput="searchPrograms(this.value)">
+        <div id="programList"></div>
     </div>
 
-    <!-- Current Workout Tab -->
+    <!-- Current Workout -->
     <div id="workout" class="tab-content">
-        <h2>Current Workout Session</h2>
-        <div id="currentProgram"><p>Select a program to start your workout</p></div>
-        <div class="video-upload">
-            <h3>Session Videos</h3>
-            <input type="file" id="videoUpload" accept="video/*" multiple onchange="handleVideoUpload(event)">
-            <div id="videoPreview"></div>
-        </div>
+        <h2>Current Workout</h2>
+        <div id="currentProgram"><p>Select a program to start</p></div>
         <div class="form-group">
-            <label>General Session Notes</label>
-            <textarea id="sessionNotes" rows="4" placeholder="How did the session feel? Any observations..."></textarea>
+            <label>Session Notes</label>
+            <textarea id="sessionNotes" rows="4"></textarea>
+        </div>
+        <div class="video-upload">
+            <h3>Upload Videos</h3>
+            <input type="file" id="videoUpload" accept="video/*" multiple>
+            <div id="videoPreview"></div>
         </div>
         <button class="btn btn-success" onclick="saveWorkout()">Save Workout</button>
     </div>
 
-    <!-- History Tab -->
+    <!-- History -->
     <div id="history" class="tab-content">
         <h2>Workout History</h2>
-        <div style="margin-bottom:20px;">
-            <input type="file" id="importJSON" accept=".json" onchange="importBackup(event)">
-            <button class="btn" onclick="exportBackup()">Export Backup</button>
-        </div>
+        <input type="text" class="search-bar" placeholder="Search history..." oninput="searchHistory(this.value)">
         <div id="historyList"></div>
     </div>
 
-    <!-- Analytics Tab -->
+    <!-- Analytics -->
     <div id="stats" class="tab-content">
-        <h2>Workout Analytics</h2>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Volume Trends</h3>
-                <div id="volumeTable"></div>
+        <h2>Analytics</h2>
+        <div id="personalRecords"></div>
+        <div id="frequencyAnalysis"></div>
+    </div>
+
+    <!-- Modal -->
+    <div id="programModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Create Program</h2>
+            <div class="form-group">
+                <label>Program Name</label>
+                <input type="text" id="programName">
             </div>
-            <div class="stat-card">
-                <h3>Strength Progress</h3>
-                <div id="strengthTable"></div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="programDescription" rows="3"></textarea>
             </div>
-            <div class="stat-card">
-                <h3>Frequency Analysis</h3>
-                <div id="frequencyTable"></div>
-            </div>
+            <h3>Exercises</h3>
+            <div id="exerciseList"></div>
+            <button class="btn" onclick="addExercise()">Add Exercise</button>
+            <button class="btn btn-success" onclick="saveProgram()">Save Program</button>
         </div>
     </div>
 </div>
 
 <script>
-/* --- Tab Navigation --- */
-function showTab(tabId){
-    document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+let programs = [];
+let workoutHistory = [];
+let currentProgramIndex = -1;
+let currentWorkout = null;
+
+// IndexedDB for videos
+let db;
+const request = indexedDB.open("TrainingLoggerDB",1);
+request.onupgradeneeded = e => {
+    db = e.target.result;
+    if(!db.objectStoreNames.contains("videos")) db.createObjectStore("videos",{keyPath:"id",autoIncrement:true});
+}
+request.onsuccess = e => { db = e.target.result; }
+request.onerror = e => { console.error(e); }
+
+// Tabs
+function showTab(name){
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     event.target.classList.add('active');
-    if(tabId==='stats'){renderAnalytics();}
-    if(tabId==='history'){renderHistory();}
 }
 
-/* --- Program Management --- */
-let programs = JSON.parse(localStorage.getItem('programs')||'[]');
+// Storage
+function savePrograms(){ localStorage.setItem('programs',JSON.stringify(programs)); }
+function saveHistory(){ localStorage.setItem('workoutHistory',JSON.stringify(workoutHistory)); }
+function loadData(){
+    programs = JSON.parse(localStorage.getItem('programs')||"[]");
+    workoutHistory = JSON.parse(localStorage.getItem('workoutHistory')||"[]");
+}
+loadData();
 
+// Program modal
 function createProgram(){
-    const name = prompt("Program Name:");
-    if(!name) return;
-    const program = {id:Date.now(), name, exercises:[]};
-    programs.push(program);
-    savePrograms();
-    renderPrograms();
+    currentProgramIndex=-1;
+    document.getElementById('modalTitle').textContent='Create Program';
+    document.getElementById('programName').value='';
+    document.getElementById('programDescription').value='';
+    document.getElementById('exerciseList').innerHTML='';
+    document.getElementById('programModal').style.display='block';
 }
-
-function renderPrograms(){
-    const container = document.getElementById('programList');
-    container.innerHTML='';
-    programs.forEach(p=>{
-        const div = document.createElement('div');
-        div.className='program-card';
-        div.innerHTML=`<strong>${p.name}</strong>`;
-        div.onclick=()=>startWorkout(p.id);
-        container.appendChild(div);
+function closeModal(){ document.getElementById('programModal').style.display='none'; }
+function addExercise(){
+    const container=document.getElementById('exerciseList');
+    const div=document.createElement('div'); div.className='exercise-card';
+    div.innerHTML=`
+        <div class="form-group"><label>Name</label><input type="text" class="exercise-name"></div>
+        <div class="form-group"><label>Sets</label><input type="number" class="exercise-sets" value="3"></div>
+        <div class="form-group"><label>Reps</label><input type="text" class="exercise-reps" value="6-8"></div>
+        <div class="form-group"><label>RPE</label><input type="number" class="exercise-rpe" value="8" step="0.5" min="1" max="10"></div>
+        <div class="form-group"><label>Rest(sec)</label><input type="number" class="exercise-rest" value="180"></div>
+        <div class="form-group"><label>Notes</label><textarea class="exercise-notes"></textarea></div>
+        <button class="btn btn-danger" onclick="this.parentNode.remove()">Remove</button>
+    `;
+    container.appendChild(div);
+}
+function saveProgram(){
+    const name=document.getElementById('programName').value.trim();
+    if(!name) return alert("Name required");
+    const desc=document.getElementById('programDescription').value;
+    const exercises=[...document.querySelectorAll('#exerciseList .exercise-card')].map(ex=>({
+        name:ex.querySelector('.exercise-name').value,
+        sets:parseInt(ex.querySelector('.exercise-sets').value),
+        reps:ex.querySelector('.exercise-reps').value,
+        rpe:parseFloat(ex.querySelector('.exercise-rpe').value),
+        rest:parseInt(ex.querySelector('.exercise-rest').value),
+        notes:ex.querySelector('.exercise-notes').value
+    }));
+    const program={name,description:desc,exercises};
+    if(currentProgramIndex>=0) programs[currentProgramIndex]=program; else programs.push(program);
+    savePrograms(); closeModal(); renderPrograms();
+}
+function renderPrograms(filter=""){
+    const list=document.getElementById('programList'); list.innerHTML='';
+    programs.filter(p=>p.name.toLowerCase().includes(filter.toLowerCase())).forEach((p,i)=>{
+        const div=document.createElement('div'); div.className='program-card';
+        div.innerHTML=`<h3>${p.name}</h3><p>${p.description}</p>
+            <button class="btn" onclick="editProgram(${i})">Edit</button>
+            <button class="btn btn-success" onclick="startWorkout(${i})">Start</button>
+            <button class="btn btn-danger" onclick="deleteProgram(${i})">Delete</button>`;
+        list.appendChild(div);
     });
 }
-
-function savePrograms(){
-    localStorage.setItem('programs',JSON.stringify(programs));
-}
-
-function searchPrograms(term){
-    const filtered = programs.filter(p=>p.name.toLowerCase().includes(term.toLowerCase()));
-    const container = document.getElementById('programList');
-    container.innerHTML='';
-    filtered.forEach(p=>{
-        const div=document.createElement('div');
-        div.className='program-card';
-        div.innerHTML=`<strong>${p.name}</strong>`;
-        div.onclick=()=>startWorkout(p.id);
-        container.appendChild(div);
+function editProgram(i){
+    currentProgramIndex=i;
+    const p=programs[i];
+    document.getElementById('modalTitle').textContent='Edit Program';
+    document.getElementById('programName').value=p.name;
+    document.getElementById('programDescription').value=p.description;
+    const container=document.getElementById('exerciseList'); container.innerHTML='';
+    p.exercises.forEach(ex=>{
+        addExercise();
+        const last=container.lastChild;
+        last.querySelector('.exercise-name').value=ex.name;
+        last.querySelector('.exercise-sets').value=ex.sets;
+        last.querySelector('.exercise-reps').value=ex.reps;
+        last.querySelector('.exercise-rpe').value=ex.rpe;
+        last.querySelector('.exercise-rest').value=ex.rest;
+        last.querySelector('.exercise-notes').value=ex.notes;
     });
+    document.getElementById('programModal').style.display='block';
 }
+function deleteProgram(i){ if(confirm("Delete?")){ programs.splice(i,1); savePrograms(); renderPrograms(); } }
+function searchPrograms(q){ renderPrograms(q); }
 
-/* --- Workout --- */
-let currentWorkout=null;
-let videoFiles={}; // store blob references by ID
-
-function startWorkout(programId){
-    const program = programs.find(p=>p.id===programId);
-    if(!program) return alert("Program not found");
-    currentWorkout={id:Date.now(), programId, date:new Date().toISOString(), notes:'', videos:[]};
-    document.getElementById('currentProgram').innerHTML=`<h3>${program.name}</h3>`;
-    document.getElementById('sessionNotes').value='';
-    document.getElementById('videoPreview').innerHTML='';
+// Workout
+function startWorkout(i){
+    currentProgramIndex=i;
+    currentWorkout={...programs[i],exercises:programs[i].exercises.map(e=>({...e,completedSets:Array(e.sets).fill({weight:"",reps:"",rpe:"",notes:""})}))};
+    renderCurrentWorkout();
     showTab('workout');
 }
-
-/* --- Video Storage in IndexedDB --- */
-let db;
-let request = indexedDB.open("TrainingLoggerDB",1);
-request.onupgradeneeded=function(e){
-    db=e.target.result;
-    if(!db.objectStoreNames.contains('videos')){
-        db.createObjectStore('videos',{keyPath:'id'});
-    }
-};
-request.onsuccess=function(e){db=e.target.result; console.log("IndexedDB ready");};
-request.onerror=function(e){console.error("IndexedDB error",e);};
-
-function handleVideoUpload(event){
-    const files=event.target.files;
-    for(const file of files){
-        const id=Date.now()+'_'+file.name;
-        const tx=db.transaction('videos','readwrite');
-        const store=tx.objectStore('videos');
-        store.put({id, file});
-        currentWorkout.videos.push(id);
-        // preview
-        const url=URL.createObjectURL(file);
-        const vid=document.createElement('video');
-        vid.src=url;
-        vid.controls=true;
-        vid.className='video-preview';
-        document.getElementById('videoPreview').appendChild(vid);
-    }
-}
-
-/* --- Save Workout --- */
-let history = JSON.parse(localStorage.getItem('history')||'[]');
-
-function saveWorkout(){
-    if(!currentWorkout) return alert("No active workout");
-    currentWorkout.notes=document.getElementById('sessionNotes').value;
-    history.push(currentWorkout);
-    localStorage.setItem('history',JSON.stringify(history));
-    alert("Workout saved!");
-    currentWorkout=null;
-    document.getElementById('currentProgram').innerHTML='<p>Select a program to start your workout</p>';
-    document.getElementById('videoPreview').innerHTML='';
-}
-
-/* --- History Tab --- */
-function renderHistory(){
-    const container=document.getElementById('historyList');
-    container.innerHTML='';
-    history.forEach(w=>{
-        const div=document.createElement('div');
-        div.className='history-item';
-        const programName=(programs.find(p=>p.id===w.programId)||{}).name||'Program';
-        div.innerHTML=`<strong>${programName}</strong> - ${new Date(w.date).toLocaleString()}<br>${w.notes || ''}`;
-        container.appendChild(div);
+function renderCurrentWorkout(){
+    const div=document.getElementById('currentProgram'); div.innerHTML='';
+    currentWorkout.exercises.forEach((ex,i)=>{
+        const exDiv=document.createElement('div'); exDiv.className='exercise-card';
+        exDiv.innerHTML=`<h4>${ex.name}</h4>`;
+        ex.sets.forEach((s,j)=>{
+            const row=document.createElement('div'); row.className='set-row';
+            row.innerHTML=`
+                <input class="set-input" placeholder="Weight" value="${s.weight||''}" onchange="updateSet(${i},${j},'weight',this.value)">
+                <input class="set-input" placeholder="Reps" value="${s.reps||''}" onchange="updateSet(${i},${j},'reps',this.value)">
+                <input class="set-input" placeholder="RPE" value="${s.rpe||''}" onchange="updateSet(${i},${j},'rpe',this.value)">
+                <input class="set-input" placeholder="Notes" value="${s.notes||''}" onchange="updateSet(${i},${j},'notes',this.value)">
+            `;
+            exDiv.appendChild(row);
+        });
+        div.appendChild(exDiv);
     });
+    renderVideoPreview();
 }
+function updateSet(exI,setI,field,value){ currentWorkout.exercises[exI].completedSets[setI][field]=value; }
 
-/* --- Analytics --- */
-function renderAnalytics(){
-    const volumeTable=document.getElementById('volumeTable');
-    const strengthTable=document.getElementById('strengthTable');
-    const frequencyTable=document.getElementById('frequencyTable');
-    // Simple examples: total workouts per program, max lifts dummy
-    let volumeHTML='<table><tr><th>Program</th><th>Workouts Completed</th></tr>';
-    programs.forEach(p=>{
-        const count=history.filter(h=>h.programId===p.id).length;
-        volumeHTML+=`<tr><td>${p.name}</td><td>${count}</td></tr>`;
-    });
-    volumeHTML+='</table>';
-    volumeTable.innerHTML=volumeHTML;
-
-    let strengthHTML='<table><tr><th>Program</th><th>Max Lift</th></tr>';
-    programs.forEach(p=>{
-        const max=Math.floor(Math.random()*200); // placeholder
-        strengthHTML+=`<tr><td>${p.name}</td><td>${max}kg</td></tr>`;
-    });
-    strengthHTML+='</table>';
-    strengthTable.innerHTML=strengthHTML;
-
-    let freqHTML='<table><tr><th>Program</th><th>Frequency (sessions/week)</th></tr>';
-    programs.forEach(p=>{
-        const freq=Math.floor(Math.random()*4)+1; // placeholder
-        freqHTML+=`<tr><td>${p.name}</td><td>${freq}</td></tr>`;
-    });
-    freqHTML+='</table>';
-    frequencyTable.innerHTML=freqHTML;
-}
-
-/* --- Backup Export/Import --- */
-function exportBackup(){
-    const data={programs,history};
-    const blob=new Blob([JSON.stringify(data, null, 2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download='training_logger_backup.json'; a.click();
-    URL.revokeObjectURL(url);
-}
-
-function importBackup(event){
-    const file=event.target.files[0];
-    if(!file) return;
-    const reader=new FileReader();
-    reader.onload=function(e){
-        try{
-            const data=JSON.parse(e.target.result);
-            programs=data.programs||[]; history=data.history||[];
-            localStorage.setItem('programs',JSON.stringify(programs));
-            localStorage.setItem('history',JSON.stringify(history));
-            renderPrograms(); renderHistory(); alert("Backup restored successfully!");
-        }catch(err){alert("Invalid JSON file");}
+document.getElementById('videoUpload').addEventListener('change',function(e){
+    const files=[...e.target.files];
+    const transaction = db.transaction("videos","readwrite");
+    const store=transaction.objectStore("videos");
+    files.forEach(file=>{ store.add({name:file.name,file}); });
+    transaction.oncomplete=()=>{ renderVideoPreview(); alert("Videos saved!"); }
+});
+function renderVideoPreview(){
+    const container=document.getElementById('videoPreview'); container.innerHTML='';
+    const transaction=db.transaction("videos","readonly").objectStore("videos").openCursor();
+    transaction.onsuccess=e=>{
+        const cursor=e.target.result;
+        if(cursor){
+            const v=cursor.value;
+            const video=document.createElement('video'); video.className='video-preview'; video.controls=true;
+            const url=URL.createObjectURL(v.file);
+            video.src=url; container.appendChild(video);
+            cursor.continue();
+        }
     };
-    reader.readAsText(file);
+}
+function saveWorkout(){
+    if(!currentWorkout) return;
+    const notes=document.getElementById('sessionNotes').value;
+    workoutHistory.push({date:new Date().toISOString(),program:currentWorkout.name,exercises:currentWorkout.exercises,notes});
+    saveHistory();
+    alert("Workout saved!");
+    document.getElementById('sessionNotes').value='';
 }
 
-/* --- Initialize --- */
+// History
+function renderHistory(filter=""){
+    const list=document.getElementById('historyList'); list.innerHTML='';
+    workoutHistory.filter(h=>h.program.toLowerCase().includes(filter.toLowerCase())).forEach(h=>{
+        const div=document.createElement('div'); div.className='history-item';
+        div.innerHTML=`<h4>${h.program} (${new Date(h.date).toLocaleString()})</h4><p>${h.notes}</p>`;
+        list.appendChild(div);
+    });
+}
+function searchHistory(q){ renderHistory(q); }
+
+// Initial render
 renderPrograms();
+renderHistory();
 </script>
 </body>
 </html>
