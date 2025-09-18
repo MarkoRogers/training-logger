@@ -9,13 +9,13 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: #e0e0e0;
-            min-height: 100vh;
+            background-color: #0a0a0a;
+            color: #f0f0f0;
+            line-height: 1.6;
         }
 
         .container {
@@ -25,64 +25,82 @@
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
         }
 
         .header h1 {
-            font-size: 2.5em;
+            font-size: 2.8em;
+            font-weight: 300;
+            letter-spacing: 2px;
             margin-bottom: 10px;
-            background: linear-gradient(45deg, #00d4ff, #5b86e5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #fff;
+        }
+
+        .header p {
+            color: #aaa;
+            font-size: 1.1em;
         }
 
         .nav {
             display: flex;
-            gap: 15px;
-            margin: 30px 0;
-            flex-wrap: wrap;
             justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
         }
 
         .nav-btn {
             padding: 12px 25px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 25px;
-            color: white;
+            background: transparent;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #ddd;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 500;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .nav-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            background: #222;
+            border-color: #666;
         }
 
         .nav-btn.active {
-            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            background: #fff;
+            color: #000;
+            border-color: #fff;
         }
 
         .tab-content {
             display: none;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
+            background: #111;
+            border-radius: 8px;
             padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            margin-bottom: 30px;
         }
 
         .tab-content.active {
             display: block;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #fff;
+            font-weight: 400;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.4em;
+            margin: 25px 0 15px;
+            color: #fff;
+            font-weight: 400;
         }
 
         .form-group {
@@ -92,19 +110,19 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: bold;
-            color: #00d4ff;
+            font-weight: 500;
+            color: #ddd;
         }
 
         .form-group input, 
         .form-group select, 
         .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #e0e0e0;
+            padding: 12px 15px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #1a1a1a;
+            color: #f0f0f0;
             font-size: 16px;
         }
 
@@ -112,49 +130,57 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #00d4ff;
-            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+            border-color: #888;
+            background: #222;
         }
 
         .btn {
             padding: 12px 25px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: #333;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             color: white;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 500;
             transition: all 0.3s ease;
-            margin: 5px;
+            display: inline-block;
         }
 
         .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-danger {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            background: #444;
+            transform: translateY(-2px);
         }
 
         .btn-success {
-            background: linear-gradient(45deg, #11998e, #38ef7d);
+            background: #2e7d32;
         }
 
-        .btn-warning {
-            background: linear-gradient(45deg, #ff9800, #ff5722);
+        .btn-success:hover {
+            background: #388e3c;
+        }
+
+        .btn-danger {
+            background: #c62828;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
         }
 
         .btn-info {
-            background: linear-gradient(45deg, #2196f3, #21cbf3);
+            background: #0277bd;
+        }
+
+        .btn-info:hover {
+            background: #0288d1;
         }
 
         .exercise-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
             padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            border: 1px solid #333;
         }
 
         .exercise-header {
@@ -165,8 +191,8 @@
         }
 
         .exercise-name {
-            font-weight: bold;
-            color: #00d4ff;
+            font-weight: 500;
+            color: #fff;
             font-size: 1.2em;
         }
 
@@ -180,32 +206,33 @@
             grid-template-columns: 60px 80px 80px 80px 1fr 60px;
             gap: 10px;
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
+            background: #222;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 4px;
         }
 
         .set-input {
             padding: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #1a1a1a;
+            color: #f0f0f0;
             text-align: center;
         }
 
         .video-upload {
             margin: 20px 0;
             padding: 20px;
-            border: 2px dashed rgba(0, 212, 255, 0.3);
-            border-radius: 10px;
+            border: 2px dashed #444;
+            border-radius: 8px;
             text-align: center;
         }
 
         .video-preview {
             max-width: 100%;
-            border-radius: 10px;
+            border-radius: 6px;
             margin-top: 10px;
+            background: #1a1a1a;
         }
 
         .stats-grid {
@@ -216,20 +243,20 @@
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: #1a1a1a;
             padding: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            border: 1px solid #333;
         }
 
         .search-bar {
             width: 100%;
             padding: 15px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #1a1a1a;
+            color: #f0f0f0;
             font-size: 16px;
         }
 
@@ -239,17 +266,17 @@
         }
 
         .program-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: #1a1a1a;
             padding: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            border: 1px solid #333;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .program-card:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
+            background: #222;
+            transform: translateY(-3px);
         }
 
         .modal {
@@ -259,7 +286,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 1000;
         }
 
@@ -268,13 +295,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #1a1a2e;
+            background: #1a1a1a;
             padding: 30px;
-            border-radius: 15px;
-            max-width: 90%;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
             max-height: 90%;
             overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid #333;
         }
 
         .close {
@@ -292,82 +320,109 @@
         .chart-container {
             width: 100%;
             height: 300px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
             padding: 20px;
             margin-top: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #666;
+            border: 1px solid #333;
         }
 
         .history-item {
-            background: rgba(255, 255, 255, 0.05);
+            background: #1a1a1a;
             padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 3px solid #00d4ff;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
         }
 
         .timer-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(20, 20, 20, 0.9);
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            border: 1px solid #444;
         }
 
         .timer-display {
             font-size: 1.5em;
-            font-weight: bold;
-            color: #00d4ff;
+            font-weight: 500;
+            color: #fff;
         }
 
         .github-config {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border-left: 4px solid #6cc644;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #333;
         }
 
         .upload-status {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 4px;
             text-align: center;
+            border: 1px solid #333;
         }
 
         .upload-success {
-            background: rgba(56, 239, 125, 0.2);
-            border: 1px solid rgba(56, 239, 125, 0.5);
+            background: rgba(46, 125, 50, 0.15);
+            border-color: #2e7d32;
+            color: #a5d6a7;
         }
 
         .upload-error {
-            background: rgba(255, 75, 43, 0.2);
-            border: 1px solid rgba(255, 75, 43, 0.5);
+            background: rgba(198, 40, 40, 0.15);
+            border-color: #c62828;
+            color: #ef9a9a;
         }
 
         .upload-progress {
             width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            margin: 10px 0;
+            background: #1a1a1a;
+            border-radius: 4px;
+            margin: 15px 0;
+            border: 1px solid #333;
         }
 
         .progress-bar {
             height: 10px;
-            background: linear-gradient(45deg, #00d4ff, #5b86e5);
-            border-radius: 5px;
+            background: #fff;
+            border-radius: 4px;
             width: 0%;
             transition: width 0.3s ease;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+
+        small {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        a {
+            color: #90caf9;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
 
         @media (max-width: 768px) {
@@ -395,18 +450,18 @@
             .timer-display {
                 font-size: 1.2em;
             }
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Training Logger</h1>
+            <h1>TRAINING LOGGER</h1>
             <p>Track your workouts, analyze progress, optimize performance</p>
         </div>
 
@@ -518,7 +573,7 @@
                 <div class="form-group">
                     <label>GitHub Personal Access Token</label>
                     <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="search-bar">
-                    <small>Create a token with repo permissions at <a href="https://github.com/settings/tokens" target="_blank" style="color: #00d4ff;">github.com/settings/tokens</a></small>
+                    <small>Create a token with repo permissions at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></small>
                 </div>
                 
                 <div class="form-group">
@@ -529,6 +584,12 @@
                 <div class="form-group">
                     <label>Repository Name</label>
                     <input type="text" id="githubRepo" placeholder="training-videos" class="search-bar">
+                </div>
+                
+                <div class="form-group">
+                    <label>Repository Branch</label>
+                    <input type="text" id="githubBranch" value="video-uploads" class="search-bar">
+                    <small>Branch where videos will be uploaded</small>
                 </div>
                 
                 <div class="form-group">
@@ -544,7 +605,7 @@
             <div class="form-group">
                 <h3>Data Management</h3>
                 <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
-                <p style="margin-top: 10px; color: #ff416c;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
+                <p style="margin-top: 10px;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
             </div>
         </div>
 
@@ -579,7 +640,7 @@
             <div class="timer-display" id="timerDisplay">00:00:00</div>
             <div>
                 <button class="btn btn-info" id="startTimerBtn" onclick="startTimer()">Start Timer</button>
-                <button class="btn btn-warning" id="pauseTimerBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
+                <button class="btn" id="pauseTimerBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
                 <button class="btn btn-danger" onclick="resetTimer()">Reset</button>
             </div>
         </div>
@@ -599,6 +660,7 @@
             token: '',
             username: '',
             repo: '',
+            branch: 'video-uploads',
             folder: ''
         };
 
@@ -680,6 +742,7 @@
                 document.getElementById('githubToken').value = githubConfig.token || '';
                 document.getElementById('githubUsername').value = githubConfig.username || '';
                 document.getElementById('githubRepo').value = githubConfig.repo || '';
+                document.getElementById('githubBranch').value = githubConfig.branch || 'video-uploads';
                 document.getElementById('githubFolder').value = githubConfig.folder || '';
             }
         }
@@ -689,6 +752,7 @@
                 token: document.getElementById('githubToken').value.trim(),
                 username: document.getElementById('githubUsername').value.trim(),
                 repo: document.getElementById('githubRepo').value.trim(),
+                branch: document.getElementById('githubBranch').value.trim() || 'video-uploads',
                 folder: document.getElementById('githubFolder').value.trim() || 'videos'
             };
             
@@ -761,7 +825,7 @@
                     const fileName = `workout-video-${timestamp}.${fileExtension}`;
                     const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
                     
-                    // Prepare the API request
+                    // Prepare the API request - specify the branch in the URL
                     const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
                     
                     const response = await fetch(apiUrl, {
@@ -773,19 +837,20 @@
                         },
                         body: JSON.stringify({
                             message: `Upload workout video: ${fileName}`,
-                            content: base64Data.split(',')[1] // Remove the data:video/mp4;base64, part
+                            content: base64Data.split(',')[1], // Remove the data:video/mp4;base64, part
+                            branch: githubConfig.branch // Specify the branch to push to
                         })
                     });
                     
                     if (response.ok) {
                         successCount++;
                         // Store the GitHub URL with the video
-                        video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/main/${filePath}`;
+                        video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/${githubConfig.branch}/${filePath}`;
                         
                         uploadStatus.innerHTML += `
                             <div class="upload-success">
                                 ✓ Successfully uploaded: ${video.name} 
-                                <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">View on GitHub</a>
+                                <a href="${video.githubUrl}" target="_blank">View on GitHub</a>
                             </div>
                         `;
                     } else {
@@ -933,11 +998,11 @@
             programList.innerHTML = '';
 
             if (programs.length === 0) {
-                programList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No programs found. Create your first program to get started.</p>';
+                programList.innerHTML = '<div class="empty-state"><p>No programs found. Create your first program to get started.</p></div>';
                 return;
             }
 
-            programs.forEach((program, index) => {
+            programs.forEach((program, index) {
                 const programCard = document.createElement('div');
                 programCard.className = 'program-card';
                 programCard.innerHTML = `
@@ -1005,7 +1070,7 @@
                         ${exercise.notes ? `<br><strong>Notes:</strong> ${exercise.notes}` : ''}
                     </div>
                     <div class="sets-container">
-                        <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
+                        <div class="set-row" style="font-weight: bold;">
                             <div>Set</div>
                             <div>Weight</div>
                             <div>Reps</div>
@@ -1168,11 +1233,11 @@
             historyList.innerHTML = '';
 
             if (workoutHistory.length === 0) {
-                historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No workout history found. Complete your first workout to see data here.</p>';
+                historyList.innerHTML = '<div class="empty-state"><p>No workout history found. Complete your first workout to see data here.</p></div>';
                 return;
             }
 
-            workoutHistory.slice().reverse().forEach((workout, index) => {
+            workoutHistory.slice().reverse().forEach((workout, index) {
                 const actualIndex = workoutHistory.length - 1 - index;
                 const historyItem = document.createElement('div');
                 historyItem.className = 'history-item';
@@ -1242,6 +1307,7 @@
                         token: '',
                         username: '',
                         repo: '',
+                        branch: 'video-uploads',
                         folder: ''
                     };
                     localStorage.clear();
@@ -1298,11 +1364,11 @@
             });
 
             if (Object.keys(exerciseMaxes).length === 0) {
-                prContainer.innerHTML = '<p style="text-align: center; color: #666;">No personal records yet. Complete some workouts to see your progress here.</p>';
+                prContainer.innerHTML = '<div class="empty-state"><p>No personal records yet. Complete some workouts to see your progress here.</p></div>';
             } else {
                 prContainer.innerHTML = Object.entries(exerciseMaxes)
                     .map(([exercise, maxes]) => `
-                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                        <div style="margin-bottom: 15px; padding: 10px; background: #222; border-radius: 4px;">
                             <strong>${exercise}</strong><br>
                             Max Weight: ${maxes.maxWeight}kg<br>
                             Max Volume: ${maxes.maxVolume}kg<br>
@@ -1322,13 +1388,13 @@
             });
 
             if (Object.keys(exerciseFrequency).length === 0) {
-                frequencyContainer.innerHTML = '<p style="text-align: center; color: #666;">No frequency data yet. Complete some workouts to see analysis here.</p>';
+                frequencyContainer.innerHTML = '<div class="empty-state"><p>No frequency data yet. Complete some workouts to see analysis here.</p></div>';
             } else {
                 frequencyContainer.innerHTML = Object.entries(exerciseFrequency)
                     .sort(([,a], [,b]) => b - a)
                     .slice(0, 10)
                     .map(([exercise, count]) => `
-                        <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                        <div style="margin-bottom: 10px; padding: 8px; background: #222; border-radius: 4px;">
                             <strong>${exercise}:</strong> ${count} sessions
                         </div>
                     `).join('');
@@ -1428,7 +1494,7 @@
                         <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
                         <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
                         <div class="sets-container">
-                            <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
+                            <div class="set-row" style="font-weight: bold;">
                                 <div>Set</div>
                                 <div>Weight</div>
                                 <div>Reps</div>
@@ -1473,7 +1539,7 @@
                     if (video.githubUrl) {
                         detailsHTML += `
                             <p style="margin: 5px 10px;">
-                                <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">${video.name}</a>
+                                <a href="${video.githubUrl}" target="_blank">${video.name}</a>
                                 (${(video.size / 1024 / 1024).toFixed(1)}MB)
                             </p>
                         `;
