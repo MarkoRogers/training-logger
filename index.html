@@ -723,105 +723,106 @@
         }
 
         async function uploadVideosToGitHub() {
-            if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-                alert('Please configure GitHub integration in the Settings tab first.');
-                showTab('settings');
-                return;
-            }
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration in the Settings tab first.');
+        showTab('settings');
+        return;
+    }
+    
+    if (sessionVideos.length === 0) {
+        alert('No videos to upload. Please select videos first.');
+        return;
+    }
+    
+    const uploadStatus = document.getElementById('uploadStatus');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    
+    uploadStatus.innerHTML = '';
+    uploadProgress.style.display = 'block';
+    progressBar.style.width = '0%';
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (let i = 0; i < sessionVideos.length; i++) {
+        const video = sessionVideos[i];
+        
+        try {
+            // Update progress
+            progressBar.style.width = `${((i / sessionVideos.length) * 100).toFixed(0)}%`;
             
-            if (sessionVideos.length === 0) {
-                alert('No videos to upload. Please select videos first.');
-                return;
-            }
+            // Read the file as base64
+            const base64Data = await readFileAsBase64(video.file);
             
-            const uploadStatus = document.getElementById('uploadStatus');
-            const uploadProgress = document.getElementById('uploadProgress');
-            const progressBar = document.getElementById('progressBar');
+            // Create the file path
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileExtension = video.name.split('.').pop();
+            const fileName = `workout-video-${timestamp}.${fileExtension}`;
+            const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
             
-            uploadStatus.innerHTML = '';
-            uploadProgress.style.display = 'block';
-            progressBar.style.width = '0%';
+            // Prepare the API request - specify the video-uploads branch
+            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
             
-            let successCount = 0;
-            let errorCount = 0;
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Upload workout video: ${fileName}`,
+                    content: base64Data.split(',')[1], // Remove the data:video/mp4;base64, part
+                    branch: 'video-uploads' // Specify the target branch
+                })
+            });
             
-            for (let i = 0; i < sessionVideos.length; i++) {
-                const video = sessionVideos[i];
+            if (response.ok) {
+                successCount++;
+                // Store the GitHub URL with the video - point to the video-uploads branch
+                video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/video-uploads/${filePath}`;
                 
-                try {
-                    // Update progress
-                    progressBar.style.width = `${((i / sessionVideos.length) * 100).toFixed(0)}%`;
-                    
-                    // Read the file as base64
-                    const base64Data = await readFileAsBase64(video.file);
-                    
-                    // Create the file path
-                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                    const fileExtension = video.name.split('.').pop();
-                    const fileName = `workout-video-${timestamp}.${fileExtension}`;
-                    const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
-                    
-                    // Prepare the API request
-                    const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
-                    
-                    const response = await fetch(apiUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${githubConfig.token}`,
-                            'Accept': 'application/vnd.github.v3+json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: `Upload workout video: ${fileName}`,
-                            content: base64Data.split(',')[1] // Remove the data:video/mp4;base64, part
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        successCount++;
-                        // Store the GitHub URL with the video
-                        video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/main/${filePath}`;
-                        
-                        uploadStatus.innerHTML += `
-                            <div class="upload-success">
-                                ✓ Successfully uploaded: ${video.name} 
-                                <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">View on GitHub</a>
-                            </div>
-                        `;
-                    } else {
-                        errorCount++;
-                        const errorData = await response.json();
-                        uploadStatus.innerHTML += `
-                            <div class="upload-error">
-                                ✗ Failed to upload: ${video.name} - ${errorData.message || 'Unknown error'}
-                            </div>
-                        `;
-                    }
-                } catch (error) {
-                    errorCount++;
-                    uploadStatus.innerHTML += `
-                        <div class="upload-error">
-                            ✗ Error uploading: ${video.name} - ${error.message}
-                        </div>
-                    `;
-                }
+                uploadStatus.innerHTML += `
+                    <div class="upload-success">
+                        ✓ Successfully uploaded: ${video.name} 
+                        <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">View on GitHub</a>
+                    </div>
+                `;
+            } else {
+                errorCount++;
+                const errorData = await response.json();
+                uploadStatus.innerHTML += `
+                    <div class="upload-error">
+                        ✗ Failed to upload: ${video.name} - ${errorData.message || 'Unknown error'}
+                    </div>
+                `;
             }
-            
-            // Final progress update
-            progressBar.style.width = '100%';
-            
-            // Show summary
+        } catch (error) {
+            errorCount++;
             uploadStatus.innerHTML += `
-                <div class="upload-${errorCount === 0 ? 'success' : 'error'}">
-                    Upload complete: ${successCount} successful, ${errorCount} failed
+                <div class="upload-error">
+                    ✗ Error uploading: ${video.name} - ${error.message}
                 </div>
             `;
-            
-            // Update session videos with GitHub URLs
-            if (successCount > 0) {
-                localStorage.setItem('sessionVideos', JSON.stringify(sessionVideos));
-            }
         }
+    }
+    
+    // Final progress update
+    progressBar.style.width = '100%';
+    
+    // Show summary
+    uploadStatus.innerHTML += `
+        <div class="upload-${errorCount === 0 ? 'success' : 'error'}">
+            Upload complete: ${successCount} successful, ${errorCount} failed
+        </div>
+    `;
+    
+    // Update session videos with GitHub URLs
+    if (successCount > 0) {
+        localStorage.setItem('sessionVideos', JSON.stringify(sessionVideos));
+    }
+}
 
         function readFileAsBase64(file) {
             return new Promise((resolve, reject) => {
@@ -1470,16 +1471,26 @@
                     <strong>Session Videos (${workout.videos.length}):</strong><br>
                 `;
                 workout.videos.forEach((video, index) => {
-                    if (video.githubUrl) {
-                        detailsHTML += `
-                            <p style="margin: 5px 10px;">
-                                <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">${video.name}</a>
-                                (${(video.size / 1024 / 1024).toFixed(1)}MB)
-                            </p>
-                        `;
-                    } else {
-                        detailsHTML += `<p style="margin: 5px 10px; color: #aaa; font-size: 0.9em;">${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB) - Not uploaded to GitHub</p>`;
-                    }
+if (video.githubUrl) {
+    detailsHTML += `
+        <p style="margin: 5px 10px;">
+            <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">${video.name}</a>
+            (${(video.size / 1024 / 1024).toFixed(1)}MB)
+        </p>
+    `;
+}
+
+// And change it to ensure it points to the video-uploads branch:
+if (video.githubUrl) {
+    // Make sure the URL points to the video-uploads branch
+    const videoUrl = video.githubUrl.replace('/blob/main/', '/blob/video-uploads/');
+    detailsHTML += `
+        <p style="margin: 5px 10px;">
+            <a href="${videoUrl}" target="_blank" style="color: #00d4ff;">${video.name}</a>
+            (${(video.size / 1024 / 1024).toFixed(1)}MB)
+        </p>
+    `;
+}
                 });
                 detailsHTML += `</div>`;
             }
