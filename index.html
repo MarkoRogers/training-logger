@@ -9,13 +9,13 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #0a0a0a;
-            color: #f0f0f0;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #e0e0e0;
+            min-height: 100vh;
         }
 
         .container {
@@ -25,82 +25,64 @@
         }
 
         .header {
-            text-align: center;
-            padding: 30px 0;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
             margin-bottom: 30px;
-            border-bottom: 1px solid #333;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .header h1 {
-            font-size: 2.8em;
-            font-weight: 300;
-            letter-spacing: 2px;
+            font-size: 2.5em;
             margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .header p {
-            color: #aaa;
-            font-size: 1.1em;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .nav {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 30px;
+            gap: 15px;
+            margin: 30px 0;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .nav-btn {
             padding: 12px 25px;
-            background: transparent;
-            border: 1px solid #444;
-            border-radius: 4px;
-            color: #ddd;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            color: white;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: bold;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .nav-btn:hover {
-            background: #222;
-            border-color: #666;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
         .nav-btn.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
         }
 
         .tab-content {
             display: none;
-            background: #111;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
             padding: 30px;
-            border: 1px solid #333;
-            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .tab-content.active {
             display: block;
-        }
-
-        h2 {
-            font-size: 1.8em;
-            margin-bottom: 20px;
-            color: #fff;
-            font-weight: 400;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-        h3 {
-            font-size: 1.4em;
-            margin: 25px 0 15px;
-            color: #fff;
-            font-weight: 400;
         }
 
         .form-group {
@@ -110,19 +92,19 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
-            color: #ddd;
+            font-weight: bold;
+            color: #00d4ff;
         }
 
         .form-group input, 
         .form-group select, 
         .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background: #1a1a1a;
-            color: #f0f0f0;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
             font-size: 16px;
         }
 
@@ -130,57 +112,49 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #888;
-            background: #222;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
         }
 
         .btn {
             padding: 12px 25px;
-            background: #333;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             color: white;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: bold;
             transition: all 0.3s ease;
-            display: inline-block;
+            margin: 5px;
         }
 
         .btn:hover {
-            background: #444;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: #2e7d32;
-        }
-
-        .btn-success:hover {
-            background: #388e3c;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-danger {
-            background: #c62828;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
         }
 
-        .btn-danger:hover {
-            background: #d32f2f;
+        .btn-success {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #ff5722);
         }
 
         .btn-info {
-            background: #0277bd;
-        }
-
-        .btn-info:hover {
-            background: #0288d1;
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
         }
 
         .exercise-card {
-            background: #1a1a1a;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #333;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .exercise-header {
@@ -191,8 +165,8 @@
         }
 
         .exercise-name {
-            font-weight: 500;
-            color: #fff;
+            font-weight: bold;
+            color: #00d4ff;
             font-size: 1.2em;
         }
 
@@ -206,33 +180,32 @@
             grid-template-columns: 60px 80px 80px 80px 1fr 60px;
             gap: 10px;
             align-items: center;
-            background: #222;
+            background: rgba(255, 255, 255, 0.05);
             padding: 10px;
-            border-radius: 4px;
+            border-radius: 5px;
         }
 
         .set-input {
             padding: 8px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background: #1a1a1a;
-            color: #f0f0f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
             text-align: center;
         }
 
         .video-upload {
             margin: 20px 0;
             padding: 20px;
-            border: 2px dashed #444;
-            border-radius: 8px;
+            border: 2px dashed rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
             text-align: center;
         }
 
         .video-preview {
             max-width: 100%;
-            border-radius: 6px;
+            border-radius: 10px;
             margin-top: 10px;
-            background: #1a1a1a;
         }
 
         .stats-grid {
@@ -243,20 +216,20 @@
         }
 
         .stat-card {
-            background: #1a1a1a;
+            background: rgba(255, 255, 255, 0.1);
             padding: 20px;
-            border-radius: 6px;
-            border: 1px solid #333;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .search-bar {
             width: 100%;
             padding: 15px;
             margin-bottom: 20px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background: #1a1a1a;
-            color: #f0f0f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
             font-size: 16px;
         }
 
@@ -266,17 +239,17 @@
         }
 
         .program-card {
-            background: #1a1a1a;
+            background: rgba(255, 255, 255, 0.1);
             padding: 20px;
-            border-radius: 6px;
-            border: 1px solid #333;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .program-card:hover {
-            background: #222;
-            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
 
         .modal {
@@ -286,7 +259,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
         }
 
@@ -295,14 +268,13 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #1a1a1a;
+            background: #1a1a2e;
             padding: 30px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
+            border-radius: 15px;
+            max-width: 90%;
             max-height: 90%;
             overflow-y: auto;
-            border: 1px solid #333;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .close {
@@ -320,109 +292,126 @@
         .chart-container {
             width: 100%;
             height: 300px;
-            background: #1a1a1a;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
             padding: 20px;
             margin-top: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #666;
-            border: 1px solid #333;
         }
 
         .history-item {
-            background: #1a1a1a;
+            background: rgba(255, 255, 255, 0.05);
             padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00d4ff;
         }
 
         .timer-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(20, 20, 20, 0.9);
+            background: rgba(0, 0, 0, 0.7);
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            border: 1px solid #444;
         }
 
         .timer-display {
             font-size: 1.5em;
-            font-weight: 500;
-            color: #fff;
+            font-weight: bold;
+            color: #00d4ff;
         }
 
-        .github-config {
-            background: #1a1a1a;
-            padding: 20px;
+        .exercise-resources {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
             border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #333;
         }
 
-        .upload-status {
-            margin: 15px 0;
-            padding: 12px;
-            border-radius: 4px;
-            text-align: center;
-            border: 1px solid #333;
+        .resource-link {
+            color: #00d4ff;
+            text-decoration: none;
+            display: block;
+            margin: 5px 0;
         }
 
-        .upload-success {
-            background: rgba(46, 125, 50, 0.15);
-            border-color: #2e7d32;
-            color: #a5d6a7;
-        }
-
-        .upload-error {
-            background: rgba(198, 40, 40, 0.15);
-            border-color: #c62828;
-            color: #ef9a9a;
-        }
-
-        .upload-progress {
-            width: 100%;
-            background: #1a1a1a;
-            border-radius: 4px;
-            margin: 15px 0;
-            border: 1px solid #333;
-        }
-
-        .progress-bar {
-            height: 10px;
-            background: #fff;
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s ease;
+        .resource-link:hover {
+            text-decoration: underline;
         }
 
         .empty-state {
             text-align: center;
             padding: 40px;
             color: #666;
-            font-style: italic;
         }
 
-        small {
-            color: #888;
+        .progress-chart {
+            width: 100%;
+            height: 200px;
+            margin-top: 15px;
+        }
+
+        .validation-error {
+            color: #ff416c;
             font-size: 0.9em;
+            margin-top: 5px;
         }
 
-        a {
-            color: #90caf9;
-            text-decoration: none;
+        .storage-warning {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
         }
 
-        a:hover {
-            text-decoration: underline;
+        .github-config {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #6cc644;
+        }
+
+        .upload-status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .upload-success {
+            background: rgba(56, 239, 125, 0.2);
+            border: 1px solid rgba(56, 239, 125, 0.5);
+        }
+
+        .upload-error {
+            background: rgba(255, 75, 43, 0.2);
+            border: 1px solid rgba(255, 75, 43, 0.5);
+        }
+
+        .upload-progress {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s ease;
         }
 
         @media (max-width: 768px) {
@@ -450,36 +439,36 @@
             .timer-display {
                 font-size: 1.2em;
             }
-            
-            .modal-content {
-                width: 95%;
-                padding: 20px;
-            }
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>TRAINING LOGGER</h1>
+            <h1>Training Logger</h1>
             <p>Track your workouts, analyze progress, optimize performance</p>
         </div>
 
         <nav class="nav">
-            <button class="nav-btn active" data-tab="programs">Programs</button>
-            <button class="nav-btn" data-tab="workout">Current Workout</button>
-            <button class="nav-btn" data-tab="history">History</button>
-            <button class="nav-btn" data-tab="stats">Analytics</button>
-            <button class="nav-btn" data-tab="settings">Settings</button>
+            <button class="nav-btn active" onclick="showTab('programs')">Programs</button>
+            <button class="nav-btn" onclick="showTab('workout')">Current Workout</button>
+            <button class="nav-btn" onclick="showTab('history')">History</button>
+            <button class="nav-btn" onclick="showTab('stats')">Analytics</button>
+            <button class="nav-btn" onclick="showTab('settings')">Settings</button>
         </nav>
 
         <!-- Programs Tab -->
         <div id="programs" class="tab-content active">
             <h2>Workout Programs</h2>
-            <button class="btn btn-success" id="createProgramBtn">Create New Program</button>
+            <button class="btn btn-success" onclick="createProgram()">Create New Program</button>
             
             <div class="search-bar-container">
-                <input type="text" class="search-bar" placeholder="Search programs..." id="programSearch">
+                <input type="text" class="search-bar" placeholder="Search programs..." oninput="searchPrograms(this.value)">
             </div>
 
             <div id="programList" class="program-list">
@@ -496,13 +485,13 @@
             
             <div class="video-upload">
                 <h3>Session Videos</h3>
-                <input type="file" id="videoUpload" accept="video/*" multiple>
+                <input type="file" id="videoUpload" accept="video/*" multiple onchange="handleVideoUpload(event)">
                 <div id="videoPreview"></div>
                 <div id="uploadProgress" class="upload-progress" style="display: none;">
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
                 <div id="uploadStatus"></div>
-                <button class="btn btn-info" id="uploadVideosBtn" style="margin-top: 15px;">Upload Videos to GitHub</button>
+                <button class="btn btn-info" onclick="uploadVideosToGitHub()" style="margin-top: 15px;">Upload Videos to GitHub</button>
             </div>
 
             <div class="form-group">
@@ -510,19 +499,19 @@
                 <textarea id="sessionNotes" rows="4" placeholder="How did the session feel? Any observations..."></textarea>
             </div>
 
-            <button class="btn btn-success" id="saveWorkoutBtn">Save Workout</button>
+            <button class="btn btn-success" onclick="saveWorkout()">Save Workout</button>
         </div>
 
         <!-- History Tab -->
         <div id="history" class="tab-content">
             <h2>Workout History</h2>
             <div style="margin-bottom: 20px;">
-                <input type="text" class="search-bar" placeholder="Search history..." id="historySearch">
+                <input type="text" class="search-bar" placeholder="Search history..." oninput="searchHistory(this.value)">
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn btn-danger" id="clearHistoryBtn">Clear All History</button>
-                    <button class="btn" id="exportDataBtn">Export Data</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
-                    <button class="btn" id="importDataBtn">Import Data</button>
+                    <button class="btn btn-danger" onclick="clearAllHistory()">Clear All History</button>
+                    <button class="btn" onclick="exportData()">Export Data</button>
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display: none;">
+                    <button class="btn" onclick="document.getElementById('importFile').click()">Import Data</button>
                 </div>
             </div>
             <div id="historyList">
@@ -533,7 +522,7 @@
         <!-- Analytics Tab -->
         <div id="stats" class="tab-content">
             <h2>Performance Analytics</h2>
-            <input type="text" class="search-bar" placeholder="Search exercises..." id="statsSearch">
+            <input type="text" class="search-bar" placeholder="Search exercises..." oninput="searchStats(this.value)">
             
             <div class="stats-grid">
                 <div class="stat-card">
@@ -543,21 +532,31 @@
                 
                 <div class="stat-card">
                     <h3>Volume Trends</h3>
-                    <div class="chart-container">
-                        <p>Volume trends chart will appear here</p>
+                    <div class="chart-container" id="volumeChart">
+                        <canvas id="volumeTrendChart"></canvas>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <h3>Strength Progress</h3>
-                    <div class="chart-container">
-                        <p>Strength progress chart will appear here</p>
+                    <div class="chart-container" id="strengthChart">
+                        <canvas id="strengthProgressChart"></canvas>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <h3>Frequency Analysis</h3>
                     <div id="frequencyAnalysis"></div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Exercise Progress</h3>
+                    <select id="exerciseSelector" onchange="updateExerciseProgressChart()" class="search-bar" style="margin-bottom: 15px;">
+                        <option value="">Select an exercise</option>
+                    </select>
+                    <div class="chart-container" id="exerciseProgressChart">
+                        <canvas id="exerciseProgressCanvas"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -573,7 +572,7 @@
                 <div class="form-group">
                     <label>GitHub Personal Access Token</label>
                     <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="search-bar">
-                    <small>Create a token with repo permissions at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></small>
+                    <small>Create a token with repo permissions at <a href="https://github.com/settings/tokens" target="_blank" style="color: #00d4ff;">github.com/settings/tokens</a></small>
                 </div>
                 
                 <div class="form-group">
@@ -587,37 +586,32 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Repository Branch</label>
-                    <input type="text" id="githubBranch" value="video-uploads" class="search-bar">
-                    <small>Branch where videos will be uploaded</small>
-                </div>
-                
-                <div class="form-group">
                     <label>Repository Folder (optional)</label>
                     <input type="text" id="githubFolder" placeholder="videos" class="search-bar">
                     <small>Folder within your repository where videos will be stored</small>
                 </div>
                 
-                <button class="btn btn-success" id="saveGithubConfigBtn">Save GitHub Configuration</button>
-                <button class="btn" id="testGithubConnectionBtn">Test Connection</button>
+                <button class="btn btn-success" onclick="saveGithubConfig()">Save GitHub Configuration</button>
+                <button class="btn" onclick="testGithubConnection()">Test Connection</button>
             </div>
             
             <div class="form-group">
                 <h3>Data Management</h3>
-                <button class="btn btn-danger" id="clearAllDataBtn">Clear All Data</button>
-                <p style="margin-top: 10px;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
+                <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+                <p style="margin-top: 10px; color: #ff416c;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
             </div>
         </div>
 
         <!-- Modal for Program Creation/Editing -->
         <div id="programModal" class="modal">
             <div class="modal-content">
-                <span class="close" id="closeModalBtn">&times;</span>
+                <span class="close" onclick="closeModal()">&times;</span>
                 <h2 id="modalTitle">Create New Program</h2>
                 
                 <div class="form-group">
                     <label>Program Name</label>
                     <input type="text" id="programName" placeholder="e.g., Push/Pull/Legs">
+                    <div class="validation-error" id="programNameError"></div>
                 </div>
 
                 <div class="form-group">
@@ -630,8 +624,8 @@
                     <!-- Exercises will be added here -->
                 </div>
                 
-                <button class="btn" id="addExerciseBtn">Add Exercise</button>
-                <button class="btn btn-success" id="saveProgramBtn">Save Program</button>
+                <button class="btn" onclick="addExercise()">Add Exercise</button>
+                <button class="btn btn-success" onclick="saveProgram()">Save Program</button>
             </div>
         </div>
 
@@ -639,9 +633,9 @@
         <div id="timerContainer" class="timer-container" style="display: none;">
             <div class="timer-display" id="timerDisplay">00:00:00</div>
             <div>
-                <button class="btn btn-info" id="startTimerBtn">Start Timer</button>
-                <button class="btn" id="pauseTimerBtn" style="display: none;">Pause</button>
-                <button class="btn btn-danger" id="resetTimerBtn">Reset</button>
+                <button class="btn btn-info" id="startTimerBtn" onclick="startTimer()">Start Timer</button>
+                <button class="btn btn-warning" id="pauseTimerBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
+                <button class="btn btn-danger" onclick="resetTimer()">Reset</button>
             </div>
         </div>
     </div>
@@ -660,83 +654,22 @@
             token: '',
             username: '',
             repo: '',
-            branch: 'video-uploads',
             folder: ''
         };
-
-        // Initialize the application
+        
+        // Initialize the application with enhanced loading
         document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
-
-        function initializeApp() {
             loadFromStorage();
             loadPrograms();
             loadHistory();
             updateStats();
+            checkStorageUsage();
+            populateExerciseSelector();
             loadGithubConfig();
-            setupEventListeners();
-        }
-
-        function setupEventListeners() {
-            // Tab navigation
-            document.querySelectorAll('.nav-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    showTab(this.dataset.tab);
-                });
-            });
             
-            // Program management
-            document.getElementById('createProgramBtn').addEventListener('click', createProgram);
-            document.getElementById('addExerciseBtn').addEventListener('click', addExercise);
-            document.getElementById('saveProgramBtn').addEventListener('click', saveProgram);
-            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-            
-            // Workout management
-            document.getElementById('videoUpload').addEventListener('change', handleVideoUpload);
-            document.getElementById('uploadVideosBtn').addEventListener('click', uploadVideosToGitHub);
-            document.getElementById('saveWorkoutBtn').addEventListener('click', saveWorkout);
-            
-            // History management
-            document.getElementById('clearHistoryBtn').addEventListener('click', clearAllHistory);
-            document.getElementById('exportDataBtn').addEventListener('click', exportData);
-            document.getElementById('importDataBtn').addEventListener('click', () => document.getElementById('importFile').click());
-            document.getElementById('importFile').addEventListener('change', importData);
-            
-            // Timer controls
-            document.getElementById('startTimerBtn').addEventListener('click', startTimer);
-            document.getElementById('pauseTimerBtn').addEventListener('click', pauseTimer);
-            document.getElementById('resetTimerBtn').addEventListener('click', resetTimer);
-            
-            // Search functionality
-            document.getElementById('programSearch').addEventListener('input', function() {
-                searchPrograms(this.value);
-            });
-            document.getElementById('historySearch').addEventListener('input', function() {
-                searchHistory(this.value);
-            });
-            document.getElementById('statsSearch').addEventListener('input', function() {
-                searchStats(this.value);
-            });
-            
-            // GitHub configuration
-            document.getElementById('saveGithubConfigBtn').addEventListener('click', saveGithubConfig);
-            document.getElementById('testGithubConnectionBtn').addEventListener('click', testGithubConnection);
-            document.getElementById('clearAllDataBtn').addEventListener('click', clearAllData);
-            
-            // Close modals when clicking outside
-            window.addEventListener('click', function(event) {
-                const modal = document.getElementById('programModal');
-                if (event.target === modal) {
-                    closeModal();
-                }
-                
-                const workoutModal = document.getElementById('workoutDetailsModal');
-                if (event.target === workoutModal) {
-                    closeWorkoutDetails();
-                }
-            });
-        }
+            // Auto-backup check
+            setTimeout(autoBackup, 2000);
+        });
 
         // Tab management
         function showTab(tabName) {
@@ -752,13 +685,20 @@
             document.getElementById(tabName).classList.add('active');
             
             // Add active class to clicked button
-            document.querySelector(`.nav-btn[data-tab="${tabName}"]`).classList.add('active');
+            event.target.classList.add('active');
 
             // If switching to workout tab, show timer if a workout is active
             if (tabName === 'workout' && currentWorkout) {
                 document.getElementById('timerContainer').style.display = 'flex';
             } else {
                 document.getElementById('timerContainer').style.display = 'none';
+            }
+
+            // Update charts when switching to stats tab
+            if (tabName === 'stats') {
+                setTimeout(() => {
+                    renderCharts();
+                }, 100);
             }
         }
 
@@ -807,7 +747,6 @@
                 document.getElementById('githubToken').value = githubConfig.token || '';
                 document.getElementById('githubUsername').value = githubConfig.username || '';
                 document.getElementById('githubRepo').value = githubConfig.repo || '';
-                document.getElementById('githubBranch').value = githubConfig.branch || 'video-uploads';
                 document.getElementById('githubFolder').value = githubConfig.folder || '';
             }
         }
@@ -817,7 +756,6 @@
                 token: document.getElementById('githubToken').value.trim(),
                 username: document.getElementById('githubUsername').value.trim(),
                 repo: document.getElementById('githubRepo').value.trim(),
-                branch: document.getElementById('githubBranch').value.trim() || 'video-uploads',
                 folder: document.getElementById('githubFolder').value.trim() || 'videos'
             };
             
@@ -890,7 +828,7 @@
                     const fileName = `workout-video-${timestamp}.${fileExtension}`;
                     const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
                     
-                    // Prepare the API request - specify the branch in the URL
+                    // Prepare the API request
                     const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
                     
                     const response = await fetch(apiUrl, {
@@ -902,20 +840,19 @@
                         },
                         body: JSON.stringify({
                             message: `Upload workout video: ${fileName}`,
-                            content: base64Data.split(',')[1], // Remove the data:video/mp4;base64, part
-                            branch: githubConfig.branch // Specify the branch to push to
+                            content: base64Data.split(',')[1] // Remove the data:video/mp4;base64, part
                         })
                     });
                     
                     if (response.ok) {
                         successCount++;
                         // Store the GitHub URL with the video
-                        video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/${githubConfig.branch}/${filePath}`;
+                        video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/main/${filePath}`;
                         
                         uploadStatus.innerHTML += `
                             <div class="upload-success">
                                 ✓ Successfully uploaded: ${video.name} 
-                                <a href="${video.githubUrl}" target="_blank">View on GitHub</a>
+                                <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">View on GitHub</a>
                             </div>
                         `;
                     } else {
@@ -954,7 +891,7 @@
         }
 
         function readFileAsBase64(file) {
-            return new Promise((resolve, reject) {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = error => reject(error);
@@ -968,12 +905,14 @@
             document.getElementById('programName').value = '';
             document.getElementById('programDescription').value = '';
             document.getElementById('exerciseList').innerHTML = '';
+            document.getElementById('programNameError').textContent = '';
             currentProgramIndex = -1;
             document.getElementById('programModal').style.display = 'block';
         }
 
         function addExercise() {
             const exerciseList = document.getElementById('exerciseList');
+            const exerciseId = Date.now();
             
             const exerciseDiv = document.createElement('div');
             exerciseDiv.className = 'exercise-card';
@@ -1011,15 +950,30 @@
             button.closest('.exercise-card').remove();
         }
 
+        function validateProgramForm() {
+            const name = document.getElementById('programName').value.trim();
+            const nameError = document.getElementById('programNameError');
+            
+            if (!name) {
+                nameError.textContent = 'Program name is required';
+                return false;
+            }
+            
+            if (name.length < 3) {
+                nameError.textContent = 'Program name must be at least 3 characters';
+                return false;
+            }
+            
+            nameError.textContent = '';
+            return true;
+        }
+
         function saveProgram() {
+            if (!validateProgramForm()) return;
+
             const name = document.getElementById('programName').value.trim();
             const description = document.getElementById('programDescription').value.trim();
             
-            if (!name) {
-                alert('Please enter a program name');
-                return;
-            }
-
             const exercises = [];
             const exerciseCards = document.querySelectorAll('#exerciseList .exercise-card');
             
@@ -1038,6 +992,11 @@
                 }
             });
 
+            if (exercises.length === 0) {
+                alert('Please add at least one exercise to the program');
+                return;
+            }
+
             const program = {
                 id: currentProgramIndex >= 0 ? programs[currentProgramIndex].id : Date.now(),
                 name,
@@ -1053,9 +1012,10 @@
                 programs.push(program);
             }
 
-            localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-            closeModal();
-            loadPrograms();
+            if (saveToStorage()) {
+                closeModal();
+                loadPrograms();
+            }
         }
 
         function loadPrograms() {
@@ -1063,7 +1023,12 @@
             programList.innerHTML = '';
 
             if (programs.length === 0) {
-                programList.innerHTML = '<div class="empty-state"><p>No programs found. Create your first program to get started.</p></div>';
+                programList.innerHTML = `
+                    <div class="empty-state">
+                        <p>No programs found. Create your first program or load the sample program to get started.</p>
+                        <button class="btn btn-success" onclick="loadSampleProgram()">Load Jordan Peters Sample Program</button>
+                    </div>
+                `;
                 return;
             }
 
@@ -1078,626 +1043,4 @@
                     <div style="margin-top: 15px;">
                         <button class="btn btn-success" onclick="startWorkout(${index})">Start Workout</button>
                         <button class="btn" onclick="editProgram(${index})">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteProgram(${index})">Delete</button>
-                    </div>
-                `;
-                programList.appendChild(programCard);
-            });
-        }
-
-        function startWorkout(programIndex) {
-            currentProgramIndex = programIndex;
-            currentWorkout = {
-                programId: programs[programIndex].id,
-                programName: programs[programIndex].name,
-                date: new Date().toISOString(),
-                exercises: programs[programIndex].exercises.map(ex => ({
-                    ...ex,
-                    sets: Array(ex.sets).fill().map(() => ({
-                        weight: '',
-                        reps: '',
-                        rpe: '',
-                        completed: false,
-                        notes: ''
-                    }))
-                })),
-                sessionNotes: '',
-                videos: []
-            };
-
-            // Show timer
-            document.getElementById('timerContainer').style.display = 'flex';
-            resetTimer();
-            
-            showTab('workout');
-            loadCurrentWorkout();
-        }
-
-        function loadCurrentWorkout() {
-            if (!currentWorkout) {
-                document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
-                return;
-            }
-
-            const container = document.getElementById('currentProgram');
-            container.innerHTML = `<h3>${currentWorkout.programName}</h3>`;
-
-            currentWorkout.exercises.forEach((exercise, exerciseIndex) => {
-                const exerciseDiv = document.createElement('div');
-                exerciseDiv.className = 'exercise-card';
-                exerciseDiv.innerHTML = `
-                    <div class="exercise-header">
-                        <div class="exercise-name">${exercise.name}</div>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <strong>Target:</strong> ${exercise.sets} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}
-                        <br><strong>Rest:</strong> ${Math.floor(exercise.rest / 60)}:${(exercise.rest % 60).toString().padStart(2, '0')}
-                        ${exercise.notes ? `<br><strong>Notes:</strong> ${exercise.notes}` : ''}
-                    </div>
-                    <div class="sets-container">
-                        <div class="set-row" style="font-weight: bold;">
-                            <div>Set</div>
-                            <div>Weight</div>
-                            <div>Reps</div>
-                            <div>RPE</div>
-                            <div>Notes</div>
-                            <div>✓</div>
-                        </div>
-                        ${exercise.sets.map((set, setIndex) => `
-                            <div class="set-row">
-                                <div>${setIndex + 1}</div>
-                                <input type="number" class="set-input" placeholder="kg" step="0.5" 
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'weight', this.value)">
-                                <input type="number" class="set-input" placeholder="reps" 
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'reps', this.value)">
-                                <input type="number" class="set-input" placeholder="RPE" step="0.5" min="1" max="10"
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'rpe', this.value)">
-                                <input type="text" class="set-input" placeholder="Optional notes"
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'notes', this.value)">
-                                <input type="checkbox" onchange="updateSet(${exerciseIndex}, ${setIndex}, 'completed', this.checked)">
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label>Exercise Notes</label>
-                        <textarea onchange="updateExerciseNotes(${exerciseIndex}, this.value)" 
-                                  placeholder="How did this exercise feel? Any adjustments needed..."></textarea>
-                    </div>
-                `;
-                container.appendChild(exerciseDiv);
-            });
-        }
-
-        function updateSet(exerciseIndex, setIndex, field, value) {
-            if (currentWorkout) {
-                currentWorkout.exercises[exerciseIndex].sets[setIndex][field] = value;
-            }
-        }
-
-        function updateExerciseNotes(exerciseIndex, notes) {
-            if (currentWorkout) {
-                currentWorkout.exercises[exerciseIndex].exerciseNotes = notes;
-            }
-        }
-
-        function handleVideoUpload(event) {
-            const files = Array.from(event.target.files);
-            const previewContainer = document.getElementById('videoPreview');
-            
-            files.forEach(file => {
-                if (file.type.startsWith('video/')) {
-                    // Store the file object for later upload
-                    const videoId = Date.now() + Math.random().toString(36).substr(2, 5);
-                    
-                    const videoInfo = {
-                        id: videoId,
-                        name: file.name,
-                        size: file.size,
-                        type: file.type,
-                        file: file, // Store the file object for upload
-                        lastModified: file.lastModified
-                    };
-                    
-                    sessionVideos.push(videoInfo);
-                    
-                    // Create a preview
-                    const videoURL = URL.createObjectURL(file);
-                    const videoElement = document.createElement('video');
-                    videoElement.controls = true;
-                    videoElement.className = 'video-preview';
-                    videoElement.style.width = '300px';
-                    videoElement.style.margin = '10px';
-                    videoElement.src = videoURL;
-                    videoElement.dataset.id = videoId;
-                    
-                    // Add remove button
-                    const videoContainer = document.createElement('div');
-                    videoContainer.style.position = 'relative';
-                    videoContainer.style.display = 'inline-block';
-                    
-                    const removeBtn = document.createElement('button');
-                    removeBtn.textContent = '×';
-                    removeBtn.className = 'btn btn-danger';
-                    removeBtn.style.position = 'absolute';
-                    removeBtn.style.top = '5px';
-                    removeBtn.style.right = '5px';
-                    removeBtn.style.padding = '2px 8px';
-                    removeBtn.onclick = function() {
-                        // Remove from sessionVideos
-                        sessionVideos = sessionVideos.filter(v => v.id !== videoId);
-                        videoContainer.remove();
-                    };
-                    
-                    videoContainer.appendChild(videoElement);
-                    videoContainer.appendChild(removeBtn);
-                    previewContainer.appendChild(videoContainer);
-                }
-            });
-        }
-
-        function saveWorkout() {
-            if (!currentWorkout) {
-                alert('No active workout to save');
-                return;
-            }
-
-            // Validate that at least one set was completed
-            const hasCompletedSets = currentWorkout.exercises.some(exercise => 
-                exercise.sets.some(set => set.completed)
-            );
-            
-            if (!hasCompletedSets) {
-                if (!confirm('No sets marked as completed. Are you sure you want to save this workout?')) {
-                    return;
-                }
-            }
-
-            currentWorkout.sessionNotes = document.getElementById('sessionNotes').value;
-            currentWorkout.videos = sessionVideos.map(v => ({
-                id: v.id,
-                name: v.name,
-                size: v.size,
-                type: v.type,
-                githubUrl: v.githubUrl || null // Store GitHub URL if available
-            }));
-            currentWorkout.completed = new Date().toISOString();
-            currentWorkout.duration = timerSeconds;
-
-            workoutHistory.push(currentWorkout);
-            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-
-            // Update program last used date
-            const program = programs.find(p => p.id === currentWorkout.programId);
-            if (program) {
-                program.lastUsed = currentWorkout.completed;
-                localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-            }
-
-            alert('Workout saved successfully!');
-            
-            // Reset current workout
-            currentWorkout = null;
-            sessionVideos = [];
-            document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
-            document.getElementById('sessionNotes').value = '';
-            document.getElementById('videoPreview').innerHTML = '';
-            document.getElementById('uploadStatus').innerHTML = '';
-            document.getElementById('uploadProgress').style.display = 'none';
-            
-            // Hide timer
-            document.getElementById('timerContainer').style.display = 'none';
-            resetTimer();
-            
-            loadPrograms();
-            loadHistory();
-            updateStats();
-        }
-
-        function loadHistory() {
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-
-            if (workoutHistory.length === 0) {
-                historyList.innerHTML = '<div class="empty-state"><p>No workout history found. Complete your first workout to see data here.</p></div>';
-                return;
-            }
-
-            workoutHistory.slice().reverse().forEach((workout, index) {
-                const actualIndex = workoutHistory.length - 1 - index;
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-                historyItem.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                        <div style="flex: 1;">
-                            <h4>${workout.programName}</h4>
-                            <p><strong>Date:</strong> ${new Date(workout.date).toLocaleDateString()} ${new Date(workout.date).toLocaleTimeString()}</p>
-                        </div>
-                        <button class="btn btn-danger" onclick="deleteWorkout(${actualIndex})" style="margin-left: 15px;">Delete</button>
-                    </div>
-                    <p><strong>Exercises:</strong> ${workout.exercises.length}</p>
-                    <p><strong>Completed Sets:</strong> ${workout.exercises.reduce((total, ex) => total + ex.sets.filter(set => set.completed).length, 0)} / ${workout.exercises.reduce((total, ex) => total + ex.sets.length, 0)}</p>
-                    <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-                    ${workout.duration ? `<p><strong>Duration:</strong> ${formatDuration(workout.duration)}</p>` : ''}
-                    ${workout.videos && workout.videos.length > 0 ? `<p><strong>Videos:</strong> ${workout.videos.length} recorded</p>` : ''}
-                    ${workout.sessionNotes ? `<p><strong>Notes:</strong> ${workout.sessionNotes.substring(0, 100)}${workout.sessionNotes.length > 100 ? '...' : ''}</p>` : ''}
-                    <button class="btn" onclick="viewWorkoutDetails(${actualIndex})">View Details</button>
-                `;
-                historyList.appendChild(historyItem);
-            });
-        }
-
-        function formatDuration(seconds) {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-            
-            if (hours > 0) {
-                return `${hours}h ${minutes}m ${secs}s`;
-            } else if (minutes > 0) {
-                return `${minutes}m ${secs}s`;
-            } else {
-                return `${secs}s`;
-            }
-        }
-
-        function deleteWorkout(workoutIndex) {
-            const workout = workoutHistory[workoutIndex];
-            if (confirm(`Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`)) {
-                workoutHistory.splice(workoutIndex, 1);
-                localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-                loadHistory();
-                updateStats();
-            }
-        }
-
-        function clearAllHistory() {
-            if (confirm('Are you sure you want to delete ALL workout history? This cannot be undone.\n\nConsider exporting your data first for backup.')) {
-                if (confirm('This will permanently delete all your workout data. Are you absolutely sure?')) {
-                    workoutHistory = [];
-                    localStorage.removeItem('workoutHistory');
-                    loadHistory();
-                    updateStats();
-                    alert('All workout history has been cleared.');
-                }
-            }
-        }
-
-        function clearAllData() {
-            if (confirm('Are you sure you want to delete ALL data including programs, workout history, and settings? This cannot be undone.')) {
-                if (confirm('This will permanently delete ALL your data. Are you absolutely sure?')) {
-                    programs = [];
-                    workoutHistory = [];
-                    sessionVideos = [];
-                    githubConfig = {
-                        token: '',
-                        username: '',
-                        repo: '',
-                        branch: 'video-uploads',
-                        folder: ''
-                    };
-                    localStorage.clear();
-                    loadPrograms();
-                    loadHistory();
-                    updateStats();
-                    loadGithubConfig();
-                    alert('All data has been cleared.');
-                }
-            }
-        }
-
-        function calculateWorkoutVolume(workout) {
-            let totalVolume = 0;
-            workout.exercises.forEach(exercise => {
-                exercise.sets.forEach(set => {
-                    if (set.completed && set.weight && set.reps) {
-                        totalVolume += parseFloat(set.weight) * parseInt(set.reps);
-                    }
-                });
-            });
-            return totalVolume.toFixed(1);
-        }
-
-        function updateStats() {
-            // Personal Records
-            const prContainer = document.getElementById('personalRecords');
-            const exerciseMaxes = {};
-            
-            workoutHistory.forEach(workout => {
-                workout.exercises.forEach(exercise => {
-                    if (!exerciseMaxes[exercise.name]) {
-                        exerciseMaxes[exercise.name] = { maxWeight: 0, maxVolume: 0, maxReps: 0 };
-                    }
-                    
-                    exercise.sets.forEach(set => {
-                        if (set.weight && set.reps && set.completed) {
-                            const weight = parseFloat(set.weight);
-                            const reps = parseInt(set.reps);
-                            const volume = weight * reps;
-                            
-                            if (weight > exerciseMaxes[exercise.name].maxWeight) {
-                                exerciseMaxes[exercise.name].maxWeight = weight;
-                            }
-                            if (volume > exerciseMaxes[exercise.name].maxVolume) {
-                                exerciseMaxes[exercise.name].maxVolume = volume;
-                            }
-                            if (reps > exerciseMaxes[exercise.name].maxReps) {
-                                exerciseMaxes[exercise.name].maxReps = reps;
-                            }
-                        }
-                    });
-                });
-            });
-
-            if (Object.keys(exerciseMaxes).length === 0) {
-                prContainer.innerHTML = '<div class="empty-state"><p>No personal records yet. Complete some workouts to see your progress here.</p></div>';
-            } else {
-                prContainer.innerHTML = Object.entries(exerciseMaxes)
-                    .map(([exercise, maxes]) => `
-                        <div style="margin-bottom: 15px; padding: 10px; background: #222; border-radius: 4px;">
-                            <strong>${exercise}</strong><br>
-                            Max Weight: ${maxes.maxWeight}kg<br>
-                            Max Volume: ${maxes.maxVolume}kg<br>
-                            Max Reps: ${maxes.maxReps}
-                        </div>
-                    `).join('');
-            }
-
-            // Frequency Analysis
-            const frequencyContainer = document.getElementById('frequencyAnalysis');
-            const exerciseFrequency = {};
-            
-            workoutHistory.forEach(workout => {
-                workout.exercises.forEach(exercise => {
-                    exerciseFrequency[exercise.name] = (exerciseFrequency[exercise.name] || 0) + 1;
-                });
-            });
-
-            if (Object.keys(exerciseFrequency).length === 0) {
-                frequencyContainer.innerHTML = '<div class="empty-state"><p>No frequency data yet. Complete some workouts to see analysis here.</p></div>';
-            } else {
-                frequencyContainer.innerHTML = Object.entries(exerciseFrequency)
-                    .sort(([,a], [,b]) => b - a)
-                    .slice(0, 10)
-                    .map(([exercise, count]) => `
-                        <div style="margin-bottom: 10px; padding: 8px; background: #222; border-radius: 4px;">
-                            <strong>${exercise}:</strong> ${count} sessions
-                        </div>
-                    `).join('');
-            }
-        }
-
-        function searchPrograms(query) {
-            const programCards = document.querySelectorAll('.program-card');
-            programCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                card.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
-            });
-        }
-
-        function searchHistory(query) {
-            const historyItems = document.querySelectorAll('.history-item');
-            historyItems.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
-            });
-        }
-
-        function searchStats(query) {
-            // This would filter stats based on exercise names
-            console.log('Searching stats for:', query);
-        }
-
-        function editProgram(programIndex) {
-            const program = programs[programIndex];
-            currentProgramIndex = programIndex;
-            
-            document.getElementById('modalTitle').textContent = 'Edit Program';
-            document.getElementById('programName').value = program.name;
-            document.getElementById('programDescription').value = program.description;
-            
-            const exerciseList = document.getElementById('exerciseList');
-            exerciseList.innerHTML = '';
-            
-            program.exercises.forEach(exercise => {
-                const exerciseDiv = document.createElement('div');
-                exerciseDiv.className = 'exercise-card';
-                exerciseDiv.innerHTML = `
-                    <div class="exercise-header">
-                        <input type="text" placeholder="Exercise name" class="exercise-name-input" value="${exercise.name}" style="flex: 1; margin-right: 10px;">
-                        <button class="btn btn-danger" onclick="removeExercise(this)">Remove</button>
-                    </div>
-                    <div class="form-group">
-                        <label>Sets</label>
-                        <input type="number" class="sets-input" value="${exercise.sets}" min="1" max="10">
-                    </div>
-                    <div class="form-group">
-                        <label>Rep Range</label>
-                        <input type="text" class="reps-input" placeholder="e.g., 6-8" value="${exercise.reps}">
-                    </div>
-                    <div class="form-group">
-                        <label>Target RPE</label>
-                        <input type="number" class="rpe-input" value="${exercise.rpe}" min="1" max="10" step="0.5">
-                    </div>
-                    <div class="form-group">
-                        <label>Rest Time (seconds)</label>
-                        <input type="number" class="rest-input" value="${exercise.rest}" min="30" step="30">
-                    </div>
-                    <div class="form-group">
-                        <label>Exercise Notes</label>
-                        <textarea class="exercise-notes" rows="2" placeholder="Setup notes, cues, form reminders...">${exercise.notes || ''}</textarea>
-                    </div>
-                `;
-                exerciseList.appendChild(exerciseDiv);
-            });
-            
-            document.getElementById('programModal').style.display = 'block';
-        }
-
-        function deleteProgram(programIndex) {
-            if (confirm('Are you sure you want to delete this program? This cannot be undone.')) {
-                programs.splice(programIndex, 1);
-                localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-                loadPrograms();
-            }
-        }
-
-        function viewWorkoutDetails(workoutIndex) {
-            const workout = workoutHistory[workoutIndex];
-            let detailsHTML = `
-                <div class="modal-content">
-                    <span class="close" onclick="closeWorkoutDetails()">&times;</span>
-                    <h2>${workout.programName} - ${new Date(workout.date).toLocaleDateString()}</h2>
-                    <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-                    <p><strong>Duration:</strong> ${workout.duration ? formatDuration(workout.duration) : 'Unknown'}</p>
-            `;
-            
-            workout.exercises.forEach(exercise => {
-                const completedSets = exercise.sets.filter(set => set.completed);
-                detailsHTML += `
-                    <div class="exercise-card">
-                        <h3>${exercise.name}</h3>
-                        <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe</p>
-                        <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
-                        <div class="sets-container">
-                            <div class="set-row" style="font-weight: bold;">
-                                <div>Set</div>
-                                <div>Weight</div>
-                                <div>Reps</div>
-                                <div>RPE</div>
-                                <div>Volume</div>
-                                <div>Notes</div>
-                            </div>
-                `;
-                
-                exercise.sets.forEach((set, index) => {
-                    if (set.completed) {
-                        const volume = set.weight && set.reps ? (parseFloat(set.weight) * parseInt(set.reps)).toFixed(1) : '0';
-                        detailsHTML += `
-                            <div class="set-row">
-                                <div>${index + 1}</div>
-                                <div>${set.weight}kg</div>
-                                <div>${set.reps}</div>
-                                <div>${set.rpe}</div>
-                                <div>${volume}kg</div>
-                                <div>${set.notes || '-'}</div>
-                            </div>
-                        `;
-                    }
-                });
-                
-                detailsHTML += `</div>`;
-                if (exercise.exerciseNotes) {
-                    detailsHTML += `<p><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>`;
-                }
-                detailsHTML += `</div>`;
-            });
-            
-            if (workout.sessionNotes) {
-                detailsHTML += `<div class="form-group"><strong>Session Notes:</strong> ${workout.sessionNotes}</div>`;
-            }
-            
-            if (workout.videos && workout.videos.length > 0) {
-                detailsHTML += `<div class="form-group">
-                    <strong>Session Videos (${workout.videos.length}):</strong><br>
-                `;
-                workout.videos.forEach((video, index) {
-                    if (video.githubUrl) {
-                        detailsHTML += `
-                            <p style="margin: 5px 10px;">
-                                <a href="${video.githubUrl}" target="_blank">${video.name}</a>
-                                (${(video.size / 1024 / 1024).toFixed(1)}MB)
-                            </p>
-                        `;
-                    } else {
-                        detailsHTML += `<p style="margin: 5px 10px; color: #aaa; font-size: 0.9em;">${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB) - Not uploaded to GitHub</p>`;
-                    }
-                });
-                detailsHTML += `</div>`;
-            }
-            
-            detailsHTML += `</div>`;
-            
-            // Create and show modal
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.id = 'workoutDetailsModal';
-            modal.style.display = 'block';
-            modal.innerHTML = detailsHTML;
-            document.body.appendChild(modal);
-        }
-
-        function closeWorkoutDetails() {
-            const modal = document.getElementById('workoutDetailsModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('programModal').style.display = 'none';
-        }
-
-        function exportData() {
-            const data = {
-                programs: programs,
-                workoutHistory: workoutHistory,
-                exportDate: new Date().toISOString(),
-                version: "1.0"
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `training-data-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    if (confirm('This will replace your current data. Are you sure?')) {
-                        programs = data.programs || [];
-                        workoutHistory = data.workoutHistory || [];
-                        
-                        localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-                        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-                        
-                        loadPrograms();
-                        loadHistory();
-                        updateStats();
-                        alert('Data imported successfully!');
-                    }
-                } catch (error) {
-                    alert('Error importing data. Please check the file format.');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function loadFromStorage() {
-            const savedPrograms = localStorage.getItem('trainingPrograms');
-            const savedHistory = localStorage.getItem('workoutHistory');
-            const savedVideos = localStorage.getItem('sessionVideos');
-            
-            if (savedPrograms) programs = JSON.parse(savedPrograms);
-            if (savedHistory) workoutHistory = JSON.parse(savedHistory);
-            if (savedVideos) sessionVideos = JSON.parse(savedVideos);
-        }
-
-        function saveToStorage() {
-            localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-            localStorage.setItem('sessionVideos', JSON.stringify(sessionVideos));
-            return true;
-        }
-    </script>
-</body>
-</html>
+                        <button class="btn btn-danger" onclick="deleteProgram
