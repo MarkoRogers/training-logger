@@ -705,31 +705,46 @@
             alert('GitHub configuration saved successfully!');
         }
 
-        function testGithubConnection() {
-            if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-                alert('Please complete all GitHub configuration fields first.');
-                return;
-            }
-            
-            // Test the connection by trying to list repositories
-            fetch(`https://api.github.com/user/repos`, {
+function testGithubConnection() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please complete all GitHub configuration fields first.');
+        return;
+    }
+    
+    // Test the connection by trying to list repositories
+    fetch(`https://api.github.com/user/repos`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `token ${githubConfig.token}`,
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Check if the video-uploads branch exists
+            return fetch(`https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/branches/video-uploads`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `token ${githubConfig.token}`,
                     'Accept': 'application/vnd.github.v3+json'
                 }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('GitHub connection successful!');
-                } else {
-                    alert('GitHub connection failed. Please check your credentials.');
-                }
-            })
-            .catch(error => {
-                alert('Error testing GitHub connection: ' + error.message);
             });
+        } else {
+            alert('GitHub connection failed. Please check your credentials.');
+            throw new Error('GitHub connection failed');
         }
+    })
+    .then(branchResponse => {
+        if (branchResponse.ok) {
+            alert('GitHub connection successful! Video-uploads branch exists.');
+        } else {
+            alert('GitHub connection successful, but video-uploads branch does not exist. It will be created automatically when you upload your first video.');
+        }
+    })
+    .catch(error => {
+        alert('Error testing GitHub connection: ' + error.message);
+    });
+}
 
         async function uploadVideosToGitHub() {
     if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
@@ -740,6 +755,13 @@
     
     if (sessionVideos.length === 0) {
         alert('No videos to upload. Please select videos first.');
+        return;
+    }
+    
+    // Ensure the video-uploads branch exists
+    const branchExists = await ensureVideoUploadsBranch();
+    if (!branchExists) {
+        alert('Could not create or access the video-uploads branch. Please check your GitHub permissions and try again.');
         return;
     }
     
@@ -1592,9 +1614,18 @@
     if (video.githubUrl) {
         try {
             // Extract the file path from the GitHub URL
-            const urlParts = video.githubUrl.split('/');
-            const blobIndex = urlParts.indexOf('blob');
-            const filePath = urlParts.slice(blobIndex + 2).join('/');
+            // URL format: https://github.com/username/repo/blob/video-uploads/folder/filename.mp4
+            const url = new URL(video.githubUrl);
+            const pathParts = url.pathname.split('/');
+            
+            // Find the index after "blob" and "video-uploads"
+            const blobIndex = pathParts.indexOf('blob');
+            if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
+                throw new Error('Invalid GitHub URL format');
+            }
+            
+            // Reconstruct the file path (skip username, repo, blob, and branch)
+            const filePath = pathParts.slice(blobIndex + 2).join('/');
             
             // Get the SHA of the file to delete
             const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
@@ -1626,14 +1657,21 @@
                     })
                 });
                 
-                if (!deleteResponse.ok) {
-                    console.error('Failed to delete video from GitHub:', await deleteResponse.json());
-                    alert('Video was removed from history but could not be deleted from GitHub. You may need to delete it manually.');
+                if (deleteResponse.ok) {
+                    console.log('Video successfully deleted from GitHub');
+                } else {
+                    const errorData = await deleteResponse.json();
+                    console.error('Failed to delete video from GitHub:', errorData);
+                    alert('Video was removed from history but could not be deleted from GitHub. Error: ' + 
+                          (errorData.message || 'Unknown error'));
                 }
+            } else {
+                console.error('Failed to get file info from GitHub:', await response.json());
+                alert('Video was removed from history but could not be deleted from GitHub (file not found).');
             }
         } catch (error) {
             console.error('Error deleting video from GitHub:', error);
-            alert('Video was removed from history but there was an error deleting it from GitHub.');
+            alert('Video was removed from history but there was an error deleting it from GitHub: ' + error.message);
         }
     }
     
@@ -1674,15 +1712,104 @@
     document.body.appendChild(videoModal);
 }
 
-function closeVideoModal() {
-    const modal = document.getElementById('videoModal');
-    if (modal) {
-        // Pause any playing video before closing
-        const video = modal.querySelector('video');
-        if (video) {
-            video.pause();
+function viewVideo(videoUrl, videoName) {
+    // Create video modal
+    const videoModal = document.createElement('div');
+    videoModal.className = 'modal';
+    videoModal.id = 'videoModal';
+    videoModal.style.display = 'block';
+    videoModal.innerHTML = `
+        <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+            <span class="close" onclick="closeVideoModal()">&times;</span>
+            <h3>${videoName}</h3>
+            <video controls autoplay style="width: 100%; max-height: 70vh;">
+                <source src="${videoUrl}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="${videoUrl}" download="${videoName}" class="btn">Download Video</a>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #aaa;">
+                    If the video doesn't play, try downloading it instead.
+                </p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(videoModal);
+    
+    // Handle video loading errors
+    const videoElement = videoModal.querySelector('video');
+    videoElement.addEventListener('error', function() {
+        videoModal.querySelector('p').textContent = 
+            'Video cannot be played directly due to CORS restrictions. Please download the video to view it.';
+        videoModal.querySelector('p').style.color = '#ff416c';
+    });
+}
+
+        async function ensureVideoUploadsBranch() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+    
+    try {
+        // Check if the video-uploads branch exists
+        const branchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/branches/video-uploads`, 
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (branchResponse.ok) {
+            return true; // Branch exists
         }
-        modal.remove();
+        
+        // If branch doesn't exist, create it from the main branch
+        // First get the SHA of the main branch
+        const mainBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs/heads/main`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (!mainBranchResponse.ok) {
+            console.error('Could not get main branch info');
+            return false;
+        }
+        
+        const mainBranchData = await mainBranchResponse.json();
+        const mainSha = mainBranchData.object.sha;
+        
+        // Create the video-uploads branch
+        const createBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'refs/heads/video-uploads',
+                    sha: mainSha
+                })
+            }
+        );
+        
+        return createBranchResponse.ok;
+    } catch (error) {
+        console.error('Error ensuring video-uploads branch exists:', error);
+        return false;
     }
 }
 
