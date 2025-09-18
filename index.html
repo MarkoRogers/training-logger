@@ -238,6 +238,15 @@
             gap: 15px;
         }
 
+        /* Add this to the CSS section */
+.btn-download {
+    background: linear-gradient(45deg, #11998e, #38ef7d);
+}
+
+.btn-download:hover {
+    background: linear-gradient(45deg, #0d7c6e, #2cbf63);
+}
+
         .program-card {
             background: rgba(255, 255, 255, 0.1);
             padding: 20px;
@@ -1412,99 +1421,109 @@
         }
 
         function viewWorkoutDetails(workoutIndex) {
-            const workout = workoutHistory[workoutIndex];
-            let detailsHTML = `
-                <div class="modal-content">
-                    <span class="close" onclick="closeWorkoutDetails()">&times;</span>
-                    <h2>${workout.programName} - ${new Date(workout.date).toLocaleDateString()}</h2>
-                    <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-                    <p><strong>Duration:</strong> ${workout.duration ? formatDuration(workout.duration) : 'Unknown'}</p>
-            `;
-            
-            workout.exercises.forEach(exercise => {
-                const completedSets = exercise.sets.filter(set => set.completed);
-                detailsHTML += `
-                    <div class="exercise-card">
-                        <h3>${exercise.name}</h3>
-                        <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
-                        <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
-                        <div class="sets-container">
-                            <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
-                                <div>Set</div>
-                                <div>Weight</div>
-                                <div>Reps</div>
-                                <div>RPE</div>
-                                <div>Volume</div>
-                                <div>Notes</div>
-                            </div>
-                `;
-                
-                exercise.sets.forEach((set, index) => {
-                    if (set.completed) {
-                        const volume = set.weight && set.reps ? (parseFloat(set.weight) * parseInt(set.reps)).toFixed(1) : '0';
-                        detailsHTML += `
-                            <div class="set-row">
-                                <div>${index + 1}</div>
-                                <div>${set.weight}kg</div>
-                                <div>${set.reps}</div>
-                                <div>${set.rpe}</div>
-                                <div>${volume}kg</div>
-                                <div>${set.notes || '-'}</div>
-                            </div>
-                        `;
-                    }
-                });
-                
-                detailsHTML += `</div>`;
-                if (exercise.exerciseNotes) {
-                    detailsHTML += `<p><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>`;
-                }
-                detailsHTML += `</div>`;
-            });
-            
-            if (workout.sessionNotes) {
-                detailsHTML += `<div class="form-group"><strong>Session Notes:</strong> ${workout.sessionNotes}</div>`;
-            }
-            
-            if (workout.videos && workout.videos.length > 0) {
-                detailsHTML += `<div class="form-group">
-                    <strong>Session Videos (${workout.videos.length}):</strong><br>
-                `;
-                workout.videos.forEach((video, index) => {
-if (video.githubUrl) {
-    detailsHTML += `
-        <p style="margin: 5px 10px;">
-            <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">${video.name}</a>
-            (${(video.size / 1024 / 1024).toFixed(1)}MB)
-        </p>
+    const workout = workoutHistory[workoutIndex];
+    let detailsHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="closeWorkoutDetails()">&times;</span>
+            <h2>${workout.programName} - ${new Date(workout.date).toLocaleDateString()}</h2>
+            <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
+            <p><strong>Duration:</strong> ${workout.duration ? formatDuration(workout.duration) : 'Unknown'}</p>
     `;
+    
+    workout.exercises.forEach(exercise => {
+        const completedSets = exercise.sets.filter(set => set.completed);
+        detailsHTML += `
+            <div class="exercise-card">
+                <h3>${exercise.name}</h3>
+                <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
+                <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
+                <div class="sets-container">
+                    <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
+                        <div>Set</div>
+                        <div>Weight</div>
+                        <div>Reps</div>
+                        <div>RPE</div>
+                        <div>Volume</div>
+                        <div>Notes</div>
+                    </div>
+        `;
+        
+        exercise.sets.forEach((set, index) => {
+            if (set.completed) {
+                const volume = set.weight && set.reps ? (parseFloat(set.weight) * parseInt(set.reps)).toFixed(1) : '0';
+                detailsHTML += `
+                    <div class="set-row">
+                        <div>${index + 1}</div>
+                        <div>${set.weight}kg</div>
+                        <div>${set.reps}</div>
+                        <div>${set.rpe}</div>
+                        <div>${volume}kg</div>
+                        <div>${set.notes || '-'}</div>
+                    </div>
+                `;
+            }
+        });
+        
+        detailsHTML += `</div>`;
+        if (exercise.exerciseNotes) {
+            detailsHTML += `<p><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>`;
+        }
+        detailsHTML += `</div>`;
+    });
+    
+    if (workout.sessionNotes) {
+        detailsHTML += `<div class="form-group"><strong>Session Notes:</strong> ${workout.sessionNotes}</div>`;
+    }
+    
+    if (workout.videos && workout.videos.length > 0) {
+        detailsHTML += `<div class="form-group">
+            <h3>Session Videos (${workout.videos.length})</h3>
+        `;
+        
+        workout.videos.forEach((video, index) => {
+            if (video.githubUrl) {
+                // Make sure the URL points to the video-uploads branch
+                const videoUrl = video.githubUrl.replace('/blob/main/', '/blob/video-uploads/');
+                const rawVideoUrl = videoUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/video-uploads/', '/video-uploads/');
+                
+                detailsHTML += `
+                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <strong>${video.name}</strong>
+                            <button class="btn btn-danger" onclick="deleteVideoFromWorkout(${workoutIndex}, ${index})">Delete Video</button>
+                        </div>
+                        <p>Size: ${(video.size / 1024 / 1024).toFixed(1)}MB</p>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button class="btn" onclick="viewVideo('${rawVideoUrl}', '${video.name}')">View Video</button>
+                            <a href="${videoUrl}" target="_blank" class="btn">View on GitHub</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                detailsHTML += `
+                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <p style="color: #aaa; font-size: 0.9em;">
+                            ${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB) - Not uploaded to GitHub
+                        </p>
+                    </div>
+                `;
+            }
+        });
+        detailsHTML += `</div>`;
+    }
+    
+    detailsHTML += `</div>`;
+    
+    // Create and show modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'workoutDetailsModal';
+    modal.style.display = 'block';
+    modal.innerHTML = detailsHTML;
+    document.body.appendChild(modal);
 }
 
-// And change it to ensure it points to the video-uploads branch:
-if (video.githubUrl) {
-    // Make sure the URL points to the video-uploads branch
-    const videoUrl = video.githubUrl.replace('/blob/main/', '/blob/video-uploads/');
-    detailsHTML += `
-        <p style="margin: 5px 10px;">
-            <a href="${videoUrl}" target="_blank" style="color: #00d4ff;">${video.name}</a>
-            (${(video.size / 1024 / 1024).toFixed(1)}MB)
-        </p>
-    `;
-}
-                });
-                detailsHTML += `</div>`;
-            }
-            
-            detailsHTML += `</div>`;
-            
-            // Create and show modal
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.id = 'workoutDetailsModal';
-            modal.style.display = 'block';
-            modal.innerHTML = detailsHTML;
-            document.body.appendChild(modal);
-        }
+        
 
         function closeWorkoutDetails() {
             const modal = document.getElementById('workoutDetailsModal');
@@ -1561,6 +1580,111 @@ if (video.githubUrl) {
             };
             reader.readAsText(file);
         }
+        async function deleteVideoFromWorkout(workoutIndex, videoIndex) {
+    const workout = workoutHistory[workoutIndex];
+    const video = workout.videos[videoIndex];
+    
+    if (!confirm(`Are you sure you want to delete the video "${video.name}"? This will remove it from GitHub and your workout history.`)) {
+        return;
+    }
+    
+    // If the video was uploaded to GitHub, delete it from there too
+    if (video.githubUrl) {
+        try {
+            // Extract the file path from the GitHub URL
+            const urlParts = video.githubUrl.split('/');
+            const blobIndex = urlParts.indexOf('blob');
+            const filePath = urlParts.slice(blobIndex + 2).join('/');
+            
+            // Get the SHA of the file to delete
+            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (response.ok) {
+                const fileData = await response.json();
+                const sha = fileData.sha;
+                
+                // Delete the file from GitHub
+                const deleteResponse = await fetch(apiUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Delete workout video: ${video.name}`,
+                        sha: sha,
+                        branch: 'video-uploads'
+                    })
+                });
+                
+                if (!deleteResponse.ok) {
+                    console.error('Failed to delete video from GitHub:', await deleteResponse.json());
+                    alert('Video was removed from history but could not be deleted from GitHub. You may need to delete it manually.');
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting video from GitHub:', error);
+            alert('Video was removed from history but there was an error deleting it from GitHub.');
+        }
+    }
+    
+    // Remove the video from the workout
+    workout.videos.splice(videoIndex, 1);
+    
+    // Update the workout history
+    workoutHistory[workoutIndex] = workout;
+    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+    
+    // Refresh the workout details view
+    closeWorkoutDetails();
+    viewWorkoutDetails(workoutIndex);
+    
+    alert('Video deleted successfully!');
+}
+
+        function viewVideo(videoUrl, videoName) {
+    // Create video modal
+    const videoModal = document.createElement('div');
+    videoModal.className = 'modal';
+    videoModal.id = 'videoModal';
+    videoModal.style.display = 'block';
+    videoModal.innerHTML = `
+        <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+            <span class="close" onclick="closeVideoModal()">&times;</span>
+            <h3>${videoName}</h3>
+            <video controls autoplay style="width: 100%; max-height: 70vh;">
+                <source src="${videoUrl}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="${videoUrl}" download="${videoName}" class="btn">Download Video</a>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(videoModal);
+}
+
+function closeVideoModal() {
+    const modal = document.getElementById('videoModal');
+    if (modal) {
+        // Pause any playing video before closing
+        const video = modal.querySelector('video');
+        if (video) {
+            video.pause();
+        }
+        modal.remove();
+    }
+}
 
         function loadFromStorage() {
             const savedPrograms = localStorage.getItem('trainingPrograms');
@@ -1580,17 +1704,22 @@ if (video.githubUrl) {
         }
 
         // Click outside modal to close
-        window.onclick = function(event) {
-            const modal = document.getElementById('programModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-            
-            const workoutModal = document.getElementById('workoutDetailsModal');
-            if (event.target === workoutModal) {
-                closeWorkoutDetails();
-            }
-        }
+window.onclick = function(event) {
+    const modal = document.getElementById('programModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+    
+    const workoutModal = document.getElementById('workoutDetailsModal');
+    if (event.target === workoutModal) {
+        closeWorkoutDetails();
+    }
+    
+    const videoModal = document.getElementById('videoModal');
+    if (event.target === videoModal) {
+        closeVideoModal();
+    }
+}
     </script>
 </body>
 </html>
