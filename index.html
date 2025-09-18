@@ -9,13 +9,13 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #0a0a0a;
-            color: #f0f0f0;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #e0e0e0;
+            min-height: 100vh;
         }
 
         .container {
@@ -25,82 +25,64 @@
         }
 
         .header {
-            text-align: center;
-            padding: 30px 0;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
             margin-bottom: 30px;
-            border-bottom: 1px solid #333;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .header h1 {
-            font-size: 2.8em;
-            font-weight: 300;
-            letter-spacing: 2px;
+            font-size: 2.5em;
             margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .header p {
-            color: #aaa;
-            font-size: 1.1em;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .nav {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 30px;
+            gap: 15px;
+            margin: 30px 0;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .nav-btn {
             padding: 12px 25px;
-            background: transparent;
-            border: 1px solid #444;
-            border-radius: 4px;
-            color: #ddd;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            color: white;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: bold;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .nav-btn:hover {
-            background: #222;
-            border-color: #666;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
         .nav-btn.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
         }
 
         .tab-content {
             display: none;
-            background: #111;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
             padding: 30px;
-            border: 1px solid #333;
-            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .tab-content.active {
             display: block;
-        }
-
-        h2 {
-            font-size: 1.8em;
-            margin-bottom: 20px;
-            color: #fff;
-            font-weight: 400;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-        h3 {
-            font-size: 1.4em;
-            margin: 25px 0 15px;
-            color: #fff;
-            font-weight: 400;
         }
 
         .form-group {
@@ -110,19 +92,19 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
-            color: #ddd;
+            font-weight: bold;
+            color: #00d4ff;
         }
 
         .form-group input, 
         .form-group select, 
         .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background: #1a1a1a;
-            color: #f0f0f0;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
             font-size: 16px;
         }
 
@@ -130,57 +112,49 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #888;
-            background: #222;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
         }
 
         .btn {
             padding: 12px 25px;
-            background: #333;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             color: white;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: bold;
             transition: all 0.3s ease;
-            display: inline-block;
+            margin: 5px;
         }
 
         .btn:hover {
-            background: #444;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: #2e7d32;
-        }
-
-        .btn-success:hover {
-            background: #388e3c;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-danger {
-            background: #c62828;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
         }
 
-        .btn-danger:hover {
-            background: #d32f2f;
+        .btn-success {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #ff5722);
         }
 
         .btn-info {
-            background: #0277bd;
-        }
-
-        .btn-info:hover {
-            background: #0288d1;
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
         }
 
         .exercise-card {
-            background: #1a1a1a;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #333;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .exercise-header {
@@ -191,8 +165,8 @@
         }
 
         .exercise-name {
-            font-weight: 500;
-            color: #fff;
+            font-weight: bold;
+            color: #00d4ff;
             font-size: 1.2em;
         }
 
@@ -206,33 +180,32 @@
             grid-template-columns: 60px 80px 80px 80px 1fr 60px;
             gap: 10px;
             align-items: center;
-            background: #222;
+            background: rgba(255, 255, 255, 0.05);
             padding: 10px;
-            border-radius: 4px;
+            border-radius: 5px;
         }
 
         .set-input {
             padding: 8px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background: #1a1a1a;
-            color: #f0f0f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
             text-align: center;
         }
 
         .video-upload {
             margin: 20px 0;
             padding: 20px;
-            border: 2px dashed #444;
-            border-radius: 8px;
+            border: 2px dashed rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
             text-align: center;
         }
 
         .video-preview {
             max-width: 100%;
-            border-radius: 6px;
+            border-radius: 10px;
             margin-top: 10px;
-            background: #1a1a1a;
         }
 
         .stats-grid {
@@ -243,20 +216,20 @@
         }
 
         .stat-card {
-            background: #1a1a1a;
+            background: rgba(255, 255, 255, 0.1);
             padding: 20px;
-            border-radius: 6px;
-            border: 1px solid #333;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .search-bar {
             width: 100%;
             padding: 15px;
             margin-bottom: 20px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background: #1a1a1a;
-            color: #f0f0f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
             font-size: 16px;
         }
 
@@ -266,17 +239,17 @@
         }
 
         .program-card {
-            background: #1a1a1a;
+            background: rgba(255, 255, 255, 0.1);
             padding: 20px;
-            border-radius: 6px;
-            border: 1px solid #333;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .program-card:hover {
-            background: #222;
-            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
 
         .modal {
@@ -286,7 +259,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
         }
 
@@ -295,14 +268,13 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #1a1a1a;
+            background: #1a1a2e;
             padding: 30px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
+            border-radius: 15px;
+            max-width: 90%;
             max-height: 90%;
             overflow-y: auto;
-            border: 1px solid #333;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .close {
@@ -320,109 +292,86 @@
         .chart-container {
             width: 100%;
             height: 300px;
-            background: #1a1a1a;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
             padding: 20px;
             margin-top: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #666;
-            border: 1px solid #333;
         }
 
         .history-item {
-            background: #1a1a1a;
+            background: rgba(255, 255, 255, 0.05);
             padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00d4ff;
         }
 
         .timer-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(20, 20, 20, 0.9);
+            background: rgba(0, 0, 0, 0.7);
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            border: 1px solid #444;
         }
 
         .timer-display {
             font-size: 1.5em;
-            font-weight: 500;
-            color: #fff;
+            font-weight: bold;
+            color: #00d4ff;
         }
 
-        .github-config {
-            background: #1a1a1a;
-            padding: 20px;
+        .exercise-resources {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
             border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #333;
         }
 
-        .upload-status {
-            margin: 15px 0;
-            padding: 12px;
-            border-radius: 4px;
-            text-align: center;
-            border: 1px solid #333;
+        .resource-link {
+            color: #00d4ff;
+            text-decoration: none;
+            display: block;
+            margin: 5px 0;
         }
 
-        .upload-success {
-            background: rgba(46, 125, 50, 0.15);
-            border-color: #2e7d32;
-            color: #a5d6a7;
-        }
-
-        .upload-error {
-            background: rgba(198, 40, 40, 0.15);
-            border-color: #c62828;
-            color: #ef9a9a;
-        }
-
-        .upload-progress {
-            width: 100%;
-            background: #1a1a1a;
-            border-radius: 4px;
-            margin: 15px 0;
-            border: 1px solid #333;
-        }
-
-        .progress-bar {
-            height: 10px;
-            background: #fff;
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s ease;
+        .resource-link:hover {
+            text-decoration: underline;
         }
 
         .empty-state {
             text-align: center;
             padding: 40px;
             color: #666;
-            font-style: italic;
         }
 
-        small {
-            color: #888;
+        .progress-chart {
+            width: 100%;
+            height: 200px;
+            margin-top: 15px;
+        }
+
+        .validation-error {
+            color: #ff416c;
             font-size: 0.9em;
+            margin-top: 5px;
         }
 
-        a {
-            color: #90caf9;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
+        .storage-warning {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
         }
 
         @media (max-width: 768px) {
@@ -450,18 +399,18 @@
             .timer-display {
                 font-size: 1.2em;
             }
-            
-            .modal-content {
-                width: 95%;
-                padding: 20px;
-            }
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>TRAINING LOGGER</h1>
+            <h1>Training Logger</h1>
             <p>Track your workouts, analyze progress, optimize performance</p>
         </div>
 
@@ -470,7 +419,6 @@
             <button class="nav-btn" onclick="showTab('workout')">Current Workout</button>
             <button class="nav-btn" onclick="showTab('history')">History</button>
             <button class="nav-btn" onclick="showTab('stats')">Analytics</button>
-            <button class="nav-btn" onclick="showTab('settings')">Settings</button>
         </nav>
 
         <!-- Programs Tab -->
@@ -498,11 +446,6 @@
                 <h3>Session Videos</h3>
                 <input type="file" id="videoUpload" accept="video/*" multiple onchange="handleVideoUpload(event)">
                 <div id="videoPreview"></div>
-                <div id="uploadProgress" class="upload-progress" style="display: none;">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                <div id="uploadStatus"></div>
-                <button class="btn btn-info" onclick="uploadVideosToGitHub()" style="margin-top: 15px;">Upload Videos to GitHub</button>
             </div>
 
             <div class="form-group">
@@ -543,15 +486,15 @@
                 
                 <div class="stat-card">
                     <h3>Volume Trends</h3>
-                    <div class="chart-container">
-                        <p>Volume trends chart will appear here</p>
+                    <div class="chart-container" id="volumeChart">
+                        <canvas id="volumeTrendChart"></canvas>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <h3>Strength Progress</h3>
-                    <div class="chart-container">
-                        <p>Strength progress chart will appear here</p>
+                    <div class="chart-container" id="strengthChart">
+                        <canvas id="strengthProgressChart"></canvas>
                     </div>
                 </div>
                 
@@ -559,53 +502,16 @@
                     <h3>Frequency Analysis</h3>
                     <div id="frequencyAnalysis"></div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Settings Tab -->
-        <div id="settings" class="tab-content">
-            <h2>App Settings</h2>
-            
-            <div class="github-config">
-                <h3>GitHub Integration</h3>
-                <p>Configure GitHub integration to upload your workout videos to a GitHub repository.</p>
-                
-                <div class="form-group">
-                    <label>GitHub Personal Access Token</label>
-                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="search-bar">
-                    <small>Create a token with repo permissions at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></small>
+                <div class="stat-card">
+                    <h3>Exercise Progress</h3>
+                    <select id="exerciseSelector" onchange="updateExerciseProgressChart()" class="search-bar" style="margin-bottom: 15px;">
+                        <option value="">Select an exercise</option>
+                    </select>
+                    <div class="chart-container" id="exerciseProgressChart">
+                        <canvas id="exerciseProgressCanvas"></canvas>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label>GitHub Username</label>
-                    <input type="text" id="githubUsername" placeholder="your-username" class="search-bar">
-                </div>
-                
-                <div class="form-group">
-                    <label>Repository Name</label>
-                    <input type="text" id="githubRepo" placeholder="training-videos" class="search-bar">
-                </div>
-                
-                <div class="form-group">
-                    <label>Repository Branch</label>
-                    <input type="text" id="githubBranch" value="video-uploads" class="search-bar">
-                    <small>Branch where videos will be uploaded</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>Repository Folder (optional)</label>
-                    <input type="text" id="githubFolder" placeholder="videos" class="search-bar">
-                    <small>Folder within your repository where videos will be stored</small>
-                </div>
-                
-                <button class="btn btn-success" onclick="saveGithubConfig()">Save GitHub Configuration</button>
-                <button class="btn" onclick="testGithubConnection()">Test Connection</button>
-            </div>
-            
-            <div class="form-group">
-                <h3>Data Management</h3>
-                <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
-                <p style="margin-top: 10px;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
             </div>
         </div>
 
@@ -618,6 +524,7 @@
                 <div class="form-group">
                     <label>Program Name</label>
                     <input type="text" id="programName" placeholder="e.g., Push/Pull/Legs">
+                    <div class="validation-error" id="programNameError"></div>
                 </div>
 
                 <div class="form-group">
@@ -640,7 +547,7 @@
             <div class="timer-display" id="timerDisplay">00:00:00</div>
             <div>
                 <button class="btn btn-info" id="startTimerBtn" onclick="startTimer()">Start Timer</button>
-                <button class="btn" id="pauseTimerBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
+                <button class="btn btn-warning" id="pauseTimerBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
                 <button class="btn btn-danger" onclick="resetTimer()">Reset</button>
             </div>
         </div>
@@ -656,21 +563,40 @@
         let timerInterval = null;
         let timerSeconds = 0;
         let timerRunning = false;
-        let githubConfig = {
-            token: '',
-            username: '',
-            repo: '',
-            branch: 'video-uploads',
-            folder: ''
+        let exerciseResources = {
+            "Romanian Deadlift": [
+                {name: "Instructional Video", url: "https://www.youtube.com/results?search_query=Romanian+Deadlift+technique"},
+                {name: "Form Guide", url: "https://www.bodybuilding.com/exercises/romanian-deadlift"}
+            ],
+            "Hip Thrust (Machine)": [
+                {name: "Instructional Video", url: "https://www.youtube.com/results?search_query=Hip+Thrust+Machine"},
+                {name: "Form Guide", url: "https://www.bodybuilding.com/exercises/hip-thrust"}
+            ],
+            "Bench Press": [
+                {name: "Instructional Video", url: "https://www.youtube.com/results?search_query=Bench+Press+technique"},
+                {name: "Form Guide", url: "https://www.bodybuilding.com/exercises/barbell-bench-press"}
+            ],
+            "Squat": [
+                {name: "Instructional Video", url: "https://www.youtube.com/results?search_query=Squat+technique"},
+                {name: "Form Guide", url: "https://www.bodybuilding.com/exercises/barbell-squat"}
+            ],
+            "Deadlift": [
+                {name: "Instructional Video", url: "https://www.youtube.com/results?search_query=Deadlift+technique"},
+                {name: "Form Guide", url: "https://www.bodybuilding.com/exercises/deadlift"}
+            ]
         };
 
-        // Initialize the application
+        // Initialize the application with enhanced loading
         document.addEventListener('DOMContentLoaded', function() {
             loadFromStorage();
             loadPrograms();
             loadHistory();
             updateStats();
-            loadGithubConfig();
+            checkStorageUsage();
+            populateExerciseSelector();
+            
+            // Auto-backup check
+            setTimeout(autoBackup, 2000);
         });
 
         // Tab management
@@ -694,6 +620,13 @@
                 document.getElementById('timerContainer').style.display = 'flex';
             } else {
                 document.getElementById('timerContainer').style.display = 'none';
+            }
+
+            // Update charts when switching to stats tab
+            if (tabName === 'stats') {
+                setTimeout(() => {
+                    renderCharts();
+                }, 100);
             }
         }
 
@@ -734,181 +667,20 @@
                 `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        // GitHub integration functions
-        function loadGithubConfig() {
-            const savedConfig = localStorage.getItem('githubConfig');
-            if (savedConfig) {
-                githubConfig = JSON.parse(savedConfig);
-                document.getElementById('githubToken').value = githubConfig.token || '';
-                document.getElementById('githubUsername').value = githubConfig.username || '';
-                document.getElementById('githubRepo').value = githubConfig.repo || '';
-                document.getElementById('githubBranch').value = githubConfig.branch || 'video-uploads';
-                document.getElementById('githubFolder').value = githubConfig.folder || '';
-            }
-        }
-
-        function saveGithubConfig() {
-            githubConfig = {
-                token: document.getElementById('githubToken').value.trim(),
-                username: document.getElementById('githubUsername').value.trim(),
-                repo: document.getElementById('githubRepo').value.trim(),
-                branch: document.getElementById('githubBranch').value.trim() || 'video-uploads',
-                folder: document.getElementById('githubFolder').value.trim() || 'videos'
-            };
-            
-            localStorage.setItem('githubConfig', JSON.stringify(githubConfig));
-            alert('GitHub configuration saved successfully!');
-        }
-
-        function testGithubConnection() {
-            if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-                alert('Please complete all GitHub configuration fields first.');
-                return;
-            }
-            
-            // Test the connection by trying to list repositories
-            fetch(`https://api.github.com/user/repos`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('GitHub connection successful!');
-                } else {
-                    alert('GitHub connection failed. Please check your credentials.');
-                }
-            })
-            .catch(error => {
-                alert('Error testing GitHub connection: ' + error.message);
-            });
-        }
-
-        async function uploadVideosToGitHub() {
-            if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-                alert('Please configure GitHub integration in the Settings tab first.');
-                showTab('settings');
-                return;
-            }
-            
-            if (sessionVideos.length === 0) {
-                alert('No videos to upload. Please select videos first.');
-                return;
-            }
-            
-            const uploadStatus = document.getElementById('uploadStatus');
-            const uploadProgress = document.getElementById('uploadProgress');
-            const progressBar = document.getElementById('progressBar');
-            
-            uploadStatus.innerHTML = '';
-            uploadProgress.style.display = 'block';
-            progressBar.style.width = '0%';
-            
-            let successCount = 0;
-            let errorCount = 0;
-            
-            for (let i = 0; i < sessionVideos.length; i++) {
-                const video = sessionVideos[i];
-                
-                try {
-                    // Update progress
-                    progressBar.style.width = `${((i / sessionVideos.length) * 100).toFixed(0)}%`;
-                    
-                    // Read the file as base64
-                    const base64Data = await readFileAsBase64(video.file);
-                    
-                    // Create the file path
-                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                    const fileExtension = video.name.split('.').pop();
-                    const fileName = `workout-video-${timestamp}.${fileExtension}`;
-                    const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
-                    
-                    // Prepare the API request - specify the branch in the URL
-                    const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
-                    
-                    const response = await fetch(apiUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${githubConfig.token}`,
-                            'Accept': 'application/vnd.github.v3+json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: `Upload workout video: ${fileName}`,
-                            content: base64Data.split(',')[1], // Remove the data:video/mp4;base64, part
-                            branch: githubConfig.branch // Specify the branch to push to
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        successCount++;
-                        // Store the GitHub URL with the video
-                        video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/${githubConfig.branch}/${filePath}`;
-                        
-                        uploadStatus.innerHTML += `
-                            <div class="upload-success">
-                                ✓ Successfully uploaded: ${video.name} 
-                                <a href="${video.githubUrl}" target="_blank">View on GitHub</a>
-                            </div>
-                        `;
-                    } else {
-                        errorCount++;
-                        const errorData = await response.json();
-                        uploadStatus.innerHTML += `
-                            <div class="upload-error">
-                                ✗ Failed to upload: ${video.name} - ${errorData.message || 'Unknown error'}
-                            </div>
-                        `;
-                    }
-                } catch (error) {
-                    errorCount++;
-                    uploadStatus.innerHTML += `
-                        <div class="upload-error">
-                            ✗ Error uploading: ${video.name} - ${error.message}
-                        </div>
-                    `;
-                }
-            }
-            
-            // Final progress update
-            progressBar.style.width = '100%';
-            
-            // Show summary
-            uploadStatus.innerHTML += `
-                <div class="upload-${errorCount === 0 ? 'success' : 'error'}">
-                    Upload complete: ${successCount} successful, ${errorCount} failed
-                </div>
-            `;
-            
-            // Update session videos with GitHub URLs
-            if (successCount > 0) {
-                localStorage.setItem('sessionVideos', JSON.stringify(sessionVideos));
-            }
-        }
-
-        function readFileAsBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(file);
-            });
-        }
-
         // Program management
         function createProgram() {
             document.getElementById('modalTitle').textContent = 'Create New Program';
             document.getElementById('programName').value = '';
             document.getElementById('programDescription').value = '';
             document.getElementById('exerciseList').innerHTML = '';
+            document.getElementById('programNameError').textContent = '';
             currentProgramIndex = -1;
             document.getElementById('programModal').style.display = 'block';
         }
 
         function addExercise() {
             const exerciseList = document.getElementById('exerciseList');
+            const exerciseId = Date.now();
             
             const exerciseDiv = document.createElement('div');
             exerciseDiv.className = 'exercise-card';
@@ -946,15 +718,30 @@
             button.closest('.exercise-card').remove();
         }
 
+        function validateProgramForm() {
+            const name = document.getElementById('programName').value.trim();
+            const nameError = document.getElementById('programNameError');
+            
+            if (!name) {
+                nameError.textContent = 'Program name is required';
+                return false;
+            }
+            
+            if (name.length < 3) {
+                nameError.textContent = 'Program name must be at least 3 characters';
+                return false;
+            }
+            
+            nameError.textContent = '';
+            return true;
+        }
+
         function saveProgram() {
+            if (!validateProgramForm()) return;
+
             const name = document.getElementById('programName').value.trim();
             const description = document.getElementById('programDescription').value.trim();
             
-            if (!name) {
-                alert('Please enter a program name');
-                return;
-            }
-
             const exercises = [];
             const exerciseCards = document.querySelectorAll('#exerciseList .exercise-card');
             
@@ -973,6 +760,11 @@
                 }
             });
 
+            if (exercises.length === 0) {
+                alert('Please add at least one exercise to the program');
+                return;
+            }
+
             const program = {
                 id: currentProgramIndex >= 0 ? programs[currentProgramIndex].id : Date.now(),
                 name,
@@ -988,9 +780,10 @@
                 programs.push(program);
             }
 
-            localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-            closeModal();
-            loadPrograms();
+            if (saveToStorage()) {
+                closeModal();
+                loadPrograms();
+            }
         }
 
         function loadPrograms() {
@@ -998,11 +791,16 @@
             programList.innerHTML = '';
 
             if (programs.length === 0) {
-                programList.innerHTML = '<div class="empty-state"><p>No programs found. Create your first program to get started.</p></div>';
+                programList.innerHTML = `
+                    <div class="empty-state">
+                        <p>No programs found. Create your first program or load the sample program to get started.</p>
+                        <button class="btn btn-success" onclick="loadSampleProgram()">Load Jordan Peters Sample Program</button>
+                    </div>
+                `;
                 return;
             }
 
-            programs.forEach((program, index) {
+            programs.forEach((program, index) => {
                 const programCard = document.createElement('div');
                 programCard.className = 'program-card';
                 programCard.innerHTML = `
@@ -1060,6 +858,10 @@
             currentWorkout.exercises.forEach((exercise, exerciseIndex) => {
                 const exerciseDiv = document.createElement('div');
                 exerciseDiv.className = 'exercise-card';
+                
+                // Check if we have resources for this exercise
+                const resources = exerciseResources[exercise.name] || [];
+                
                 exerciseDiv.innerHTML = `
                     <div class="exercise-header">
                         <div class="exercise-name">${exercise.name}</div>
@@ -1069,8 +871,16 @@
                         <br><strong>Rest:</strong> ${Math.floor(exercise.rest / 60)}:${(exercise.rest % 60).toString().padStart(2, '0')}
                         ${exercise.notes ? `<br><strong>Notes:</strong> ${exercise.notes}` : ''}
                     </div>
+                    ${resources.length > 0 ? `
+                    <div class="exercise-resources">
+                        <strong>Exercise Resources:</strong>
+                        ${resources.map(resource => 
+                            `<a href="${resource.url}" target="_blank" class="resource-link">${resource.name}</a>`
+                        ).join('')}
+                    </div>
+                    ` : ''}
                     <div class="sets-container">
-                        <div class="set-row" style="font-weight: bold;">
+                        <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
                             <div>Set</div>
                             <div>Weight</div>
                             <div>Reps</div>
@@ -1082,21 +892,26 @@
                             <div class="set-row">
                                 <div>${setIndex + 1}</div>
                                 <input type="number" class="set-input" placeholder="kg" step="0.5" 
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'weight', this.value)">
+                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'weight', this.value)"
+                                       value="${set.weight || ''}">
                                 <input type="number" class="set-input" placeholder="reps" 
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'reps', this.value)">
+                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'reps', this.value)"
+                                       value="${set.reps || ''}">
                                 <input type="number" class="set-input" placeholder="RPE" step="0.5" min="1" max="10"
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'rpe', this.value)">
+                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'rpe', this.value)"
+                                       value="${set.rpe || ''}">
                                 <input type="text" class="set-input" placeholder="Optional notes"
-                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'notes', this.value)">
-                                <input type="checkbox" onchange="updateSet(${exerciseIndex}, ${setIndex}, 'completed', this.checked)">
+                                       onchange="updateSet(${exerciseIndex}, ${setIndex}, 'notes', this.value)"
+                                       value="${set.notes || ''}">
+                                <input type="checkbox" onchange="updateSet(${exerciseIndex}, ${setIndex}, 'completed', this.checked)"
+                                       ${set.completed ? 'checked' : ''}>
                             </div>
                         `).join('')}
                     </div>
                     <div class="form-group" style="margin-top: 15px;">
                         <label>Exercise Notes</label>
                         <textarea onchange="updateExerciseNotes(${exerciseIndex}, this.value)" 
-                                  placeholder="How did this exercise feel? Any adjustments needed..."></textarea>
+                                  placeholder="How did this exercise feel? Any adjustments needed...">${exercise.exerciseNotes || ''}</textarea>
                     </div>
                 `;
                 container.appendChild(exerciseDiv);
@@ -1116,12 +931,14 @@
         }
 
         function handleVideoUpload(event) {
+            // Video storage improvement - store only metadata, not the actual video data
             const files = Array.from(event.target.files);
             const previewContainer = document.getElementById('videoPreview');
             
             files.forEach(file => {
                 if (file.type.startsWith('video/')) {
-                    // Store the file object for later upload
+                    // For better storage management, we'll just store metadata
+                    // and rely on the user to keep the original files
                     const videoId = Date.now() + Math.random().toString(36).substr(2, 5);
                     
                     const videoInfo = {
@@ -1129,43 +946,28 @@
                         name: file.name,
                         size: file.size,
                         type: file.type,
-                        file: file, // Store the file object for upload
-                        lastModified: file.lastModified
+                        lastModified: file.lastModified,
+                        // Note: We're not storing the actual video data to avoid storage issues
                     };
                     
                     sessionVideos.push(videoInfo);
                     
-                    // Create a preview
+                    // Create a preview that will work during this session only
                     const videoURL = URL.createObjectURL(file);
-                    const videoElement = document.createElement('video');
-                    videoElement.controls = true;
-                    videoElement.className = 'video-preview';
-                    videoElement.style.width = '300px';
-                    videoElement.style.margin = '10px';
-                    videoElement.src = videoURL;
-                    videoElement.dataset.id = videoId;
+                    const video = document.createElement('video');
+                    video.controls = true;
+                    video.className = 'video-preview';
+                    video.style.width = '300px';
+                    video.style.margin = '10px';
+                    video.src = videoURL;
+                    video.dataset.id = videoId;
                     
-                    // Add remove button
-                    const videoContainer = document.createElement('div');
-                    videoContainer.style.position = 'relative';
-                    videoContainer.style.display = 'inline-block';
+                    previewContainer.appendChild(video);
                     
-                    const removeBtn = document.createElement('button');
-                    removeBtn.textContent = '×';
-                    removeBtn.className = 'btn btn-danger';
-                    removeBtn.style.position = 'absolute';
-                    removeBtn.style.top = '5px';
-                    removeBtn.style.right = '5px';
-                    removeBtn.style.padding = '2px 8px';
-                    removeBtn.onclick = function() {
-                        // Remove from sessionVideos
-                        sessionVideos = sessionVideos.filter(v => v.id !== videoId);
-                        videoContainer.remove();
-                    };
-                    
-                    videoContainer.appendChild(videoElement);
-                    videoContainer.appendChild(removeBtn);
-                    previewContainer.appendChild(videoContainer);
+                    // Clean up the object URL when the video is removed
+                    video.addEventListener('load', function() {
+                        URL.revokeObjectURL(videoURL);
+                    });
                 }
             });
         }
@@ -1188,44 +990,38 @@
             }
 
             currentWorkout.sessionNotes = document.getElementById('sessionNotes').value;
-            currentWorkout.videos = sessionVideos.map(v => ({
-                id: v.id,
-                name: v.name,
-                size: v.size,
-                type: v.type,
-                githubUrl: v.githubUrl || null // Store GitHub URL if available
-            }));
+            currentWorkout.videos = sessionVideos;
             currentWorkout.completed = new Date().toISOString();
             currentWorkout.duration = timerSeconds;
 
             workoutHistory.push(currentWorkout);
-            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+            
+            if (saveToStorage()) {
+                // Update program last used date
+                const program = programs.find(p => p.id === currentWorkout.programId);
+                if (program) {
+                    program.lastUsed = currentWorkout.completed;
+                    localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+                }
 
-            // Update program last used date
-            const program = programs.find(p => p.id === currentWorkout.programId);
-            if (program) {
-                program.lastUsed = currentWorkout.completed;
-                localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+                alert('Workout saved successfully!');
+                
+                // Reset current workout
+                currentWorkout = null;
+                sessionVideos = [];
+                document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
+                document.getElementById('sessionNotes').value = '';
+                document.getElementById('videoPreview').innerHTML = '';
+                
+                // Hide timer
+                document.getElementById('timerContainer').style.display = 'none';
+                resetTimer();
+                
+                loadPrograms();
+                loadHistory();
+                updateStats();
+                populateExerciseSelector();
             }
-
-            alert('Workout saved successfully!');
-            
-            // Reset current workout
-            currentWorkout = null;
-            sessionVideos = [];
-            document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
-            document.getElementById('sessionNotes').value = '';
-            document.getElementById('videoPreview').innerHTML = '';
-            document.getElementById('uploadStatus').innerHTML = '';
-            document.getElementById('uploadProgress').style.display = 'none';
-            
-            // Hide timer
-            document.getElementById('timerContainer').style.display = 'none';
-            resetTimer();
-            
-            loadPrograms();
-            loadHistory();
-            updateStats();
         }
 
         function loadHistory() {
@@ -1237,7 +1033,7 @@
                 return;
             }
 
-            workoutHistory.slice().reverse().forEach((workout, index) {
+            workoutHistory.slice().reverse().forEach((workout, index) => {
                 const actualIndex = workoutHistory.length - 1 - index;
                 const historyItem = document.createElement('div');
                 historyItem.className = 'history-item';
@@ -1279,9 +1075,11 @@
             const workout = workoutHistory[workoutIndex];
             if (confirm(`Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`)) {
                 workoutHistory.splice(workoutIndex, 1);
-                localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-                loadHistory();
-                updateStats();
+                if (saveToStorage()) {
+                    loadHistory();
+                    updateStats();
+                    populateExerciseSelector();
+                }
             }
         }
 
@@ -1289,33 +1087,11 @@
             if (confirm('Are you sure you want to delete ALL workout history? This cannot be undone.\n\nConsider exporting your data first for backup.')) {
                 if (confirm('This will permanently delete all your workout data. Are you absolutely sure?')) {
                     workoutHistory = [];
-                    localStorage.removeItem('workoutHistory');
-                    loadHistory();
-                    updateStats();
-                    alert('All workout history has been cleared.');
-                }
-            }
-        }
-
-        function clearAllData() {
-            if (confirm('Are you sure you want to delete ALL data including programs, workout history, and settings? This cannot be undone.')) {
-                if (confirm('This will permanently delete ALL your data. Are you absolutely sure?')) {
-                    programs = [];
-                    workoutHistory = [];
-                    sessionVideos = [];
-                    githubConfig = {
-                        token: '',
-                        username: '',
-                        repo: '',
-                        branch: 'video-uploads',
-                        folder: ''
-                    };
-                    localStorage.clear();
-                    loadPrograms();
-                    loadHistory();
-                    updateStats();
-                    loadGithubConfig();
-                    alert('All data has been cleared.');
+                    if (saveToStorage()) {
+                        loadHistory();
+                        updateStats();
+                        populateExerciseSelector();
+                    }
                 }
             }
         }
@@ -1368,7 +1144,7 @@
             } else {
                 prContainer.innerHTML = Object.entries(exerciseMaxes)
                     .map(([exercise, maxes]) => `
-                        <div style="margin-bottom: 15px; padding: 10px; background: #222; border-radius: 4px;">
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
                             <strong>${exercise}</strong><br>
                             Max Weight: ${maxes.maxWeight}kg<br>
                             Max Volume: ${maxes.maxVolume}kg<br>
@@ -1394,11 +1170,347 @@
                     .sort(([,a], [,b]) => b - a)
                     .slice(0, 10)
                     .map(([exercise, count]) => `
-                        <div style="margin-bottom: 10px; padding: 8px; background: #222; border-radius: 4px;">
+                        <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 5px;">
                             <strong>${exercise}:</strong> ${count} sessions
                         </div>
                     `).join('');
             }
+
+            // Render charts
+            renderCharts();
+        }
+
+        function renderCharts() {
+            renderVolumeTrendChart();
+            renderStrengthProgressChart();
+        }
+
+        function renderVolumeTrendChart() {
+            const ctx = document.getElementById('volumeTrendChart').getContext('2d');
+            
+            // Prepare data for volume trend chart
+            const volumeData = workoutHistory.map(workout => ({
+                date: new Date(workout.date),
+                volume: calculateWorkoutVolume(workout)
+            })).filter(item => item.volume > 0);
+            
+            if (volumeData.length === 0) {
+                document.getElementById('volumeTrendChart').innerHTML = '<p class="empty-state">No volume data available</p>';
+                return;
+            }
+            
+            // Sort by date
+            volumeData.sort((a, b) => a.date - b.date);
+            
+            // For demonstration purposes, we'll create a simple chart using canvas
+            const canvas = document.getElementById('volumeTrendChart');
+            const context = canvas.getContext('2d');
+            
+            // Clear canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set up chart dimensions
+            const padding = 40;
+            const chartWidth = canvas.width - padding * 2;
+            const chartHeight = canvas.height - padding * 2;
+            
+            // Find data ranges
+            const volumes = volumeData.map(item => parseFloat(item.volume));
+            const minVolume = Math.min(...volumes);
+            const maxVolume = Math.max(...volumes);
+            const volumeRange = maxVolume - minVolume;
+            
+            const dates = volumeData.map(item => item.date);
+            const minDate = new Date(Math.min(...dates));
+            const maxDate = new Date(Math.max(...dates));
+            const dateRange = maxDate - minDate;
+            
+            // Draw axes
+            context.strokeStyle = '#00d4ff';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(padding, padding);
+            context.lineTo(padding, canvas.height - padding);
+            context.lineTo(canvas.width - padding, canvas.height - padding);
+            context.stroke();
+            
+            // Draw data points and lines
+            context.strokeStyle = '#5b86e5';
+            context.fillStyle = '#5b86e5';
+            context.lineWidth = 2;
+            context.beginPath();
+            
+            volumeData.forEach((item, index) => {
+                const x = padding + (item.date - minDate) / dateRange * chartWidth;
+                const y = canvas.height - padding - (item.volume - minVolume) / volumeRange * chartHeight;
+                
+                if (index === 0) {
+                    context.moveTo(x, y);
+                } else {
+                    context.lineTo(x, y);
+                }
+                
+                // Draw point
+                context.beginPath();
+                context.arc(x, y, 4, 0, Math.PI * 2);
+                context.fill();
+            });
+            
+            context.stroke();
+            
+            // Draw labels
+            context.fillStyle = '#e0e0e0';
+            context.font = '12px Arial';
+            context.textAlign = 'center';
+            
+            // X-axis labels (dates)
+            const sampleDates = [
+                volumeData[0].date,
+                volumeData[Math.floor(volumeData.length / 2)].date,
+                volumeData[volumeData.length - 1].date
+            ];
+            
+            sampleDates.forEach(date => {
+                const x = padding + (date - minDate) / dateRange * chartWidth;
+                context.fillText(date.toLocaleDateString(), x, canvas.height - padding + 20);
+            });
+            
+            // Y-axis labels (volume)
+            context.textAlign = 'right';
+            context.textBaseline = 'middle';
+            
+            const volumeSteps = [minVolume, minVolume + volumeRange / 2, maxVolume];
+            volumeSteps.forEach(volume => {
+                const y = canvas.height - padding - (volume - minVolume) / volumeRange * chartHeight;
+                context.fillText(volume.toFixed(0) + 'kg', padding - 10, y);
+            });
+            
+            // Chart title
+            context.textAlign = 'center';
+            context.font = 'bold 14px Arial';
+            context.fillText('Workout Volume Over Time', canvas.width / 2, 20);
+        }
+
+        function renderStrengthProgressChart() {
+            const ctx = document.getElementById('strengthProgressChart').getContext('2d');
+            
+            // For this demo, we'll create a simple representation
+            // In a real app, you would use a charting library like Chart.js
+            
+            const canvas = document.getElementById('strengthProgressChart');
+            const context = canvas.getContext('2d');
+            
+            // Clear canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Check if we have data
+            if (workoutHistory.length === 0) {
+                context.fillStyle = '#666';
+                context.font = '14px Arial';
+                context.textAlign = 'center';
+                context.fillText('No strength data available', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            // Draw a simple placeholder chart
+            context.fillStyle = '#1a1a2e';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            context.strokeStyle = '#00d4ff';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(40, 40);
+            context.lineTo(40, canvas.height - 40);
+            context.lineTo(canvas.width - 40, canvas.height - 40);
+            context.stroke();
+            
+            context.fillStyle = '#e0e0e0';
+            context.font = '12px Arial';
+            context.textAlign = 'center';
+            context.fillText('Strength Progress Chart', canvas.width / 2, 20);
+            context.fillText('Time', canvas.width / 2, canvas.height - 10);
+            
+            context.save();
+            context.translate(20, canvas.height / 2);
+            context.rotate(-Math.PI / 2);
+            context.fillText('Strength', 0, 0);
+            context.restore();
+            
+            // Draw some sample data
+            context.strokeStyle = '#5b86e5';
+            context.beginPath();
+            context.moveTo(40, canvas.height - 40);
+            
+            for (let i = 1; i <= 5; i++) {
+                const x = 40 + (i * (canvas.width - 80) / 5);
+                const y = canvas.height - 40 - (i * (canvas.height - 80) / 5);
+                context.lineTo(x, y);
+            }
+            
+            context.stroke();
+        }
+
+        function populateExerciseSelector() {
+            const selector = document.getElementById('exerciseSelector');
+            const exercises = new Set();
+            
+            // Get all unique exercises from workout history
+            workoutHistory.forEach(workout => {
+                workout.exercises.forEach(exercise => {
+                    exercises.add(exercise.name);
+                });
+            });
+            
+            // Clear existing options except the first one
+            while (selector.options.length > 1) {
+                selector.remove(1);
+            }
+            
+            // Add exercises to selector
+            exercises.forEach(exercise => {
+                const option = document.createElement('option');
+                option.value = exercise;
+                option.textContent = exercise;
+                selector.appendChild(option);
+            });
+        }
+
+        function updateExerciseProgressChart() {
+            const exerciseName = document.getElementById('exerciseSelector').value;
+            if (!exerciseName) return;
+            
+            const canvas = document.getElementById('exerciseProgressCanvas');
+            const context = canvas.getContext('2d');
+            
+            // Clear canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Get all sets for this exercise from history
+            const exerciseData = [];
+            
+            workoutHistory.forEach(workout => {
+                workout.exercises.forEach(exercise => {
+                    if (exercise.name === exerciseName) {
+                        exercise.sets.forEach(set => {
+                            if (set.completed && set.weight && set.reps) {
+                                exerciseData.push({
+                                    date: new Date(workout.date),
+                                    weight: parseFloat(set.weight),
+                                    reps: parseInt(set.reps),
+                                    volume: parseFloat(set.weight) * parseInt(set.reps)
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+            
+            if (exerciseData.length === 0) {
+                context.fillStyle = '#666';
+                context.font = '14px Arial';
+                context.textAlign = 'center';
+                context.fillText('No data available for ' + exerciseName, canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            // Sort by date
+            exerciseData.sort((a, b) => a.date - b.date);
+            
+            // Draw chart
+            const padding = 40;
+            const chartWidth = canvas.width - padding * 2;
+            const chartHeight = canvas.height - padding * 2;
+            
+            // Find data ranges
+            const weights = exerciseData.map(item => item.weight);
+            const minWeight = Math.min(...weights);
+            const maxWeight = Math.max(...weights);
+            const weightRange = maxWeight - minWeight;
+            
+            const dates = exerciseData.map(item => item.date);
+            const minDate = new Date(Math.min(...dates));
+            const maxDate = new Date(Math.max(...dates));
+            const dateRange = maxDate - minDate;
+            
+            // Draw axes
+            context.strokeStyle = '#00d4ff';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(padding, padding);
+            context.lineTo(padding, canvas.height - padding);
+            context.lineTo(canvas.width - padding, canvas.height - padding);
+            context.stroke();
+            
+            // Draw data points
+            context.fillStyle = '#5b86e5';
+            
+            exerciseData.forEach(item => {
+                const x = padding + (item.date - minDate) / dateRange * chartWidth;
+                const y = canvas.height - padding - (item.weight - minWeight) / weightRange * chartHeight;
+                
+                context.beginPath();
+                context.arc(x, y, 4, 0, Math.PI * 2);
+                context.fill();
+                
+                // Label with weight
+                context.fillStyle = '#e0e0e0';
+                context.font = '10px Arial';
+                context.textAlign = 'center';
+                context.fillText(item.weight + 'kg', x, y - 10);
+                context.fillStyle = '#5b86e5';
+            });
+            
+            // Draw trend line
+            if (exerciseData.length > 1) {
+                context.strokeStyle = '#5b86e5';
+                context.lineWidth = 2;
+                context.beginPath();
+                
+                exerciseData.forEach((item, index) => {
+                    const x = padding + (item.date - minDate) / dateRange * chartWidth;
+                    const y = canvas.height - padding - (item.weight - minWeight) / weightRange * chartHeight;
+                    
+                    if (index === 0) {
+                        context.moveTo(x, y);
+                    } else {
+                        context.lineTo(x, y);
+                    }
+                });
+                
+                context.stroke();
+            }
+            
+            // Draw labels
+            context.fillStyle = '#e0e0e0';
+            context.font = '12px Arial';
+            context.textAlign = 'center';
+            
+            // X-axis labels (dates)
+            const sampleDates = [
+                exerciseData[0].date,
+                exerciseData[Math.floor(exerciseData.length / 2)].date,
+                exerciseData[exerciseData.length - 1].date
+            ];
+            
+            sampleDates.forEach(date => {
+                const x = padding + (date - minDate) / dateRange * chartWidth;
+                context.fillText(date.toLocaleDateString(), x, canvas.height - padding + 20);
+            });
+            
+            // Y-axis labels (weight)
+            context.textAlign = 'right';
+            context.textBaseline = 'middle';
+            
+            const weightSteps = [minWeight, minWeight + weightRange / 2, maxWeight];
+            weightSteps.forEach(weight => {
+                const y = canvas.height - padding - (weight - minWeight) / weightRange * chartHeight;
+                context.fillText(weight.toFixed(0) + 'kg', padding - 10, y);
+            });
+            
+            // Chart title
+            context.textAlign = 'center';
+            context.font = 'bold 14px Arial';
+            context.fillText(exerciseName + ' Progress', canvas.width / 2, 20);
         }
 
         function searchPrograms(query) {
@@ -1418,8 +1530,25 @@
         }
 
         function searchStats(query) {
-            // This would filter stats based on exercise names
-            console.log('Searching stats for:', query);
+            if (!query) {
+                // Show all if query is empty
+                document.querySelectorAll('#personalRecords > div, #frequencyAnalysis > div').forEach(el => {
+                    el.style.display = 'block';
+                });
+                return;
+            }
+            
+            // Filter personal records
+            document.querySelectorAll('#personalRecords > div').forEach(el => {
+                const exerciseName = el.querySelector('strong').textContent;
+                el.style.display = exerciseName.toLowerCase().includes(query.toLowerCase()) ? 'block' : 'none';
+            });
+            
+            // Filter frequency analysis
+            document.querySelectorAll('#frequencyAnalysis > div').forEach(el => {
+                const exerciseName = el.textContent.split(':')[0];
+                el.style.display = exerciseName.toLowerCase().includes(query.toLowerCase()) ? 'block' : 'none';
+            });
         }
 
         function editProgram(programIndex) {
@@ -1429,6 +1558,7 @@
             document.getElementById('modalTitle').textContent = 'Edit Program';
             document.getElementById('programName').value = program.name;
             document.getElementById('programDescription').value = program.description;
+            document.getElementById('programNameError').textContent = '';
             
             const exerciseList = document.getElementById('exerciseList');
             exerciseList.innerHTML = '';
@@ -1471,8 +1601,9 @@
         function deleteProgram(programIndex) {
             if (confirm('Are you sure you want to delete this program? This cannot be undone.')) {
                 programs.splice(programIndex, 1);
-                localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-                loadPrograms();
+                if (saveToStorage()) {
+                    loadPrograms();
+                }
             }
         }
 
@@ -1494,7 +1625,7 @@
                         <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
                         <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
                         <div class="sets-container">
-                            <div class="set-row" style="font-weight: bold;">
+                            <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
                                 <div>Set</div>
                                 <div>Weight</div>
                                 <div>Reps</div>
@@ -1534,18 +1665,10 @@
             if (workout.videos && workout.videos.length > 0) {
                 detailsHTML += `<div class="form-group">
                     <strong>Session Videos (${workout.videos.length}):</strong><br>
+                    <p><em>Note: Video files are not stored in the app. You need to keep the original video files on your device.</em></p>
                 `;
                 workout.videos.forEach((video, index) => {
-                    if (video.githubUrl) {
-                        detailsHTML += `
-                            <p style="margin: 5px 10px;">
-                                <a href="${video.githubUrl}" target="_blank">${video.name}</a>
-                                (${(video.size / 1024 / 1024).toFixed(1)}MB)
-                            </p>
-                        `;
-                    } else {
-                        detailsHTML += `<p style="margin: 5px 10px; color: #aaa; font-size: 0.9em;">${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB) - Not uploaded to GitHub</p>`;
-                    }
+                    detailsHTML += `<p style="margin: 5px 10px; color: #aaa; font-size: 0.9em;">${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB)</p>`;
                 });
                 detailsHTML += `</div>`;
             }
@@ -1572,12 +1695,126 @@
             document.getElementById('programModal').style.display = 'none';
         }
 
+        // Load sample Jordan Peters HIT program
+        function loadSampleProgram() {
+            const sampleProgram = {
+                id: Date.now(),
+                name: "Jordan Peters HIT - Push/Pull/Legs",
+                description: "High Intensity Training protocol with fresh arm prioritization - 2x per muscle group per week",
+                created: new Date().toISOString(),
+                lastUsed: null,
+                exercises: [
+                    {
+                        name: "Romanian Deadlift",
+                        sets: 2,
+                        reps: "5-6",
+                        rpe: 9,
+                        rest: 240,
+                        notes: "Focus on hip hinge pattern, control eccentric"
+                    },
+                    {
+                        name: "Hip Thrust (Machine)",
+                        sets: 2,
+                        reps: "6-7",
+                        rpe: 9,
+                        rest: 180,
+                        notes: "Full ROM, pause at top"
+                    },
+                    {
+                        name: "Hip Adduction",
+                        sets: 2,
+                        reps: "6-7",
+                        rpe: 8,
+                        rest: 120,
+                        notes: "Control the negative"
+                    },
+                    {
+                        name: "Lying Leg Curl",
+                        sets: 2,
+                        reps: "6-7",
+                        rpe: 9,
+                        rest: 180,
+                        notes: "Keep hips down, full stretch"
+                    },
+                    {
+                        name: "Leg Extension",
+                        sets: 3,
+                        reps: "6-7",
+                        rpe: 9,
+                        rest: 180,
+                        notes: "Priority exercise - 3 sets for optimal quad development"
+                    },
+                    {
+                        name: "Cable Crunch",
+                        sets: 2,
+                        reps: "6-7",
+                        rpe: 8,
+                        rest: 120,
+                        notes: "Flex spine, don't use hip flexors"
+                    },
+                    {
+                        name: "Calf Extension",
+                        sets: 2,
+                        reps: "8-10",
+                        rpe: 9,
+                        rest: 120,
+                        notes: "Full stretch and contraction"
+                    }
+                ]
+            };
+            
+            programs.push(sampleProgram);
+            if (saveToStorage()) {
+                loadPrograms();
+            }
+        }
+
+        // Enhanced data management and persistence
+        function saveToStorage() {
+            try {
+                localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+                localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+                localStorage.setItem('lastBackup', new Date().toISOString());
+                return true;
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+                if (error.name === 'QuotaExceededError') {
+                    alert('Storage quota exceeded. Consider exporting and clearing old data, or reduce video file sizes.');
+                }
+                return false;
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const savedPrograms = localStorage.getItem('trainingPrograms');
+                const savedHistory = localStorage.getItem('workoutHistory');
+                
+                if (savedPrograms) programs = JSON.parse(savedPrograms);
+                if (savedHistory) workoutHistory = JSON.parse(savedHistory);
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading from localStorage:', error);
+                return false;
+            }
+        }
+
+        // Enhanced export with metadata
         function exportData() {
             const data = {
                 programs: programs,
                 workoutHistory: workoutHistory,
                 exportDate: new Date().toISOString(),
-                version: "1.0"
+                version: "1.0",
+                metadata: {
+                    totalWorkouts: workoutHistory.length,
+                    totalPrograms: programs.length,
+                    dateRange: workoutHistory.length > 0 ? {
+                        first: workoutHistory[0].date,
+                        last: workoutHistory[workoutHistory.length - 1].date
+                    } : null
+                }
             };
             
             const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -1587,8 +1824,11 @@
             a.download = `training-data-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
+            
+            alert(`Data exported successfully!\n\nIncluded:\n- ${data.metadata.totalPrograms} programs\n- ${data.metadata.totalWorkouts} workouts\n\nSave this file as backup.`);
         }
 
+        // Enhanced import with validation
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1598,40 +1838,71 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    if (confirm('This will replace your current data. Are you sure?')) {
+                    // Validate data structure
+                    if (!data.programs || !data.workoutHistory) {
+                        throw new Error('Invalid data format');
+                    }
+                    
+                    const importChoice = confirm(
+                        `Import Data Summary:\n\n` +
+                        `Programs: ${data.programs.length}\n` +
+                        `Workouts: ${data.workoutHistory.length}\n` +
+                        `Export Date: ${data.exportDate ? new Date(data.exportDate).toLocaleDateString() : 'Unknown'}\n\n` +
+                        `This will REPLACE your current data. Continue?`
+                    );
+                    
+                    if (importChoice) {
                         programs = data.programs || [];
                         workoutHistory = data.workoutHistory || [];
                         
-                        localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-                        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-                        
-                        loadPrograms();
-                        loadHistory();
-                        updateStats();
-                        alert('Data imported successfully!');
+                        if (saveToStorage()) {
+                            loadPrograms();
+                            loadHistory();
+                            updateStats();
+                            populateExerciseSelector();
+                            alert('Data imported successfully!');
+                        }
                     }
                 } catch (error) {
-                    alert('Error importing data. Please check the file format.');
+                    alert('Error importing data. Please check the file format.\n\nError: ' + error.message);
                 }
             };
             reader.readAsText(file);
-        }
-
-        function loadFromStorage() {
-            const savedPrograms = localStorage.getItem('trainingPrograms');
-            const savedHistory = localStorage.getItem('workoutHistory');
-            const savedVideos = localStorage.getItem('sessionVideos');
             
-            if (savedPrograms) programs = JSON.parse(savedPrograms);
-            if (savedHistory) workoutHistory = JSON.parse(savedHistory);
-            if (savedVideos) sessionVideos = JSON.parse(savedVideos);
+            // Reset file input
+            event.target.value = '';
         }
 
-        function saveToStorage() {
-            localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-            localStorage.setItem('sessionVideos', JSON.stringify(sessionVideos));
-            return true;
+        // Storage monitoring
+        function checkStorageUsage() {
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(estimate => {
+                    const usedMB = (estimate.usage / 1024 / 1024).toFixed(2);
+                    const quotaMB = (estimate.quota / 1024 / 1024).toFixed(2);
+                    console.log(`Storage usage: ${usedMB}MB / ${quotaMB}MB`);
+                    
+                    if (estimate.usage / estimate.quota > 0.8) {
+                        const warning = document.createElement('div');
+                        warning.className = 'storage-warning';
+                        warning.innerHTML = `Storage is ${(100 * estimate.usage / estimate.quota).toFixed(1)}% full. Consider exporting and clearing old data.`;
+                        document.querySelector('.container').prepend(warning);
+                    }
+                });
+            }
+        }
+
+        // Auto-backup functionality
+        function autoBackup() {
+            const lastBackup = localStorage.getItem('lastBackup');
+            const now = new Date();
+            
+            if (!lastBackup || (now - new Date(lastBackup)) > 7 * 24 * 60 * 60 * 1000) { // 7 days
+                if (workoutHistory.length > 5) { // Only suggest backup if there's meaningful data
+                    if (confirm('It\'s been a while since your last backup. Would you like to export your data now?')) {
+                        exportData();
+                    }
+                }
+            }
         }
 
         // Click outside modal to close
