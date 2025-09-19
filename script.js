@@ -989,14 +989,140 @@ function formatDuration(seconds) {
     }
 }
 
-function deleteWorkout(workoutIndex) {
+async function deleteWorkout(workoutIndex) {
     const workout = workoutHistory[workoutIndex];
-    if (confirm(`Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`)) {
-        workoutHistory.splice(workoutIndex, 1);
-        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-        loadHistory();
-        updateStats();
+    
+    // Check if workout has videos that need to be deleted from GitHub
+    const videosToDelete = workout.videos ? workout.videos.filter(video => video.githubUrl) : [];
+    
+    let confirmMessage = `Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`;
+    
+    if (videosToDelete.length > 0) {
+        confirmMessage += `\n\nThis will also delete ${videosToDelete.length} video(s) from GitHub.`;
     }
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // If there are videos to delete from GitHub, show progress
+    if (videosToDelete.length > 0) {
+        const deleteStatus = document.createElement('div');
+        deleteStatus.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            min-width: 300px;
+            text-align: center;
+        `;
+        deleteStatus.innerHTML = `
+            <h3>Deleting Videos from GitHub...</h3>
+            <div id="deleteProgress">Preparing to delete ${videosToDelete.length} video(s)...</div>
+        `;
+        document.body.appendChild(deleteStatus);
+        
+        let successCount = 0;
+        let errorCount = 0;
+        
+        // Delete each video from GitHub
+        for (let i = 0; i < videosToDelete.length; i++) {
+            const video = videosToDelete[i];
+            
+            try {
+                deleteStatus.querySelector('#deleteProgress').innerHTML = 
+                    `Deleting video ${i + 1} of ${videosToDelete.length}: ${video.name}...`;
+                
+                // Extract the file path from the GitHub URL
+                const url = new URL(video.githubUrl);
+                const pathParts = url.pathname.split('/');
+                
+                // Find the index after "blob" and "video-uploads"
+                const blobIndex = pathParts.indexOf('blob');
+                if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
+                    throw new Error('Invalid GitHub URL format');
+                }
+                
+                // Reconstruct the file path (skip username, repo, blob, and branch)
+                const filePath = pathParts.slice(blobIndex + 2).join('/');
+                
+                // Get the SHA of the file to delete
+                const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const fileData = await response.json();
+                    const sha = fileData.sha;
+                    
+                    // Delete the file from GitHub
+                    const deleteResponse = await fetch(apiUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `token ${githubConfig.token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Delete workout video: ${video.name} (workout deletion)`,
+                            sha: sha,
+                            branch: 'video-uploads'
+                        })
+                    });
+                    
+                    if (deleteResponse.ok) {
+                        successCount++;
+                        console.log(`Successfully deleted video: ${video.name}`);
+                    } else {
+                        errorCount++;
+                        const errorData = await deleteResponse.json();
+                        console.error(`Failed to delete video ${video.name}:`, errorData);
+                    }
+                } else {
+                    errorCount++;
+                    console.error(`Failed to get file info for ${video.name}:`, await response.json());
+                }
+            } catch (error) {
+                errorCount++;
+                console.error(`Error deleting video ${video.name}:`, error);
+            }
+        }
+        
+        // Show final status
+        deleteStatus.querySelector('#deleteProgress').innerHTML = 
+            `Video deletion complete: ${successCount} successful, ${errorCount} failed`;
+        
+        // Remove status after 2 seconds
+        setTimeout(() => {
+            document.body.removeChild(deleteStatus);
+        }, 2000);
+        
+        // Show summary if there were any errors
+        if (errorCount > 0) {
+            alert(`Warning: ${errorCount} video(s) could not be deleted from GitHub. The workout will still be removed from your history.`);
+        }
+    }
+    
+    // Remove the workout from history
+    workoutHistory.splice(workoutIndex, 1);
+    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+    
+    // Refresh UI
+    loadHistory();
+    updateStats();
+    
+    alert(`Workout deleted successfully! ${videosToDelete.length > 0 ? `${videosToDelete.length} video(s) were also removed from GitHub.` : ''}`);
 }
 
 function clearAllHistory() {
@@ -1515,3 +1641,4 @@ window.onclick = function(event) {
         closeVideoModal();
     }
 }
+
