@@ -375,6 +375,101 @@ function getSelectedWorkoutIndex() {
     return -1;
 }
 
+// Add this function to delete videos from GitHub
+async function deleteVideosFromGitHub(videos) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        console.log('GitHub not configured, skipping video deletion');
+        return;
+    }
+    
+    for (const video of videos) {
+        if (video.githubUrl) {
+            try {
+                // Extract the file path from the GitHub URL
+                const url = new URL(video.githubUrl);
+                const pathParts = url.pathname.split('/');
+                
+                // Find the index after "blob" and "video-uploads"
+                const blobIndex = pathParts.indexOf('blob');
+                if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
+                    console.error('Invalid GitHub URL format:', video.githubUrl);
+                    continue;
+                }
+                
+                // Reconstruct the file path (skip username, repo, blob, and branch)
+                const filePath = pathParts.slice(blobIndex + 2).join('/');
+                
+                // Get the SHA of the file to delete
+                const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const fileData = await response.json();
+                    const sha = fileData.sha;
+                    
+                    // Delete the file from GitHub
+                    const deleteResponse = await fetch(apiUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `token ${githubConfig.token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Delete workout video: ${video.name}`,
+                            sha: sha,
+                            branch: 'video-uploads'
+                        })
+                    });
+                    
+                    if (deleteResponse.ok) {
+                        console.log('Video successfully deleted from GitHub:', video.name);
+                    } else {
+                        const errorData = await deleteResponse.json();
+                        console.error('Failed to delete video from GitHub:', errorData);
+                        throw new Error('Failed to delete video from GitHub: ' + (errorData.message || 'Unknown error'));
+                    }
+                } else {
+                    console.error('Failed to get file info from GitHub:', await response.json());
+                    throw new Error('Failed to get file info from GitHub (file not found)');
+                }
+            } catch (error) {
+                console.error('Error deleting video from GitHub:', error);
+                throw error;
+            }
+        }
+    }
+}
+
+// Update the deleteWorkout function to handle video deletion from GitHub
+async function deleteWorkout(workoutIndex) {
+    const workout = workoutHistory[workoutIndex];
+    if (confirm(`Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`)) {
+        // If the workout has videos uploaded to GitHub, delete them too
+        if (workout.videos && workout.videos.length > 0 && workout.videos.some(video => video.githubUrl)) {
+            try {
+                await deleteVideosFromGitHub(workout.videos);
+            } catch (error) {
+                console.error('Error deleting videos from GitHub:', error);
+                alert('Workout was deleted but there was an error deleting videos from GitHub: ' + error.message);
+            }
+        }
+        
+        // Remove the workout from history
+        workoutHistory.splice(workoutIndex, 1);
+        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+        loadHistory();
+        updateStats();
+    }
+}
+
 // Update the deleteVideoFromWorkout function to properly delete from GitHub
 async function deleteVideoFromWorkout(workoutIndex, videoIndex) {
     const workout = workoutHistory[workoutIndex];
@@ -387,61 +482,7 @@ async function deleteVideoFromWorkout(workoutIndex, videoIndex) {
     // If the video was uploaded to GitHub, delete it from there too
     if (video.githubUrl) {
         try {
-            // Extract the file path from the GitHub URL
-            const url = new URL(video.githubUrl);
-            const pathParts = url.pathname.split('/');
-            
-            // Find the index after "blob" and "video-uploads"
-            const blobIndex = pathParts.indexOf('blob');
-            if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
-                throw new Error('Invalid GitHub URL format');
-            }
-            
-            // Reconstruct the file path (skip username, repo, blob, and branch)
-            const filePath = pathParts.slice(blobIndex + 2).join('/');
-            
-            // Get the SHA of the file to delete
-            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
-            
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            
-            if (response.ok) {
-                const fileData = await response.json();
-                const sha = fileData.sha;
-                
-                // Delete the file from GitHub
-                const deleteResponse = await fetch(apiUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Delete workout video: ${video.name}`,
-                        sha: sha,
-                        branch: 'video-uploads'
-                    })
-                });
-                
-                if (deleteResponse.ok) {
-                    console.log('Video successfully deleted from GitHub');
-                } else {
-                    const errorData = await deleteResponse.json();
-                    console.error('Failed to delete video from GitHub:', errorData);
-                    alert('Video was removed from history but could not be deleted from GitHub. Error: ' + 
-                          (errorData.message || 'Unknown error'));
-                }
-            } else {
-                console.error('Failed to get file info from GitHub:', await response.json());
-                alert('Video was removed from history but could not be deleted from GitHub (file not found).');
-            }
+            await deleteVideosFromGitHub([video]);
         } catch (error) {
             console.error('Error deleting video from GitHub:', error);
             alert('Video was removed from history but there was an error deleting it from GitHub: ' + error.message);
@@ -474,7 +515,6 @@ function viewWorkoutDetails(workoutIndex) {
             <p><strong>Videos:</strong> ${workout.videos ? workout.videos.length : 0} recorded</p>
     `;
     
-    // Rest of the function remains the same...
     workout.exercises.forEach(exercise => {
         const completedSets = exercise.sets.filter(set => set.completed);
         detailsHTML += `
@@ -603,7 +643,7 @@ function loadHistory() {
 }
 
 function readFileAsBase64(file) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = error => reject(error);
@@ -942,39 +982,6 @@ function saveWorkout() {
     updateStats();
 }
 
-function loadHistory() {
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = '';
-
-    if (workoutHistory.length === 0) {
-        historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No workout history found. Complete your first workout to see data here.</p>';
-        return;
-    }
-
-    workoutHistory.slice().reverse().forEach((workout, index) => {
-        const actualIndex = workoutHistory.length - 1 - index;
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                <div style="flex: 1;">
-                    <h4>${workout.programName}</h4>
-                    <p><strong>Date:</strong> ${new Date(workout.date).toLocaleDateString()} ${new Date(workout.date).toLocaleTimeString()}</p>
-                </div>
-                <button class="btn btn-danger" onclick="deleteWorkout(${actualIndex})" style="margin-left: 15px;">Delete</button>
-            </div>
-            <p><strong>Exercises:</strong> ${workout.exercises.length}</p>
-            <p><strong>Completed Sets:</strong> ${workout.exercises.reduce((total, ex) => total + ex.sets.filter(set => set.completed).length, 0)} / ${workout.exercises.reduce((total, ex) => total + ex.sets.length, 0)}</p>
-            <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-            ${workout.duration ? `<p><strong>Duration:</strong> ${formatDuration(workout.duration)}</p>` : ''}
-            ${workout.videos && workout.videos.length > 0 ? `<p><strong>Videos:</strong> ${workout.videos.length} recorded</p>` : ''}
-            ${workout.sessionNotes ? `<p><strong>Notes:</strong> ${workout.sessionNotes.substring(0, 100)}${workout.sessionNotes.length > 100 ? '...' : ''}</p>` : ''}
-            <button class="btn" onclick="viewWorkoutDetails(${actualIndex})">View Details</button>
-        `;
-        historyList.appendChild(historyItem);
-    });
-}
-
 function formatDuration(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -986,16 +993,6 @@ function formatDuration(seconds) {
         return `${minutes}m ${secs}s`;
     } else {
         return `${secs}s`;
-    }
-}
-
-function deleteWorkout(workoutIndex) {
-    const workout = workoutHistory[workoutIndex];
-    if (confirm(`Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`)) {
-        workoutHistory.splice(workoutIndex, 1);
-        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-        loadHistory();
-        updateStats();
     }
 }
 
@@ -1187,196 +1184,6 @@ function deleteProgram(programIndex) {
         localStorage.setItem('trainingPrograms', JSON.stringify(programs));
         loadPrograms();
     }
-}
-
-function viewWorkoutDetails(workoutIndex) {
-    const workout = workoutHistory[workoutIndex];
-    let detailsHTML = `
-        <div class="modal-content">
-            <span class="close" onclick="closeWorkoutDetails()">&times;</span>
-            <h2>${workout.programName} - ${new Date(workout.date).toLocaleDateString()}</h2>
-            <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-            <p><strong>Duration:</strong> ${workout.duration ? formatDuration(workout.duration) : 'Unknown'}</p>
-    `;
-    
-    workout.exercises.forEach(exercise => {
-        const completedSets = exercise.sets.filter(set => set.completed);
-        detailsHTML += `
-            <div class="exercise-card">
-                <h3>${exercise.name}</h3>
-                <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
-                <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
-                <div class="sets-container">
-                    <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
-                        <div>Set</div>
-                        <div>Weight</div>
-                        <div>Reps</div>
-                        <div>RPE</div>
-                        <div>Volume</div>
-                        <div>Notes</div>
-                    </div>
-        `;
-        
-        exercise.sets.forEach((set, index) => {
-            if (set.completed) {
-                const volume = set.weight && set.reps ? (parseFloat(set.weight) * parseInt(set.reps)).toFixed(1) : '0';
-                detailsHTML += `
-                    <div class="set-row">
-                        <div>${index + 1}</div>
-                        <div>${set.weight}kg</div>
-                        <div>${set.reps}</div>
-                        <div>${set.rpe}</div>
-                        <div>${volume}kg</div>
-                        <div>${set.notes || '-'}</div>
-                    </div>
-                `;
-            }
-        });
-        
-        detailsHTML += `</div>`;
-        if (exercise.exerciseNotes) {
-            detailsHTML += `<p><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>`;
-        }
-        detailsHTML += `</div>`;
-    });
-    
-    if (workout.sessionNotes) {
-        detailsHTML += `<div class="form-group"><strong>Session Notes:</strong> ${workout.sessionNotes}</div>`;
-    }
-    
-    if (workout.videos && workout.videos.length > 0) {
-        detailsHTML += `<div class="form-group">
-            <h3>Session Videos (${workout.videos.length})</h3>
-        `;
-        
-        workout.videos.forEach((video, index) => {
-            if (video.githubUrl) {
-                // Make sure the URL points to the video-uploads branch
-                const videoUrl = video.githubUrl.replace('/blob/main/', '/blob/video-uploads/');
-                const rawVideoUrl = videoUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/video-uploads/', '/video-uploads/');
-                
-                detailsHTML += `
-                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong>${video.name}</strong>
-                            <button class="btn btn-danger" onclick="deleteVideoFromWorkout(${workoutIndex}, ${index})">Delete Video</button>
-                        </div>
-                        <p>Size: ${(video.size / 1024 / 1024).toFixed(1)}MB</p>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn" onclick="viewVideo('${rawVideoUrl}', '${video.name}')">View Video</button>
-                            <a href="${videoUrl}" target="_blank" class="btn">View on GitHub</a>
-                        </div>
-                    </div>
-                `;
-            } else {
-                detailsHTML += `
-                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <p style="color: #aaa; font-size: 0.9em;">
-                            ${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB) - Not uploaded to GitHub
-                        </p>
-                    </div>
-                `;
-            }
-        });
-        detailsHTML += `</div>`;
-    }
-    
-    detailsHTML += `</div>`;
-    
-    // Create and show modal
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'workoutDetailsModal';
-    modal.style.display = 'block';
-    modal.innerHTML = detailsHTML;
-    document.body.appendChild(modal);
-}
-
-async function deleteVideoFromWorkout(workoutIndex, videoIndex) {
-    const workout = workoutHistory[workoutIndex];
-    const video = workout.videos[videoIndex];
-    
-    if (!confirm(`Are you sure you want to delete the video "${video.name}"? This will remove it from GitHub and your workout history.`)) {
-        return;
-    }
-    
-    // If the video was uploaded to GitHub, delete it from there too
-    if (video.githubUrl) {
-        try {
-            // Extract the file path from the GitHub URL
-            // URL format: https://github.com/username/repo/blob/video-uploads/folder/filename.mp4
-            const url = new URL(video.githubUrl);
-            const pathParts = url.pathname.split('/');
-            
-            // Find the index after "blob" and "video-uploads"
-            const blobIndex = pathParts.indexOf('blob');
-            if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
-                throw new Error('Invalid GitHub URL format');
-            }
-            
-            // Reconstruct the file path (skip username, repo, blob, and branch)
-            const filePath = pathParts.slice(blobIndex + 2).join('/');
-            
-            // Get the SHA of the file to delete
-            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
-            
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            
-            if (response.ok) {
-                const fileData = await response.json();
-                const sha = fileData.sha;
-                
-                // Delete the file from GitHub
-                const deleteResponse = await fetch(apiUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Delete workout video: ${video.name}`,
-                        sha: sha,
-                        branch: 'video-uploads'
-                    })
-                });
-                
-                if (deleteResponse.ok) {
-                    console.log('Video successfully deleted from GitHub');
-                } else {
-                    const errorData = await deleteResponse.json();
-                    console.error('Failed to delete video from GitHub:', errorData);
-                    alert('Video was removed from history but could not be deleted from GitHub. Error: ' + 
-                          (errorData.message || 'Unknown error'));
-                }
-            } else {
-                console.error('Failed to get file info from GitHub:', await response.json());
-                alert('Video was removed from history but could not be deleted from GitHub (file not found).');
-            }
-        } catch (error) {
-            console.error('Error deleting video from GitHub:', error);
-            alert('Video was removed from history but there was an error deleting it from GitHub: ' + error.message);
-        }
-    }
-    
-    // Remove the video from the workout
-    workout.videos.splice(videoIndex, 1);
-    
-    // Update the workout history
-    workoutHistory[workoutIndex] = workout;
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-    
-    // Refresh the workout details view
-    closeWorkoutDetails();
-    viewWorkoutDetails(workoutIndex);
-    
-    alert('Video deleted successfully!');
 }
 
 function viewVideo(videoUrl, videoName) {
