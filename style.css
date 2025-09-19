@@ -651,3 +651,124 @@
         html {
             scroll-behavior: smooth;
         }
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8em;
+    line-height: 1.2;
+}
+
+/* Warning button styling */
+.btn-warning {
+    background: linear-gradient(135deg, #ff9500, #ff6b35);
+    color: white;
+    border: none;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #e6850e, #e55a2b);
+    transform: translateY(-1px);
+}
+
+/* Secondary button styling */
+.btn-secondary {
+    background: linear-gradient(135deg, #666, #999);
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #555, #888);
+    transform: translateY(-1px);
+}
+
+/* Upload status styling */
+.upload-success {
+    color: #4ade80;
+    margin: 5px 0;
+    padding: 5px;
+    background: rgba(74, 222, 128, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #4ade80;
+}
+
+.upload-error {
+    color: #f87171;
+    margin: 5px 0;
+    padding: 5px;
+    background: rgba(248, 113, 113, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #f87171;
+}
+
+/* Video container styling */
+.video-container {
+    transition: all 0.3s ease;
+}
+
+.video-container:hover {
+    background: rgba(255,255,255,0.08) !important;
+}
+
+/* Enhanced modal content for edit */
+#editWorkoutModal .modal-content {
+    max-height: 95vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Responsive adjustments for edit modal */
+@media (max-width: 768px) {
+    #editWorkoutModal .modal-content {
+        width: 98%;
+        max-width: none;
+        margin: 1% auto;
+        max-height: 98vh;
+    }
+    
+    .set-row {
+        font-size: 0.85em;
+    }
+    
+    .set-input {
+        min-width: 50px;
+    }
+}
+
+/* Loading state for buttons */
+.btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn.loading:after {
+    content: '...';
+}
+
+/* Better spacing for edit form elements */
+#editWorkoutModal .form-group {
+    margin-bottom: 20px;
+}
+
+#editWorkoutModal .exercise-card {
+    margin-bottom: 25px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Highlight new videos */
+.video-container[style*="rgba(0, 255, 0"] {
+    animation: newItemGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes newItemGlow {
+    from {
+        border-color: rgba(0, 255, 0, 0.3);
+        box-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+    }
+    to {
+        border-color: rgba(0, 255, 0, 0.6);
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+    }
+}
+
