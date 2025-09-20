@@ -1411,3 +1411,464 @@ window.onclick = function(event) {
         closeWorkoutDetails();
     }
 }
+
+// Progress tracking functions
+async function saveMeasurement() {
+    const date = document.getElementById('measurementDate').value;
+    const weight = document.getElementById('weight').value;
+    const bodyFat = document.getElementById('bodyFat').value;
+    const muscleMass = document.getElementById('muscleMass').value;
+
+    if (!date || !weight) {
+        alert('Please enter at least date and weight');
+        return;
+    }
+
+    const measurement = {
+        id: Date.now(),
+        date: date,
+        weight: parseFloat(weight),
+        bodyFat: bodyFat ? parseFloat(bodyFat) : null,
+        muscleMass: muscleMass ? parseFloat(muscleMass) : null,
+        created: new Date().toISOString()
+    };
+
+    measurements.push(measurement);
+    measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    try {
+        await saveDataToGitHub('measurements', measurements);
+        localStorage.setItem('measurements', JSON.stringify(measurements));
+        
+        document.getElementById('measurementDate').value = '';
+        document.getElementById('weight').value = '';
+        document.getElementById('bodyFat').value = '';
+        document.getElementById('muscleMass').value = '';
+        
+        loadMeasurements();
+        updateMeasurementChart();
+        alert('Measurement saved successfully to GitHub!');
+    } catch (error) {
+        alert('Error saving measurement to GitHub: ' + error.message);
+        console.error('Measurement save error:', error);
+    }
+}
+
+function handleProgressPictureUpload(event) {
+    const files = Array.from(event.target.files);
+    const previewContainer = document.getElementById('progressPicturePreview');
+    
+    files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const pictureId = Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const pictureInfo = {
+                id: pictureId,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                file: file,
+                lastModified: file.lastModified
+            };
+            
+            progressPictureFiles.push(pictureInfo);
+            
+            // Create preview
+            const imageURL = URL.createObjectURL(file);
+            const imageContainer = document.createElement('div');
+            imageContainer.style.cssText = 'display: inline-block; margin: 10px; position: relative;';
+            
+            const imageElement = document.createElement('img');
+            imageElement.src = imageURL;
+            imageElement.style.cssText = 'width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #e8e8e8;';
+            imageElement.dataset.id = pictureId;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'btn btn-danger';
+            removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; padding: 2px 8px; font-size: 16px;';
+            removeBtn.onclick = function() {
+                progressPictureFiles = progressPictureFiles.filter(p => p.id !== pictureId);
+                imageContainer.remove();
+            };
+            
+            imageContainer.appendChild(imageElement);
+            imageContainer.appendChild(removeBtn);
+            previewContainer.appendChild(imageContainer);
+        }
+    });
+}
+
+function saveProgressPictures() {
+    const date = document.getElementById('pictureDate').value;
+    const notes = document.getElementById('pictureNotes').value;
+
+    if (!date) {
+        alert('Please select a date');
+        return;
+    }
+
+    if (progressPictureFiles.length === 0) {
+        alert('Please select at least one picture');
+        return;
+    }
+
+    const pictureEntry = {
+        id: Date.now(),
+        date: date,
+        notes: notes,
+        pictures: progressPictureFiles.map(p => ({
+            id: p.id,
+            name: p.name,
+            size: p.size,
+            type: p.type,
+            githubUrl: null
+        })),
+        created: new Date().toISOString()
+    };
+
+    progressPictures.push(pictureEntry);
+    progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+    
+    // Clear form
+    document.getElementById('pictureDate').value = '';
+    document.getElementById('pictureNotes').value = '';
+    document.getElementById('progressPicturePreview').innerHTML = '';
+    document.getElementById('progressPictures').value = '';
+    progressPictureFiles = [];
+    
+    loadProgressPictures();
+    alert('Progress pictures saved successfully!');
+}
+
+async function uploadProgressPicturesToGitHub() {
+    if (progressPictureFiles.length === 0) {
+        alert('No new pictures to upload. Please add pictures first.');
+        return;
+    }
+
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration in the Settings tab first.');
+        return;
+    }
+
+    // Ensure the progress-pictures branch exists
+    const branchExists = await ensureProgressPicturesBranch();
+    if (!branchExists) {
+        alert('Could not create or access the progress-pictures branch. Please check your GitHub permissions and try again.');
+        return;
+    }
+
+    const uploadButton = document.querySelector('[onclick="uploadProgressPicturesToGitHub()"]');
+    if (uploadButton) {
+        uploadButton.disabled = true;
+        uploadButton.textContent = 'Uploading...';
+    }
+
+    const uploadStatus = document.createElement('div');
+    uploadStatus.id = 'pictureUploadStatus';
+    uploadStatus.style.cssText = 'margin-top: 15px;';
+    
+    // Remove existing status if present
+    const existingStatus = document.getElementById('pictureUploadStatus');
+    if (existingStatus) existingStatus.remove();
+    
+    uploadButton.parentNode.appendChild(uploadStatus);
+
+    try {
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < progressPictureFiles.length; i++) {
+            const picture = progressPictureFiles[i];
+
+            try {
+                uploadStatus.innerHTML = `<div>Uploading ${picture.name}... (${i + 1} of ${progressPictureFiles.length})</div>`;
+
+                const base64Data = await readFileAsBase64(picture.file);
+                
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const fileExtension = picture.name.split('.').pop();
+                const fileName = `progress-${timestamp}.${fileExtension}`;
+                const folderPath = githubConfig.folder ? `${githubConfig.folder}/progress-pictures` : 'progress-pictures';
+                const filePath = `${folderPath}/${fileName}`;
+
+                const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Upload progress picture: ${fileName}`,
+                        content: base64Data.split(',')[1],
+                        branch: 'progress-pictures'
+                    })
+                });
+
+                if (response.ok) {
+                    successCount++;
+                    picture.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/progress-pictures/${filePath}`;
+                    
+                    uploadStatus.innerHTML += `
+                        <div class="upload-success">
+                            ✓ Successfully uploaded: ${picture.name} 
+                            <a href="${picture.githubUrl}" target="_blank" style="color: #00d4ff;">View on GitHub</a>
+                        </div>
+                    `;
+                } else {
+                    errorCount++;
+                    const errorData = await response.json();
+                    uploadStatus.innerHTML += `
+                        <div class="upload-error">
+                            ✗ Failed to upload: ${picture.name} - ${errorData.message || 'Unknown error'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                errorCount++;
+                uploadStatus.innerHTML += `
+                    <div class="upload-error">
+                        ✗ Error uploading: ${picture.name} - ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        uploadStatus.innerHTML += `
+            <div class="upload-${errorCount === 0 ? 'success' : 'error'}">
+                Upload complete: ${successCount} successful, ${errorCount} failed
+            </div>
+        `;
+
+        // Update the current progress pictures with GitHub URLs
+        const currentDate = document.getElementById('pictureDate').value;
+        if (currentDate && successCount > 0) {
+            const pictureEntry = {
+                id: Date.now(),
+                date: currentDate,
+                notes: document.getElementById('pictureNotes').value,
+                pictures: progressPictureFiles.filter(p => p.githubUrl).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    size: p.size,
+                    type: p.type,
+                    githubUrl: p.githubUrl
+                })),
+                created: new Date().toISOString()
+            };
+
+            progressPictures.push(pictureEntry);
+            progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+            
+            // Clear the upload queue
+            progressPictureFiles = [];
+            document.getElementById('progressPicturePreview').innerHTML = '';
+            document.getElementById('progressPictures').value = '';
+            
+            loadProgressPictures();
+        }
+
+    } finally {
+        if (uploadButton) {
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload to GitHub';
+        }
+    }
+}
+
+function loadMeasurements() {
+    const measurementsList = document.getElementById('measurementsList');
+    measurementsList.innerHTML = '';
+
+    if (measurements.length === 0) {
+        measurementsList.innerHTML = '<p style="text-align: center; color: #666;">No measurements recorded yet.</p>';
+        return;
+    }
+
+    measurements.slice().reverse().forEach((measurement, index) => {
+        const actualIndex = measurements.length - 1 - index;
+        const measurementItem = document.createElement('div');
+        measurementItem.className = 'measurement-item';
+        measurementItem.style.cssText = 'background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #28a745;';
+        
+        measurementItem.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h4>${new Date(measurement.date).toLocaleDateString()}</h4>
+                    <p><strong>Weight:</strong> ${measurement.weight}kg</p>
+                    ${measurement.bodyFat ? `<p><strong>Body Fat:</strong> ${measurement.bodyFat}%</p>` : ''}
+                    ${measurement.muscleMass ? `<p><strong>Muscle Mass:</strong> ${measurement.muscleMass}kg</p>` : ''}
+                </div>
+                <button class="btn btn-danger" onclick="deleteMeasurement(${actualIndex})">Delete</button>
+            </div>
+        `;
+        measurementsList.appendChild(measurementItem);
+    });
+}
+
+function loadProgressPictures() {
+    const gallery = document.getElementById('picturesGallery');
+    gallery.innerHTML = '';
+
+    if (progressPictures.length === 0) {
+        gallery.innerHTML = '<p style="text-align: center; color: #666;">No progress pictures yet.</p>';
+        return;
+    }
+
+    progressPictures.slice().reverse().forEach((entry, index) => {
+        const actualIndex = progressPictures.length - 1 - index;
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'picture-entry';
+        entryDiv.style.cssText = 'background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 12px; border-left: 4px solid #17a2b8;';
+        
+        let entryHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div>
+                    <h4>${new Date(entry.date).toLocaleDateString()}</h4>
+                    ${entry.notes ? `<p><strong>Notes:</strong> ${entry.notes}</p>` : ''}
+                    <p><strong>Pictures:</strong> ${entry.pictures.length}</p>
+                </div>
+                <button class="btn btn-danger" onclick="deleteProgressPictureEntry(${actualIndex})">Delete Entry</button>
+            </div>
+            <div class="pictures-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+        `;
+        
+        entry.pictures.forEach((picture, pictureIndex) => {
+            if (picture.githubUrl) {
+                const imageUrl = picture.githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                entryHTML += `
+                    <div style="position: relative;">
+                        <img src="${imageUrl}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="viewProgressPicture('${imageUrl}', '${picture.name}')">
+                        <button class="btn btn-danger btn-sm" onclick="deleteProgressPicture(${actualIndex}, ${pictureIndex})" style="position: absolute; top: 5px; right: 5px;">×</button>
+                    </div>
+                `;
+            } else {
+                entryHTML += `
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 8px; text-align: center;">
+                        <p>${picture.name}</p>
+                        <small>Not uploaded to GitHub</small>
+                    </div>
+                `;
+            }
+        });
+        
+        entryHTML += '</div>';
+        entryDiv.innerHTML = entryHTML;
+        gallery.appendChild(entryDiv);
+    });
+}
+
+function updateMeasurementChart() {
+    const ctx = document.getElementById('measurementChart');
+    if (!ctx) return;
+
+    if (measurementChart) {
+        measurementChart.destroy();
+    }
+
+    const labels = measurements.map(m => new Date(m.date).toLocaleDateString());
+    const weightData = measurements.map(m => m.weight);
+    const bodyFatData = measurements.map(m => m.bodyFat);
+
+    measurementChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Weight (kg)',
+                data: weightData,
+                borderColor: '#1a1a1a',
+                backgroundColor: 'rgba(26, 26, 26, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Body Fat %',
+                data: bodyFatData,
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: { display: true, text: 'Weight (kg)' }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: { display: true, text: 'Body Fat %' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+}
+
+function deleteMeasurement(index) {
+    if (confirm('Are you sure you want to delete this measurement?')) {
+        measurements.splice(index, 1);
+        localStorage.setItem('measurements', JSON.stringify(measurements));
+        loadMeasurements();
+        updateMeasurementChart();
+    }
+}
+
+function deleteProgressPictureEntry(index) {
+    if (confirm('Are you sure you want to delete this entire progress picture entry?')) {
+        progressPictures.splice(index, 1);
+        localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+        loadProgressPictures();
+    }
+}
+
+function viewProgressPicture(imageUrl, imageName) {
+    const imageModal = document.createElement('div');
+    imageModal.className = 'modal';
+    imageModal.style.display = 'block';
+    imageModal.innerHTML = `
+        <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h3>${imageName}</h3>
+            <img src="${imageUrl}" style="width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;">
+        </div>
+    `;
+    document.body.appendChild(imageModal);
+}
+
+function deleteProgressPicture(entryIndex, pictureIndex) {
+    const entry = progressPictures[entryIndex];
+    const picture = entry.pictures[pictureIndex];
+    
+    if (!confirm(`Are you sure you want to delete this progress picture "${picture.name}"?`)) {
+        return;
+    }
+    
+    // Remove the picture from the entry
+    entry.pictures.splice(pictureIndex, 1);
+    
+    // If this was the last picture, remove the entire entry
+    if (entry.pictures.length === 0) {
+        progressPictures.splice(entryIndex, 1);
+    }
+    
+    // Update localStorage
+    localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+    
+    // Refresh the display
+    loadProgressPictures();
+    
+    alert('Progress picture deleted successfully!');
+}
