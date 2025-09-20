@@ -1,18 +1,29 @@
 // Global variables
 let programs = [];
 let workoutHistory = [];
+let measurements = [];
+let progressPhotos = [];
 let currentProgramIndex = -1;
 let currentWorkout = null;
 let sessionVideos = [];
 let timerInterval = null;
 let timerSeconds = 0;
 let timerRunning = false;
+let editingWorkoutIndex = -1;
+let newEditVideos = [];
+let newProgressPhotos = [];
 let githubConfig = {
     token: '',
     username: '',
     repo: '',
-    folder: ''
+    folder: 'videos',
+    photoFolder: 'photos'
 };
+
+// Chart instances
+let volumeChart = null;
+let strengthChart = null;
+let measurementChart = null;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -21,6 +32,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHistory();
     updateStats();
     loadGithubConfig();
+    loadMeasurements();
+    loadProgressPhotos();
+    
+    // Set default dates
+    document.getElementById('measurementDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('photoDate').value = new Date().toISOString().split('T')[0];
+    
+    // Initialize charts
+    initializeCharts();
 });
 
 // Tab management
@@ -45,6 +65,660 @@ function showTab(tabName) {
     } else {
         document.getElementById('timerContainer').style.display = 'none';
     }
+    
+    // Update charts when switching to analytics tab
+    if (tabName === 'stats') {
+        setTimeout(() => {
+            updateCharts();
+        }, 100);
+    }
+    
+    // Update measurement chart when switching to progress tab
+    if (tabName === 'progress') {
+        setTimeout(() => {
+            updateMeasurementChart();
+        }, 100);
+    }
+}
+
+// Progress tab management
+function showProgressTab(tabName) {
+    // Hide all progress tabs
+    const tabs = document.querySelectorAll('.progress-tab-content');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    // Remove active class from all progress nav buttons
+    const navBtns = document.querySelectorAll('.progress-tab-btn');
+    navBtns.forEach(btn => btn.classList.remove('active'));
+    
+    // Show selected tab
+    document.getElementById(tabName).classList.add('active');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+    
+    // Update measurement chart if switching to measurements
+    if (tabName === 'measurements') {
+        setTimeout(() => {
+            updateMeasurementChart();
+        }, 100);
+    }
+}
+
+// Initialize charts
+function initializeCharts() {
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: 'rgba(148, 163, 184, 0.1)'
+                }
+            },
+            y: {
+                grid: {
+                    color: 'rgba(148, 163, 184, 0.1)'
+                }
+            }
+        }
+    };
+
+    // Volume Chart
+    const volumeCtx = document.getElementById('volumeChart')?.getContext('2d');
+    if (volumeCtx) {
+        volumeChart = new Chart(volumeCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Total Volume (kg)',
+                    data: [],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: chartOptions
+        });
+    }
+
+    // Strength Chart
+    const strengthCtx = document.getElementById('strengthChart')?.getContext('2d');
+    if (strengthCtx) {
+        strengthChart = new Chart(strengthCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: chartOptions
+        });
+    }
+
+    // Measurement Chart
+    const measurementCtx = document.getElementById('measurementChart')?.getContext('2d');
+    if (measurementCtx) {
+        measurementChart = new Chart(measurementCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: chartOptions
+        });
+    }
+}
+
+// Update charts based on filters
+function updateCharts() {
+    const exerciseFilter = document.getElementById('exerciseFilter')?.value || '';
+    const periodFilter = parseInt(document.getElementById('periodFilter')?.value || '90');
+    
+    updateVolumeChart(exerciseFilter, periodFilter);
+    updateStrengthChart(exerciseFilter, periodFilter);
+    updateExerciseFilter();
+}
+
+// Update exercise filter dropdown
+function updateExerciseFilter() {
+    const exerciseFilter = document.getElementById('exerciseFilter');
+    if (!exerciseFilter) return;
+    
+    const exercises = new Set();
+    workoutHistory.forEach(workout => {
+        workout.exercises.forEach(exercise => {
+            exercises.add(exercise.name);
+        });
+    });
+    
+    const currentValue = exerciseFilter.value;
+    exerciseFilter.innerHTML = '<option value="">All Exercises</option>';
+    
+    Array.from(exercises).sort().forEach(exercise => {
+        const option = document.createElement('option');
+        option.value = exercise;
+        option.textContent = exercise;
+        if (exercise === currentValue) {
+            option.selected = true;
+        }
+        exerciseFilter.appendChild(option);
+    });
+}
+
+// Update volume chart
+function updateVolumeChart(exerciseFilter, periodFilter) {
+    if (!volumeChart) return;
+    
+    const cutoffDate = periodFilter === 'all' ? new Date(0) : 
+                     new Date(Date.now() - periodFilter * 24 * 60 * 60 * 1000);
+    
+    const filteredWorkouts = workoutHistory
+        .filter(workout => new Date(workout.date) >= cutoffDate)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const labels = [];
+    const data = [];
+    
+    filteredWorkouts.forEach(workout => {
+        let totalVolume = 0;
+        
+        workout.exercises.forEach(exercise => {
+            if (!exerciseFilter || exercise.name === exerciseFilter) {
+                exercise.sets.forEach(set => {
+                    if (set.completed && set.weight && set.reps) {
+                        totalVolume += parseFloat(set.weight) * parseInt(set.reps);
+                    }
+                });
+            }
+        });
+        
+        if (totalVolume > 0) {
+            labels.push(new Date(workout.date).toLocaleDateString());
+            data.push(totalVolume);
+        }
+    });
+    
+    volumeChart.data.labels = labels;
+    volumeChart.data.datasets[0].data = data;
+    volumeChart.data.datasets[0].label = exerciseFilter ? 
+        `${exerciseFilter} Volume (kg)` : 'Total Volume (kg)';
+    volumeChart.update();
+}
+
+// Update strength chart
+function updateStrengthChart(exerciseFilter, periodFilter) {
+    if (!strengthChart) return;
+    
+    const cutoffDate = periodFilter === 'all' ? new Date(0) : 
+                     new Date(Date.now() - periodFilter * 24 * 60 * 60 * 1000);
+    
+    const exerciseData = {};
+    
+    workoutHistory
+        .filter(workout => new Date(workout.date) >= cutoffDate)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .forEach(workout => {
+            workout.exercises.forEach(exercise => {
+                if (!exerciseFilter || exercise.name === exerciseFilter) {
+                    const maxWeight = Math.max(...exercise.sets
+                        .filter(set => set.completed && set.weight)
+                        .map(set => parseFloat(set.weight)));
+                    
+                    if (maxWeight > 0) {
+                        if (!exerciseData[exercise.name]) {
+                            exerciseData[exercise.name] = [];
+                        }
+                        exerciseData[exercise.name].push({
+                            date: workout.date,
+                            weight: maxWeight
+                        });
+                    }
+                }
+            });
+        });
+    
+    const datasets = [];
+    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+    let colorIndex = 0;
+    
+    Object.entries(exerciseData).forEach(([exerciseName, data]) => {
+        const color = colors[colorIndex % colors.length];
+        colorIndex++;
+        
+        datasets.push({
+            label: exerciseName,
+            data: data.map(item => ({
+                x: new Date(item.date).toLocaleDateString(),
+                y: item.weight
+            })),
+            borderColor: color,
+            backgroundColor: color + '20',
+            tension: 0.4
+        });
+    });
+    
+    strengthChart.data.datasets = datasets;
+    strengthChart.update();
+}
+
+// Measurements functionality
+function saveMeasurement() {
+    const date = document.getElementById('measurementDate').value;
+    const weight = document.getElementById('weight').value;
+    const bodyFat = document.getElementById('bodyFat').value;
+    const muscleMass = document.getElementById('muscleMass').value;
+    const chest = document.getElementById('chest').value;
+    const waist = document.getElementById('waist').value;
+    const arms = document.getElementById('arms').value;
+    const thighs = document.getElementById('thighs').value;
+    const notes = document.getElementById('measurementNotes').value;
+    
+    if (!date) {
+        alert('Please select a date for the measurement.');
+        return;
+    }
+    
+    if (!weight && !bodyFat && !muscleMass && !chest && !waist && !arms && !thighs) {
+        alert('Please enter at least one measurement.');
+        return;
+    }
+    
+    const measurement = {
+        id: Date.now(),
+        date: date,
+        weight: weight ? parseFloat(weight) : null,
+        bodyFat: bodyFat ? parseFloat(bodyFat) : null,
+        muscleMass: muscleMass ? parseFloat(muscleMass) : null,
+        chest: chest ? parseFloat(chest) : null,
+        waist: waist ? parseFloat(waist) : null,
+        arms: arms ? parseFloat(arms) : null,
+        thighs: thighs ? parseFloat(thighs) : null,
+        notes: notes,
+        created: new Date().toISOString()
+    };
+    
+    measurements.push(measurement);
+    localStorage.setItem('measurements', JSON.stringify(measurements));
+    
+    // Clear form
+    document.getElementById('weight').value = '';
+    document.getElementById('bodyFat').value = '';
+    document.getElementById('muscleMass').value = '';
+    document.getElementById('chest').value = '';
+    document.getElementById('waist').value = '';
+    document.getElementById('arms').value = '';
+    document.getElementById('thighs').value = '';
+    document.getElementById('measurementNotes').value = '';
+    
+    loadMeasurements();
+    updateMeasurementChart();
+    
+    alert('Measurement saved successfully!');
+}
+
+function loadMeasurements() {
+    const measurementsList = document.getElementById('measurementsList');
+    if (!measurementsList) return;
+    
+    measurementsList.innerHTML = '';
+    
+    if (measurements.length === 0) {
+        measurementsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No measurements recorded yet. Add your first measurement to start tracking progress.</p>';
+        return;
+    }
+    
+    // Sort measurements by date (newest first)
+    const sortedMeasurements = measurements.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    sortedMeasurements.forEach(measurement => {
+        const measurementItem = document.createElement('div');
+        measurementItem.className = 'measurement-item';
+        measurementItem.style.cssText = `
+            background: var(--background);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        `;
+        
+        let measurementHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                <h4>${new Date(measurement.date).toLocaleDateString()}</h4>
+                <button class="btn btn-danger btn-sm" onclick="deleteMeasurement(${measurement.id})">Delete</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+        `;
+        
+        if (measurement.weight) measurementHTML += `<div><strong>Weight:</strong> ${measurement.weight}kg</div>`;
+        if (measurement.bodyFat) measurementHTML += `<div><strong>Body Fat:</strong> ${measurement.bodyFat}%</div>`;
+        if (measurement.muscleMass) measurementHTML += `<div><strong>Muscle Mass:</strong> ${measurement.muscleMass}kg</div>`;
+        if (measurement.chest) measurementHTML += `<div><strong>Chest:</strong> ${measurement.chest}cm</div>`;
+        if (measurement.waist) measurementHTML += `<div><strong>Waist:</strong> ${measurement.waist}cm</div>`;
+        if (measurement.arms) measurementHTML += `<div><strong>Arms:</strong> ${measurement.arms}cm</div>`;
+        if (measurement.thighs) measurementHTML += `<div><strong>Thighs:</strong> ${measurement.thighs}cm</div>`;
+        
+        measurementHTML += '</div>';
+        
+        if (measurement.notes) {
+            measurementHTML += `<div style="margin-top: 12px;"><strong>Notes:</strong> ${measurement.notes}</div>`;
+        }
+        
+        measurementItem.innerHTML = measurementHTML;
+        measurementsList.appendChild(measurementItem);
+    });
+}
+
+function deleteMeasurement(measurementId) {
+    if (!confirm('Are you sure you want to delete this measurement? This cannot be undone.')) {
+        return;
+    }
+    
+    measurements = measurements.filter(m => m.id !== measurementId);
+    localStorage.setItem('measurements', JSON.stringify(measurements));
+    
+    loadMeasurements();
+    updateMeasurementChart();
+    
+    alert('Measurement deleted successfully!');
+}
+
+function updateMeasurementChart() {
+    if (!measurementChart || measurements.length === 0) return;
+    
+    // Sort measurements by date
+    const sortedMeasurements = measurements.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const labels = sortedMeasurements.map(m => new Date(m.date).toLocaleDateString());
+    const datasets = [];
+    const colors = {
+        weight: '#6366f1',
+        bodyFat: '#ef4444',
+        muscleMass: '#10b981',
+        chest: '#f59e0b',
+        waist: '#8b5cf6',
+        arms: '#06b6d4',
+        thighs: '#ec4899'
+    };
+    
+    // Create datasets for each measurement type
+    Object.entries(colors).forEach(([key, color]) => {
+        const data = sortedMeasurements.map(m => m[key] || null);
+        const hasData = data.some(value => value !== null);
+        
+        if (hasData) {
+            datasets.push({
+                label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+                data: data,
+                borderColor: color,
+                backgroundColor: color + '20',
+                tension: 0.4,
+                spanGaps: true,
+                yAxisID: key === 'bodyFat' ? 'y1' : 'y'
+            });
+        }
+    });
+    
+    measurementChart.data.labels = labels;
+    measurementChart.data.datasets = datasets;
+    
+    // Update scales for dual y-axis
+    measurementChart.options.scales = {
+        x: {
+            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+            title: { display: true, text: 'Weight/Measurements' }
+        },
+        y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: 'Body Fat %' }
+        }
+    };
+    
+    measurementChart.update();
+}
+
+// Progress Photos functionality
+function handleProgressPhotoUpload(event) {
+    const files = Array.from(event.target.files);
+    const previewContainer = document.getElementById('photoPreview');
+    
+    files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const photoId = Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const photoInfo = {
+                id: photoId,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                file: file,
+                lastModified: file.lastModified
+            };
+            
+            newProgressPhotos.push(photoInfo);
+            
+            // Create preview
+            const photoURL = URL.createObjectURL(file);
+            const photoContainer = document.createElement('div');
+            photoContainer.className = 'photo-preview-item';
+            
+            photoContainer.innerHTML = `
+                <img src="${photoURL}" alt="${file.name}">
+                <button class="photo-remove-btn" onclick="removeNewPhoto('${photoId}')">&times;</button>
+            `;
+            
+            previewContainer.appendChild(photoContainer);
+        }
+    });
+}
+
+function removeNewPhoto(photoId) {
+    newProgressPhotos = newProgressPhotos.filter(p => p.id !== photoId);
+    
+    // Remove from preview
+    const previewContainer = document.getElementById('photoPreview');
+    const photoElements = previewContainer.querySelectorAll('.photo-preview-item');
+    photoElements.forEach(element => {
+        if (element.innerHTML.includes(photoId)) {
+            element.remove();
+        }
+    });
+}
+
+function saveProgressPhotos() {
+    if (newProgressPhotos.length === 0) {
+        alert('Please select at least one photo to save.');
+        return;
+    }
+    
+    const date = document.getElementById('photoDate').value;
+    const notes = document.getElementById('photoNotes').value;
+    
+    if (!date) {
+        alert('Please select a date for the photos.');
+        return;
+    }
+    
+    const photoSession = {
+        id: Date.now(),
+        date: date,
+        notes: notes,
+        photos: newProgressPhotos.map(photo => ({
+            id: photo.id,
+            name: photo.name,
+            size: photo.size,
+            type: photo.type,
+            dataUrl: null, // Will be populated when we read the file
+            githubUrl: null
+        })),
+        created: new Date().toISOString()
+    };
+    
+    // Read files as data URLs for local storage
+    Promise.all(newProgressPhotos.map(photo => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const photoData = photoSession.photos.find(p => p.id === photo.id);
+                if (photoData) {
+                    photoData.dataUrl = e.target.result;
+                }
+                resolve();
+            };
+            reader.readAsDataURL(photo.file);
+        });
+    })).then(() => {
+        progressPhotos.push(photoSession);
+        localStorage.setItem('progressPhotos', JSON.stringify(progressPhotos));
+        
+        // Clear form
+        document.getElementById('photoNotes').value = '';
+        document.getElementById('photoPreview').innerHTML = '';
+        newProgressPhotos = [];
+        
+        loadProgressPhotos();
+        alert('Progress photos saved successfully!');
+    });
+}
+
+function loadProgressPhotos() {
+    const photoHistory = document.getElementById('photoHistory');
+    if (!photoHistory) return;
+    
+    photoHistory.innerHTML = '';
+    
+    if (progressPhotos.length === 0) {
+        photoHistory.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No progress photos yet. Upload your first photos to start tracking visual progress.</p>';
+        return;
+    }
+    
+    // Sort by date (newest first)
+    const sortedPhotos = progressPhotos.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    sortedPhotos.forEach((session, sessionIndex) => {
+        const sessionDiv = document.createElement('div');
+        sessionDiv.className = 'photo-session';
+        sessionDiv.style.cssText = `
+            background: var(--background);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        `;
+        
+        let sessionHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                <div>
+                    <h4 class="photo-date">${new Date(session.date).toLocaleDateString()}</h4>
+                    ${session.notes ? `<p class="photo-notes">${session.notes}</p>` : ''}
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deletePhotoSession(${session.id})">Delete Session</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+        `;
+        
+        session.photos.forEach((photo, photoIndex) => {
+            const displayUrl = photo.githubUrl ? 
+                photo.githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/') : 
+                photo.dataUrl;
+                
+            sessionHTML += `
+                <div class="photo-history-item" style="margin: 0;">
+                    <img src="${displayUrl}" alt="${photo.name}" onclick="viewPhotoFullsize('${displayUrl}', '${photo.name}')">
+                    <div style="padding: 8px 0;">
+                        <small style="color: var(--text-secondary);">${photo.name}</small>
+                        <div style="margin-top: 8px;">
+                            ${photo.githubUrl ? 
+                                `<a href="${photo.githubUrl}" target="_blank" class="btn btn-sm" style="margin-right: 8px;">View on GitHub</a>` : 
+                                ''}
+                            <button class="btn btn-danger btn-sm" onclick="deletePhotoFromSession(${session.id}, '${photo.id}')">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        sessionHTML += '</div>';
+        sessionDiv.innerHTML = sessionHTML;
+        photoHistory.appendChild(sessionDiv);
+    });
+}
+
+function deletePhotoSession(sessionId) {
+    if (!confirm('Are you sure you want to delete this entire photo session? This cannot be undone.')) {
+        return;
+    }
+    
+    progressPhotos = progressPhotos.filter(session => session.id !== sessionId);
+    localStorage.setItem('progressPhotos', JSON.stringify(progressPhotos));
+    
+    loadProgressPhotos();
+    alert('Photo session deleted successfully!');
+}
+
+function deletePhotoFromSession(sessionId, photoId) {
+    if (!confirm('Are you sure you want to delete this photo? This cannot be undone.')) {
+        return;
+    }
+    
+    const session = progressPhotos.find(s => s.id === sessionId);
+    if (session) {
+        session.photos = session.photos.filter(p => p.id !== photoId);
+        if (session.photos.length === 0) {
+            // Delete entire session if no photos left
+            progressPhotos = progressPhotos.filter(s => s.id !== sessionId);
+        }
+        localStorage.setItem('progressPhotos', JSON.stringify(progressPhotos));
+        
+        loadProgressPhotos();
+        alert('Photo deleted successfully!');
+    }
+}
+
+function viewPhotoFullsize(photoUrl, photoName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'photoViewModal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 90%; max-height: 90%; padding: 20px;">
+            <span class="close" onclick="closePhotoModal()">&times;</span>
+            <h3 style="margin-bottom: 20px;">${photoName}</h3>
+            <img src="${photoUrl}" style="max-width: 100%; max-height: 70vh; border-radius: 12px;" alt="${photoName}">
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closePhotoModal() {
+    const modal = document.getElementById('photoViewModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function filterPhotos() {
+    const filterValue = document.getElementById('photoDateFilter').value;
+    // This would filter the photos based on the selected period
+    // For now, we'll just reload all photos
+    loadProgressPhotos();
 }
 
 // Timer functions
@@ -84,7 +758,7 @@ function updateTimerDisplay() {
         `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// GitHub integration functions
+// Enhanced GitHub configuration
 function loadGithubConfig() {
     const savedConfig = localStorage.getItem('githubConfig');
     if (savedConfig) {
@@ -92,7 +766,8 @@ function loadGithubConfig() {
         document.getElementById('githubToken').value = githubConfig.token || '';
         document.getElementById('githubUsername').value = githubConfig.username || '';
         document.getElementById('githubRepo').value = githubConfig.repo || '';
-        document.getElementById('githubFolder').value = githubConfig.folder || '';
+        document.getElementById('githubFolder').value = githubConfig.folder || 'videos';
+        document.getElementById('githubPhotoFolder').value = githubConfig.photoFolder || 'photos';
     }
 }
 
@@ -101,7 +776,8 @@ function saveGithubConfig() {
         token: document.getElementById('githubToken').value.trim(),
         username: document.getElementById('githubUsername').value.trim(),
         repo: document.getElementById('githubRepo').value.trim(),
-        folder: document.getElementById('githubFolder').value.trim() || 'videos'
+        folder: document.getElementById('githubFolder').value.trim() || 'videos',
+        photoFolder: document.getElementById('githubPhotoFolder').value.trim() || 'photos'
     };
     
     localStorage.setItem('githubConfig', JSON.stringify(githubConfig));
@@ -114,7 +790,6 @@ function testGithubConnection() {
         return;
     }
     
-    // Test the connection by trying to list repositories
     fetch(`https://api.github.com/user/repos`, {
         method: 'GET',
         headers: {
@@ -124,24 +799,9 @@ function testGithubConnection() {
     })
     .then(response => {
         if (response.ok) {
-            // Check if the video-uploads branch exists
-            return fetch(`https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/branches/video-uploads`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
+            alert('GitHub connection successful!');
         } else {
             alert('GitHub connection failed. Please check your credentials.');
-            throw new Error('GitHub connection failed');
-        }
-    })
-    .then(branchResponse => {
-        if (branchResponse.ok) {
-            alert('GitHub connection successful! Video-uploads branch exists.');
-        } else {
-            alert('GitHub connection successful, but video-uploads branch does not exist. It will be created automatically when you upload your first video.');
         }
     })
     .catch(error => {
@@ -155,7 +815,6 @@ async function ensureVideoUploadsBranch() {
     }
     
     try {
-        // Check if the video-uploads branch exists
         const branchResponse = await fetch(
             `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/branches/video-uploads`, 
             {
@@ -168,11 +827,9 @@ async function ensureVideoUploadsBranch() {
         );
         
         if (branchResponse.ok) {
-            return true; // Branch exists
+            return true;
         }
         
-        // If branch doesn't exist, create it from the main branch
-        // First get the SHA of the main branch
         const mainBranchResponse = await fetch(
             `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs/heads/main`,
             {
@@ -185,14 +842,12 @@ async function ensureVideoUploadsBranch() {
         );
         
         if (!mainBranchResponse.ok) {
-            console.error('Could not get main branch info');
             return false;
         }
         
         const mainBranchData = await mainBranchResponse.json();
         const mainSha = mainBranchData.object.sha;
         
-        // Create the video-uploads branch
         const createBranchResponse = await fetch(
             `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs`,
             {
@@ -223,38 +878,14 @@ async function uploadVideosToGitHub() {
         return;
     }
     
-    // Check if we're in the workout tab (current session) or history tab
-    const isHistoryView = document.getElementById('history').classList.contains('active');
-    let videosToUpload = [];
-    
-    if (isHistoryView) {
-        // We're in history view, need to get the selected workout
-        const selectedWorkoutIndex = getSelectedWorkoutIndex();
-        if (selectedWorkoutIndex === -1) {
-            alert('Please select a workout from history first.');
-            return;
-        }
-        
-        const workout = workoutHistory[selectedWorkoutIndex];
-        videosToUpload = workout.videos.filter(video => !video.githubUrl);
-        
-        if (videosToUpload.length === 0) {
-            alert('All videos in this workout are already uploaded to GitHub.');
-            return;
-        }
-    } else {
-        // We're in workout tab, use session videos
-        if (sessionVideos.length === 0) {
-            alert('No videos to upload. Please select videos first.');
-            return;
-        }
-        videosToUpload = sessionVideos;
+    if (sessionVideos.length === 0) {
+        alert('No videos to upload. Please select videos first.');
+        return;
     }
     
-    // Ensure the video-uploads branch exists
     const branchExists = await ensureVideoUploadsBranch();
     if (!branchExists) {
-        alert('Could not create or access the video-uploads branch. Please check your GitHub permissions and try again.');
+        alert('Could not create or access the video-uploads branch.');
         return;
     }
     
@@ -269,35 +900,19 @@ async function uploadVideosToGitHub() {
     let successCount = 0;
     let errorCount = 0;
     
-    for (let i = 0; i < videosToUpload.length; i++) {
-        const video = videosToUpload[i];
+    for (let i = 0; i < sessionVideos.length; i++) {
+        const video = sessionVideos[i];
         
         try {
-            // Update progress
-            progressBar.style.width = `${((i / videosToUpload.length) * 100).toFixed(0)}%`;
+            progressBar.style.width = `${((i / sessionVideos.length) * 100).toFixed(0)}%`;
             
-            // For videos from history, we can't read them as base64 since we don't have the file
-            // So we'll skip them and only upload new videos from the current session
-            if (isHistoryView) {
-                uploadStatus.innerHTML += `
-                    <div class="upload-error">
-                        ✗ Cannot upload: ${video.name} - Videos can only be uploaded from the current session, not from history.
-                    </div>
-                `;
-                errorCount++;
-                continue;
-            }
-            
-            // Read the file as base64 (only for current session videos)
             const base64Data = await readFileAsBase64(video.file);
             
-            // Create the file path
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const fileExtension = video.name.split('.').pop();
             const fileName = `workout-video-${timestamp}.${fileExtension}`;
             const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
             
-            // Prepare the API request - specify the video-uploads branch
             const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
             
             const response = await fetch(apiUrl, {
@@ -309,20 +924,18 @@ async function uploadVideosToGitHub() {
                 },
                 body: JSON.stringify({
                     message: `Upload workout video: ${fileName}`,
-                    content: base64Data.split(',')[1], // Remove the data:video/mp4;base64, part
-                    branch: 'video-uploads' // Specify the target branch
+                    content: base64Data.split(',')[1],
+                    branch: 'video-uploads'
                 })
             });
             
             if (response.ok) {
                 successCount++;
-                // Store the GitHub URL with the video - point to the video-uploads branch
                 video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/video-uploads/${filePath}`;
                 
                 uploadStatus.innerHTML += `
                     <div class="upload-success">
-                        ✓ Successfully uploaded: ${video.name} 
-                        <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">View on GitHub</a>
+                        ✓ Successfully uploaded: ${video.name}
                     </div>
                 `;
             } else {
@@ -344,277 +957,295 @@ async function uploadVideosToGitHub() {
         }
     }
     
-    // Final progress update
     progressBar.style.width = '100%';
     
-    // Show summary
     uploadStatus.innerHTML += `
         <div class="upload-${errorCount === 0 ? 'success' : 'error'}">
             Upload complete: ${successCount} successful, ${errorCount} failed
         </div>
     `;
     
-    // Update session videos with GitHub URLs
-    if (successCount > 0 && !isHistoryView) {
+    if (successCount > 0) {
         localStorage.setItem('sessionVideos', JSON.stringify(sessionVideos));
     }
 }
 
-// Add helper function to get selected workout index
-function getSelectedWorkoutIndex() {
-    // This is a simple implementation - you might need to adjust based on your UI
-    const activeWorkout = document.querySelector('.history-item:hover');
-    if (!activeWorkout) return -1;
-    
-    const allWorkouts = document.querySelectorAll('.history-item');
-    for (let i = 0; i < allWorkouts.length; i++) {
-        if (allWorkouts[i] === activeWorkout) {
-            return workoutHistory.length - 1 - i;
-        }
-    }
-    return -1;
-}
-
-// Update the deleteVideoFromWorkout function to properly delete from GitHub
-async function deleteVideoFromWorkout(workoutIndex, videoIndex) {
-    const workout = workoutHistory[workoutIndex];
-    const video = workout.videos[videoIndex];
-    
-    if (!confirm(`Are you sure you want to delete the video "${video.name}"? This will remove it from GitHub and your workout history.`)) {
+async function uploadPhotosToGitHub() {
+    if (newProgressPhotos.length === 0) {
+        alert('No new photos to upload. Please select photos first.');
         return;
     }
     
-    // If the video was uploaded to GitHub, delete it from there too
-    if (video.githubUrl) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration in the Settings tab first.');
+        showTab('settings');
+        return;
+    }
+    
+    const branchExists = await ensureVideoUploadsBranch();
+    if (!branchExists) {
+        alert('Could not create or access the upload branch.');
+        return;
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (let i = 0; i < newProgressPhotos.length; i++) {
+        const photo = newProgressPhotos[i];
+        
         try {
-            // Extract the file path from the GitHub URL
-            const url = new URL(video.githubUrl);
-            const pathParts = url.pathname.split('/');
+            const base64Data = await readFileAsBase64(photo.file);
             
-            // Find the index after "blob" and "video-uploads"
-            const blobIndex = pathParts.indexOf('blob');
-            if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
-                throw new Error('Invalid GitHub URL format');
-            }
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileExtension = photo.name.split('.').pop();
+            const fileName = `progress-photo-${timestamp}.${fileExtension}`;
+            const filePath = githubConfig.photoFolder ? `${githubConfig.photoFolder}/${fileName}` : fileName;
             
-            // Reconstruct the file path (skip username, repo, blob, and branch)
-            const filePath = pathParts.slice(blobIndex + 2).join('/');
-            
-            // Get the SHA of the file to delete
-            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
+            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
             
             const response = await fetch(apiUrl, {
-                method: 'GET',
+                method: 'PUT',
                 headers: {
                     'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Upload progress photo: ${fileName}`,
+                    content: base64Data.split(',')[1],
+                    branch: 'video-uploads'
+                })
             });
             
             if (response.ok) {
-                const fileData = await response.json();
-                const sha = fileData.sha;
-                
-                // Delete the file from GitHub
-                const deleteResponse = await fetch(apiUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Delete workout video: ${video.name}`,
-                        sha: sha,
-                        branch: 'video-uploads'
-                    })
-                });
-                
-                if (deleteResponse.ok) {
-                    console.log('Video successfully deleted from GitHub');
-                } else {
-                    const errorData = await deleteResponse.json();
-                    console.error('Failed to delete video from GitHub:', errorData);
-                    alert('Video was removed from history but could not be deleted from GitHub. Error: ' + 
-                          (errorData.message || 'Unknown error'));
-                }
+                successCount++;
+                photo.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/video-uploads/${filePath}`;
             } else {
-                console.error('Failed to get file info from GitHub:', await response.json());
-                alert('Video was removed from history but could not be deleted from GitHub (file not found).');
+                errorCount++;
             }
         } catch (error) {
-            console.error('Error deleting video from GitHub:', error);
-            alert('Video was removed from history but there was an error deleting it from GitHub: ' + error.message);
+            errorCount++;
+            console.error('Error uploading photo:', error);
         }
     }
     
-    // Remove the video from the workout
-    workout.videos.splice(videoIndex, 1);
-    
-    // Update the workout history
-    workoutHistory[workoutIndex] = workout;
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-    
-    // Refresh the workout details view
-    closeWorkoutDetails();
-    viewWorkoutDetails(workoutIndex);
-    
-    alert('Video deleted successfully!');
+    alert(`Photo upload complete: ${successCount} successful, ${errorCount} failed`);
 }
 
-// Update the viewWorkoutDetails function to show the correct video count
-function viewWorkoutDetails(workoutIndex) {
-    const workout = workoutHistory[workoutIndex];
-    let detailsHTML = `
-        <div class="modal-content">
-            <span class="close" onclick="closeWorkoutDetails()">&times;</span>
-            <h2>${workout.programName} - ${new Date(workout.date).toLocaleDateString()}</h2>
-            <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-            <p><strong>Duration:</strong> ${workout.duration ? formatDuration(workout.duration) : 'Unknown'}</p>
-            <p><strong>Videos:</strong> ${workout.videos ? workout.videos.length : 0} recorded</p>
-    `;
+// Enhanced data loading
+function loadFromStorage() {
+    const savedPrograms = localStorage.getItem('trainingPrograms');
+    const savedHistory = localStorage.getItem('workoutHistory');
+    const savedVideos = localStorage.getItem('sessionVideos');
+    const savedMeasurements = localStorage.getItem('measurements');
+    const savedPhotos = localStorage.getItem('progressPhotos');
     
-    // Rest of the function remains the same...
-    workout.exercises.forEach(exercise => {
-        const completedSets = exercise.sets.filter(set => set.completed);
-        detailsHTML += `
-            <div class="exercise-card">
-                <h3>${exercise.name}</h3>
-                <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
-                <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
-                <div class="sets-container">
-                    <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
-                        <div>Set</div>
-                        <div>Weight</div>
-                        <div>Reps</div>
-                        <div>RPE</div>
-                        <div>Volume</div>
-                        <div>Notes</div>
-                    </div>
-        `;
-        
-        exercise.sets.forEach((set, index) => {
-            if (set.completed) {
-                const volume = set.weight && set.reps ? (parseFloat(set.weight) * parseInt(set.reps)).toFixed(1) : '0';
-                detailsHTML += `
-                    <div class="set-row">
-                        <div>${index + 1}</div>
-                        <div>${set.weight}kg</div>
-                        <div>${set.reps}</div>
-                        <div>${set.rpe}</div>
-                        <div>${volume}kg</div>
-                        <div>${set.notes || '-'}</div>
-                    </div>
-                `;
-            }
-        });
-        
-        detailsHTML += `</div>`;
-        if (exercise.exerciseNotes) {
-            detailsHTML += `<p><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>`;
+    if (savedPrograms) programs = JSON.parse(savedPrograms);
+    if (savedHistory) workoutHistory = JSON.parse(savedHistory);
+    if (savedVideos) sessionVideos = JSON.parse(savedVideos);
+    if (savedMeasurements) measurements = JSON.parse(savedMeasurements);
+    if (savedPhotos) progressPhotos = JSON.parse(savedPhotos);
+}
+
+// Enhanced clear all data function
+function clearAllData() {
+    if (confirm('Are you sure you want to delete ALL data including programs, workout history, measurements, photos, and settings? This cannot be undone.')) {
+        if (confirm('This will permanently delete ALL your data. Are you absolutely sure?')) {
+            programs = [];
+            workoutHistory = [];
+            measurements = [];
+            progressPhotos = [];
+            sessionVideos = [];
+            githubConfig = {
+                token: '',
+                username: '',
+                repo: '',
+                folder: 'videos',
+                photoFolder: 'photos'
+            };
+            localStorage.clear();
+            loadPrograms();
+            loadHistory();
+            loadMeasurements();
+            loadProgressPhotos();
+            updateStats();
+            loadGithubConfig();
+            alert('All data has been cleared.');
         }
-        detailsHTML += `</div>`;
-    });
-    
-    if (workout.sessionNotes) {
-        detailsHTML += `<div class="form-group"><strong>Session Notes:</strong> ${workout.sessionNotes}</div>`;
     }
+}
+
+// Enhanced export data function
+function exportData() {
+    const data = {
+        programs: programs,
+        workoutHistory: workoutHistory,
+        measurements: measurements,
+        progressPhotos: progressPhotos.map(session => ({
+            ...session,
+            photos: session.photos.map(photo => ({
+                ...photo,
+                dataUrl: null // Don't export large data URLs
+            }))
+        })),
+        exportDate: new Date().toISOString(),
+        version: "2.0"
+    };
     
-    if (workout.videos && workout.videos.length > 0) {
-        detailsHTML += `<div class="form-group">
-            <h3>Session Videos (${workout.videos.length})</h3>
-        `;
-        
-        workout.videos.forEach((video, index) => {
-            if (video.githubUrl) {
-                // Make sure the URL points to the video-uploads branch
-                const videoUrl = video.githubUrl.replace('/blob/main/', '/blob/video-uploads/');
-                const rawVideoUrl = videoUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/video-uploads/', '/video-uploads/');
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `training-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Enhanced import data function
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (confirm('This will replace your current data. Are you sure?')) {
+                programs = data.programs || [];
+                workoutHistory = data.workoutHistory || [];
+                measurements = data.measurements || [];
+                progressPhotos = data.progressPhotos || [];
                 
-                detailsHTML += `
-                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong>${video.name}</strong>
-                            <button class="btn btn-danger" onclick="deleteVideoFromWorkout(${workoutIndex}, ${index})">Delete Video</button>
-                        </div>
-                        <p>Size: ${(video.size / 1024 / 1024).toFixed(1)}MB</p>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn" onclick="viewVideo('${rawVideoUrl}', '${video.name}')">View Video</button>
-                            <a href="${videoUrl}" target="_blank" class="btn">View on GitHub</a>
-                        </div>
-                    </div>
-                `;
-            } else {
-                detailsHTML += `
-                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <p style="color: #aaa; font-size: 0.9em;">
-                            ${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB) - Not uploaded to GitHub
-                        </p>
-                    </div>
-                `;
+                localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+                localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+                localStorage.setItem('measurements', JSON.stringify(measurements));
+                localStorage.setItem('progressPhotos', JSON.stringify(progressPhotos));
+                
+                loadPrograms();
+                loadHistory();
+                loadMeasurements();
+                loadProgressPhotos();
+                updateStats();
+                updateCharts();
+                updateMeasurementChart();
+                alert('Data imported successfully!');
             }
+        } catch (error) {
+            alert('Error importing data. Please check the file format.');
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Enhanced updateStats function
+function updateStats() {
+    // Personal Records
+    const prContainer = document.getElementById('personalRecords');
+    if (!prContainer) return;
+    
+    const exerciseMaxes = {};
+    
+    workoutHistory.forEach(workout => {
+        workout.exercises.forEach(exercise => {
+            if (!exerciseMaxes[exercise.name]) {
+                exerciseMaxes[exercise.name] = { 
+                    maxWeight: 0, 
+                    maxVolume: 0, 
+                    maxReps: 0,
+                    maxWeightDate: null,
+                    maxVolumeDate: null,
+                    maxRepsDate: null
+                };
+            }
+            
+            exercise.sets.forEach(set => {
+                if (set.weight && set.reps && set.completed) {
+                    const weight = parseFloat(set.weight);
+                    const reps = parseInt(set.reps);
+                    const volume = weight * reps;
+                    
+                    if (weight > exerciseMaxes[exercise.name].maxWeight) {
+                        exerciseMaxes[exercise.name].maxWeight = weight;
+                        exerciseMaxes[exercise.name].maxWeightDate = workout.date;
+                    }
+                    if (volume > exerciseMaxes[exercise.name].maxVolume) {
+                        exerciseMaxes[exercise.name].maxVolume = volume;
+                        exerciseMaxes[exercise.name].maxVolumeDate = workout.date;
+                    }
+                    if (reps > exerciseMaxes[exercise.name].maxReps) {
+                        exerciseMaxes[exercise.name].maxReps = reps;
+                        exerciseMaxes[exercise.name].maxRepsDate = workout.date;
+                    }
+                }
+            });
         });
-        detailsHTML += `</div>`;
-    }
-    
-    detailsHTML += `</div>`;
-    
-    // Create and show modal
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'workoutDetailsModal';
-    modal.style.display = 'block';
-    modal.innerHTML = detailsHTML;
-    document.body.appendChild(modal);
-}
+    });
 
-// Update the loadHistory function to show video count
-function loadHistory() {
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = '';
-
-    if (workoutHistory.length === 0) {
-        historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No workout history found. Complete your first workout to see data here.</p>';
-        return;
-    }
-
-    workoutHistory.slice().reverse().forEach((workout, index) => {
-        const actualIndex = workoutHistory.length - 1 - index;
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                <div style="flex: 1;">
-                    <h4>${workout.programName}</h4>
-                    <p><strong>Date:</strong> ${new Date(workout.date).toLocaleDateString()} ${new Date(workout.date).toLocaleTimeString()}</p>
+    if (Object.keys(exerciseMaxes).length === 0) {
+        prContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No personal records yet. Complete some workouts to see your progress here.</p>';
+    } else {
+        prContainer.innerHTML = Object.entries(exerciseMaxes)
+            .sort(([,a], [,b]) => b.maxWeight - a.maxWeight)
+            .slice(0, 10)
+            .map(([exercise, maxes]) => `
+                <div style="margin-bottom: 20px; padding: 16px; background: var(--background); border-radius: 12px; border: 1px solid var(--border);">
+                    <strong style="font-size: 1.1em; color: var(--text-primary);">${exercise}</strong><br>
+                    <div style="margin-top: 8px; display: grid; gap: 4px;">
+                        <div style="color: var(--text-secondary);">Max Weight: <span style="color: var(--primary-color); font-weight: 600;">${maxes.maxWeight}kg</span> <small>(${new Date(maxes.maxWeightDate).toLocaleDateString()})</small></div>
+                        <div style="color: var(--text-secondary);">Max Volume: <span style="color: var(--accent-color); font-weight: 600;">${maxes.maxVolume.toFixed(1)}kg</span> <small>(${new Date(maxes.maxVolumeDate).toLocaleDateString()})</small></div>
+                        <div style="color: var(--text-secondary);">Max Reps: <span style="color: var(--warning-color); font-weight: 600;">${maxes.maxReps}</span> <small>(${new Date(maxes.maxRepsDate).toLocaleDateString()})</small></div>
+                    </div>
                 </div>
-                <button class="btn btn-danger" onclick="deleteWorkout(${actualIndex})" style="margin-left: 15px;">Delete</button>
-            </div>
-            <p><strong>Exercises:</strong> ${workout.exercises.length}</p>
-            <p><strong>Completed Sets:</strong> ${workout.exercises.reduce((total, ex) => total + ex.sets.filter(set => set.completed).length, 0)} / ${workout.exercises.reduce((total, ex) => total + ex.sets.length, 0)}</p>
-            <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-            ${workout.duration ? `<p><strong>Duration:</strong> ${formatDuration(workout.duration)}</p>` : ''}
-            ${workout.videos && workout.videos.length > 0 ? `<p><strong>Videos:</strong> ${workout.videos.length} recorded</p>` : ''}
-            ${workout.sessionNotes ? `<p><strong>Notes:</strong> ${workout.sessionNotes.substring(0, 100)}${workout.sessionNotes.length > 100 ? '...' : ''}</p>` : ''}
-            <div style="margin-top: 15px;">
-                <button class="btn" onclick="viewWorkoutDetails(${actualIndex})">View Details</button>
-                <button class="btn btn-warning" onclick="editWorkout(${actualIndex})" style="margin-left: 10px;">Edit Workout</button>
-            </div>
-        `;
-        historyList.appendChild(historyItem);
+            `).join('');
+    }
+
+    // Frequency Analysis
+    const frequencyContainer = document.getElementById('frequencyAnalysis');
+    if (!frequencyContainer) return;
+    
+    const exerciseFrequency = {};
+    const recentWorkouts = workoutHistory.filter(workout => 
+        new Date(workout.date) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    );
+    
+    recentWorkouts.forEach(workout => {
+        workout.exercises.forEach(exercise => {
+            exerciseFrequency[exercise.name] = (exerciseFrequency[exercise.name] || 0) + 1;
+        });
     });
+
+    if (Object.keys(exerciseFrequency).length === 0) {
+        frequencyContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recent activity. Complete some workouts to see frequency analysis.</p>';
+    } else {
+        frequencyContainer.innerHTML = `
+            <div style="margin-bottom: 16px;">
+                <strong style="color: var(--text-primary);">Last 30 Days</strong>
+            </div>
+        ` + Object.entries(exerciseFrequency)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 8)
+            .map(([exercise, count]) => {
+                const percentage = Math.round((count / recentWorkouts.length) * 100);
+                return `
+                    <div style="margin-bottom: 16px; padding: 12px; background: var(--background); border-radius: 8px; border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong style="color: var(--text-primary);">${exercise}</strong>
+                            <span style="color: var(--primary-color); font-weight: 600;">${count} sessions</span>
+                        </div>
+                        <div style="width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background: var(--gradient-primary); transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+    }
+
+    updateExerciseFilter();
 }
 
-function readFileAsBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-        reader.readAsDataURL(file);
-    });
-}
-
-// Program management
+// Core workout management functions
 function createProgram() {
     document.getElementById('modalTitle').textContent = 'Create New Program';
     document.getElementById('programName').value = '';
@@ -715,7 +1346,7 @@ function loadPrograms() {
     programList.innerHTML = '';
 
     if (programs.length === 0) {
-        programList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No programs found. Create your first program to get started.</p>';
+        programList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No programs found. Create your first program to get started.</p>';
         return;
     }
 
@@ -757,7 +1388,6 @@ function startWorkout(programIndex) {
         videos: []
     };
 
-    // Show timer
     document.getElementById('timerContainer').style.display = 'flex';
     resetTimer();
     
@@ -787,7 +1417,7 @@ function loadCurrentWorkout() {
                 ${exercise.notes ? `<br><strong>Notes:</strong> ${exercise.notes}` : ''}
             </div>
             <div class="sets-container">
-                <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
+                <div class="set-row" style="font-weight: bold; background: rgba(99, 102, 241, 0.1);">
                     <div>Set</div>
                     <div>Weight</div>
                     <div>Reps</div>
@@ -832,806 +1462,6 @@ function updateExerciseNotes(exerciseIndex, notes) {
     }
 }
 
-function handleVideoUpload(event) {
-    const files = Array.from(event.target.files);
-    const previewContainer = document.getElementById('videoPreview');
-    
-    files.forEach(file => {
-        if (file.type.startsWith('video/')) {
-            // Store the file object for later upload
-            const videoId = Date.now() + Math.random().toString(36).substr(2, 5);
-            
-            const videoInfo = {
-                id: videoId,
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                file: file, // Store the file object for upload
-                lastModified: file.lastModified
-            };
-            
-            sessionVideos.push(videoInfo);
-            
-            // Create a preview
-            const videoURL = URL.createObjectURL(file);
-            const videoElement = document.createElement('video');
-            videoElement.controls = true;
-            videoElement.className = 'video-preview';
-            videoElement.style.width = '300px';
-            videoElement.style.margin = '10px';
-            videoElement.src = videoURL;
-            videoElement.dataset.id = videoId;
-            
-            // Add remove button
-            const videoContainer = document.createElement('div');
-            videoContainer.style.position = 'relative';
-            videoContainer.style.display = 'inline-block';
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.textContent = '×';
-            removeBtn.className = 'btn btn-danger';
-            removeBtn.style.position = 'absolute';
-            removeBtn.style.top = '5px';
-            removeBtn.style.right = '5px';
-            removeBtn.style.padding = '2px 8px';
-            removeBtn.onclick = function() {
-                // Remove from sessionVideos
-                sessionVideos = sessionVideos.filter(v => v.id !== videoId);
-                videoContainer.remove();
-            };
-            
-            videoContainer.appendChild(videoElement);
-            videoContainer.appendChild(removeBtn);
-            previewContainer.appendChild(videoContainer);
-        }
-    });
-}
-
-function saveWorkout() {
-    if (!currentWorkout) {
-        alert('No active workout to save');
-        return;
-    }
-
-    // Validate that at least one set was completed
-    const hasCompletedSets = currentWorkout.exercises.some(exercise => 
-        exercise.sets.some(set => set.completed)
-    );
-    
-    if (!hasCompletedSets) {
-        if (!confirm('No sets marked as completed. Are you sure you want to save this workout?')) {
-            return;
-        }
-    }
-
-    currentWorkout.sessionNotes = document.getElementById('sessionNotes').value;
-    currentWorkout.videos = sessionVideos.map(v => ({
-        id: v.id,
-        name: v.name,
-        size: v.size,
-        type: v.type,
-        githubUrl: v.githubUrl || null // Store GitHub URL if available
-    }));
-    currentWorkout.completed = new Date().toISOString();
-    currentWorkout.duration = timerSeconds;
-
-    workoutHistory.push(currentWorkout);
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-
-    // Update program last used date
-    const program = programs.find(p => p.id === currentWorkout.programId);
-    if (program) {
-        program.lastUsed = currentWorkout.completed;
-        localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-    }
-
-    alert('Workout saved successfully!');
-    
-    // Reset current workout
-    currentWorkout = null;
-    sessionVideos = [];
-    document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
-    document.getElementById('sessionNotes').value = '';
-    document.getElementById('videoPreview').innerHTML = '';
-    document.getElementById('uploadStatus').innerHTML = '';
-    document.getElementById('uploadProgress').style.display = 'none';
-    
-    // Hide timer
-    document.getElementById('timerContainer').style.display = 'none';
-    resetTimer();
-    
-    loadPrograms();
-    loadHistory();
-    updateStats();
-}
-
-function loadHistory() {
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = '';
-
-    if (workoutHistory.length === 0) {
-        historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No workout history found. Complete your first workout to see data here.</p>';
-        return;
-    }
-
-    workoutHistory.slice().reverse().forEach((workout, index) => {
-        const actualIndex = workoutHistory.length - 1 - index;
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                <div style="flex: 1;">
-                    <h4>${workout.programName}</h4>
-                    <p><strong>Date:</strong> ${new Date(workout.date).toLocaleDateString()} ${new Date(workout.date).toLocaleTimeString()}</p>
-                </div>
-                <button class="btn btn-danger" onclick="deleteWorkout(${actualIndex})" style="margin-left: 15px;">Delete</button>
-            </div>
-            <p><strong>Exercises:</strong> ${workout.exercises.length}</p>
-            <p><strong>Completed Sets:</strong> ${workout.exercises.reduce((total, ex) => total + ex.sets.filter(set => set.completed).length, 0)} / ${workout.exercises.reduce((total, ex) => total + ex.sets.length, 0)}</p>
-            <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-            ${workout.duration ? `<p><strong>Duration:</strong> ${formatDuration(workout.duration)}</p>` : ''}
-            ${workout.videos && workout.videos.length > 0 ? `<p><strong>Videos:</strong> ${workout.videos.length} recorded</p>` : ''}
-            ${workout.sessionNotes ? `<p><strong>Notes:</strong> ${workout.sessionNotes.substring(0, 100)}${workout.sessionNotes.length > 100 ? '...' : ''}</p>` : ''}
-            <button class="btn" onclick="viewWorkoutDetails(${actualIndex})">View Details</button>
-        `;
-        historyList.appendChild(historyItem);
-    });
-}
-
-function formatDuration(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-        return `${hours}h ${minutes}m ${secs}s`;
-    } else if (minutes > 0) {
-        return `${minutes}m ${secs}s`;
-    } else {
-        return `${secs}s`;
-    }
-}
-
-async function deleteWorkout(workoutIndex) {
-    const workout = workoutHistory[workoutIndex];
-    
-    // Check if workout has videos that need to be deleted from GitHub
-    const videosToDelete = workout.videos ? workout.videos.filter(video => video.githubUrl) : [];
-    
-    let confirmMessage = `Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`;
-    
-    if (videosToDelete.length > 0) {
-        confirmMessage += `\n\nThis will also delete ${videosToDelete.length} video(s) from GitHub.`;
-    }
-    
-    if (!confirm(confirmMessage)) {
-        return;
-    }
-    
-    // If there are videos to delete from GitHub, show progress
-    if (videosToDelete.length > 0) {
-        const deleteStatus = document.createElement('div');
-        deleteStatus.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            z-index: 10000;
-            min-width: 300px;
-            text-align: center;
-        `;
-        deleteStatus.innerHTML = `
-            <h3>Deleting Videos from GitHub...</h3>
-            <div id="deleteProgress">Preparing to delete ${videosToDelete.length} video(s)...</div>
-        `;
-        document.body.appendChild(deleteStatus);
-        
-        let successCount = 0;
-        let errorCount = 0;
-        
-        // Delete each video from GitHub
-        for (let i = 0; i < videosToDelete.length; i++) {
-            const video = videosToDelete[i];
-            
-            try {
-                deleteStatus.querySelector('#deleteProgress').innerHTML = 
-                    `Deleting video ${i + 1} of ${videosToDelete.length}: ${video.name}...`;
-                
-                // Extract the file path from the GitHub URL
-                const url = new URL(video.githubUrl);
-                const pathParts = url.pathname.split('/');
-                
-                // Find the index after "blob" and "video-uploads"
-                const blobIndex = pathParts.indexOf('blob');
-                if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
-                    throw new Error('Invalid GitHub URL format');
-                }
-                
-                // Reconstruct the file path (skip username, repo, blob, and branch)
-                const filePath = pathParts.slice(blobIndex + 2).join('/');
-                
-                // Get the SHA of the file to delete
-                const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
-                
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const fileData = await response.json();
-                    const sha = fileData.sha;
-                    
-                    // Delete the file from GitHub
-                    const deleteResponse = await fetch(apiUrl, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `token ${githubConfig.token}`,
-                            'Accept': 'application/vnd.github.v3+json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: `Delete workout video: ${video.name} (workout deletion)`,
-                            sha: sha,
-                            branch: 'video-uploads'
-                        })
-                    });
-                    
-                    if (deleteResponse.ok) {
-                        successCount++;
-                        console.log(`Successfully deleted video: ${video.name}`);
-                    } else {
-                        errorCount++;
-                        const errorData = await deleteResponse.json();
-                        console.error(`Failed to delete video ${video.name}:`, errorData);
-                    }
-                } else {
-                    errorCount++;
-                    console.error(`Failed to get file info for ${video.name}:`, await response.json());
-                }
-            } catch (error) {
-                errorCount++;
-                console.error(`Error deleting video ${video.name}:`, error);
-            }
-        }
-        
-        // Show final status
-        deleteStatus.querySelector('#deleteProgress').innerHTML = 
-            `Video deletion complete: ${successCount} successful, ${errorCount} failed`;
-        
-        // Remove status after 2 seconds
-        setTimeout(() => {
-            document.body.removeChild(deleteStatus);
-        }, 2000);
-        
-        // Show summary if there were any errors
-        if (errorCount > 0) {
-            alert(`Warning: ${errorCount} video(s) could not be deleted from GitHub. The workout will still be removed from your history.`);
-        }
-    }
-    
-    // Remove the workout from history
-    workoutHistory.splice(workoutIndex, 1);
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-    
-    // Refresh UI
-    loadHistory();
-    updateStats();
-    
-    alert(`Workout deleted successfully! ${videosToDelete.length > 0 ? `${videosToDelete.length} video(s) were also removed from GitHub.` : ''}`);
-}
-
-function clearAllHistory() {
-    if (confirm('Are you sure you want to delete ALL workout history? This cannot be undone.\n\nConsider exporting your data first for backup.')) {
-        if (confirm('This will permanently delete all your workout data. Are you absolutely sure?')) {
-            workoutHistory = [];
-            localStorage.removeItem('workoutHistory');
-            loadHistory();
-            updateStats();
-            alert('All workout history has been cleared.');
-        }
-    }
-}
-
-function clearAllData() {
-    if (confirm('Are you sure you want to delete ALL data including programs, workout history, and settings? This cannot be undone.')) {
-        if (confirm('This will permanently delete ALL your data. Are you absolutely sure?')) {
-            programs = [];
-            workoutHistory = [];
-            sessionVideos = [];
-            githubConfig = {
-                token: '',
-                username: '',
-                repo: '',
-                folder: ''
-            };
-            localStorage.clear();
-            loadPrograms();
-            loadHistory();
-            updateStats();
-            loadGithubConfig();
-            alert('All data has been cleared.');
-        }
-    }
-}
-
-function calculateWorkoutVolume(workout) {
-    let totalVolume = 0;
-    workout.exercises.forEach(exercise => {
-        exercise.sets.forEach(set => {
-            if (set.completed && set.weight && set.reps) {
-                totalVolume += parseFloat(set.weight) * parseInt(set.reps);
-            }
-        });
-    });
-    return totalVolume.toFixed(1);
-}
-
-function updateStats() {
-    // Personal Records
-    const prContainer = document.getElementById('personalRecords');
-    const exerciseMaxes = {};
-    
-    workoutHistory.forEach(workout => {
-        workout.exercises.forEach(exercise => {
-            if (!exerciseMaxes[exercise.name]) {
-                exerciseMaxes[exercise.name] = { maxWeight: 0, maxVolume: 0, maxReps: 0 };
-            }
-            
-            exercise.sets.forEach(set => {
-                if (set.weight && set.reps && set.completed) {
-                    const weight = parseFloat(set.weight);
-                    const reps = parseInt(set.reps);
-                    const volume = weight * reps;
-                    
-                    if (weight > exerciseMaxes[exercise.name].maxWeight) {
-                        exerciseMaxes[exercise.name].maxWeight = weight;
-                    }
-                    if (volume > exerciseMaxes[exercise.name].maxVolume) {
-                        exerciseMaxes[exercise.name].maxVolume = volume;
-                    }
-                    if (reps > exerciseMaxes[exercise.name].maxReps) {
-                        exerciseMaxes[exercise.name].maxReps = reps;
-                    }
-                }
-            });
-        });
-    });
-
-    if (Object.keys(exerciseMaxes).length === 0) {
-        prContainer.innerHTML = '<p style="text-align: center; color: #666;">No personal records yet. Complete some workouts to see your progress here.</p>';
-    } else {
-        prContainer.innerHTML = Object.entries(exerciseMaxes)
-            .map(([exercise, maxes]) => `
-                <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
-                    <strong>${exercise}</strong><br>
-                    Max Weight: ${maxes.maxWeight}kg<br>
-                    Max Volume: ${maxes.maxVolume}kg<br>
-                    Max Reps: ${maxes.maxReps}
-                </div>
-            `).join('');
-    }
-
-    // Frequency Analysis
-    const frequencyContainer = document.getElementById('frequencyAnalysis');
-    const exerciseFrequency = {};
-    
-    workoutHistory.forEach(workout => {
-        workout.exercises.forEach(exercise => {
-            exerciseFrequency[exercise.name] = (exerciseFrequency[exercise.name] || 0) + 1;
-        });
-    });
-
-    if (Object.keys(exerciseFrequency).length === 0) {
-        frequencyContainer.innerHTML = '<p style="text-align: center; color: #666;">No frequency data yet. Complete some workouts to see analysis here.</p>';
-    } else {
-        frequencyContainer.innerHTML = Object.entries(exerciseFrequency)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 10)
-            .map(([exercise, count]) => `
-                <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 5px;">
-                    <strong>${exercise}:</strong> ${count} sessions
-                </div>
-            `).join('');
-    }
-}
-
-function searchPrograms(query) {
-    const programCards = document.querySelectorAll('.program-card');
-    programCards.forEach(card => {
-        const text = card.textContent.toLowerCase();
-        card.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
-    });
-}
-
-function searchHistory(query) {
-    const historyItems = document.querySelectorAll('.history-item');
-    historyItems.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
-    });
-}
-
-function searchStats(query) {
-    // This would filter stats based on exercise names
-    console.log('Searching stats for:', query);
-}
-
-function editProgram(programIndex) {
-    const program = programs[programIndex];
-    currentProgramIndex = programIndex;
-    
-    document.getElementById('modalTitle').textContent = 'Edit Program';
-    document.getElementById('programName').value = program.name;
-    document.getElementById('programDescription').value = program.description;
-    
-    const exerciseList = document.getElementById('exerciseList');
-    exerciseList.innerHTML = '';
-    
-    program.exercises.forEach(exercise => {
-        const exerciseDiv = document.createElement('div');
-        exerciseDiv.className = 'exercise-card';
-        exerciseDiv.innerHTML = `
-            <div class="exercise-header">
-                <input type="text" placeholder="Exercise name" class="exercise-name-input" value="${exercise.name}" style="flex: 1; margin-right: 10px;">
-                <button class="btn btn-danger" onclick="removeExercise(this)">Remove</button>
-            </div>
-            <div class="form-group">
-                <label>Sets</label>
-                <input type="number" class="sets-input" value="${exercise.sets}" min="1" max="10">
-            </div>
-            <div class="form-group">
-                <label>Rep Range</label>
-                <input type="text" class="reps-input" placeholder="e.g., 6-8" value="${exercise.reps}">
-            </div>
-            <div class="form-group">
-                <label>Target RPE</label>
-                <input type="number" class="rpe-input" value="${exercise.rpe}" min="1" max="10" step="0.5">
-            </div>
-            <div class="form-group">
-                <label>Rest Time (seconds)</label>
-                <input type="number" class="rest-input" value="${exercise.rest}" min="30" step="30">
-            </div>
-            <div class="form-group">
-                <label>Exercise Notes</label>
-                <textarea class="exercise-notes" rows="2" placeholder="Setup notes, cues, form reminders...">${exercise.notes || ''}</textarea>
-            </div>
-        `;
-        exerciseList.appendChild(exerciseDiv);
-    });
-    
-    document.getElementById('programModal').style.display = 'block';
-}
-
-function deleteProgram(programIndex) {
-    if (confirm('Are you sure you want to delete this program? This cannot be undone.')) {
-        programs.splice(programIndex, 1);
-        localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-        loadPrograms();
-    }
-}
-
-function viewWorkoutDetails(workoutIndex) {
-    const workout = workoutHistory[workoutIndex];
-    let detailsHTML = `
-        <div class="modal-content">
-            <span class="close" onclick="closeWorkoutDetails()">&times;</span>
-            <h2>${workout.programName} - ${new Date(workout.date).toLocaleDateString()}</h2>
-            <div style="margin-bottom: 20px;">
-                <button class="btn btn-warning" onclick="closeWorkoutDetails(); editWorkout(${workoutIndex});">Edit This Workout</button>
-            </div>
-            <p><strong>Total Volume:</strong> ${calculateWorkoutVolume(workout)}kg</p>
-            <p><strong>Duration:</strong> ${workout.duration ? formatDuration(workout.duration) : 'Unknown'}</p>
-            <p><strong>Videos:</strong> ${workout.videos ? workout.videos.length : 0} recorded</p>
-    `;
-    
-    workout.exercises.forEach(exercise => {
-        const completedSets = exercise.sets.filter(set => set.completed);
-        detailsHTML += `
-            <div class="exercise-card">
-                <h3>${exercise.name}</h3>
-                <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
-                <p><strong>Completed:</strong> ${completedSets.length} / ${exercise.sets.length} sets</p>
-                <div class="sets-container">
-                    <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
-                        <div>Set</div>
-                        <div>Weight</div>
-                        <div>Reps</div>
-                        <div>RPE</div>
-                        <div>Volume</div>
-                        <div>Notes</div>
-                    </div>
-        `;
-        
-        exercise.sets.forEach((set, index) => {
-            if (set.completed) {
-                const volume = set.weight && set.reps ? (parseFloat(set.weight) * parseInt(set.reps)).toFixed(1) : '0';
-                detailsHTML += `
-                    <div class="set-row">
-                        <div>${index + 1}</div>
-                        <div>${set.weight}kg</div>
-                        <div>${set.reps}</div>
-                        <div>${set.rpe}</div>
-                        <div>${volume}kg</div>
-                        <div>${set.notes || '-'}</div>
-                    </div>
-                `;
-            }
-        });
-        
-        detailsHTML += `</div>`;
-        if (exercise.exerciseNotes) {
-            detailsHTML += `<p><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>`;
-        }
-        detailsHTML += `</div>`;
-    });
-    
-    if (workout.sessionNotes) {
-        detailsHTML += `<div class="form-group"><strong>Session Notes:</strong> ${workout.sessionNotes}</div>`;
-    }
-    
-    if (workout.videos && workout.videos.length > 0) {
-        detailsHTML += `<div class="form-group">
-            <h3>Session Videos (${workout.videos.length})</h3>
-        `;
-        
-        workout.videos.forEach((video, index) => {
-            if (video.githubUrl) {
-                // Make sure the URL points to the video-uploads branch
-                const videoUrl = video.githubUrl.replace('/blob/main/', '/blob/video-uploads/');
-                const rawVideoUrl = videoUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/video-uploads/', '/video-uploads/');
-                
-                detailsHTML += `
-                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong>${video.name}</strong>
-                            <button class="btn btn-danger" onclick="deleteVideoFromWorkout(${workoutIndex}, ${index})">Delete Video</button>
-                        </div>
-                        <p>Size: ${(video.size / 1024 / 1024).toFixed(1)}MB</p>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn" onclick="viewVideo('${rawVideoUrl}', '${video.name}')">View Video</button>
-                            <a href="${videoUrl}" target="_blank" class="btn">View on GitHub</a>
-                        </div>
-                    </div>
-                `;
-            } else {
-                detailsHTML += `
-                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <p style="color: #aaa; font-size: 0.9em;">
-                            ${video.name} (${(video.size / 1024 / 1024).toFixed(1)}MB) - Not uploaded to GitHub
-                        </p>
-                    </div>
-                `;
-            }
-        });
-        detailsHTML += `</div>`;
-    }
-    
-    detailsHTML += `</div>`;
-    
-    // Create and show modal
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'workoutDetailsModal';
-    modal.style.display = 'block';
-    modal.innerHTML = detailsHTML;
-    document.body.appendChild(modal);
-}
-
-async function deleteVideoFromWorkout(workoutIndex, videoIndex) {
-    const workout = workoutHistory[workoutIndex];
-    const video = workout.videos[videoIndex];
-    
-    if (!confirm(`Are you sure you want to delete the video "${video.name}"? This will remove it from GitHub and your workout history.`)) {
-        return;
-    }
-    
-    // If the video was uploaded to GitHub, delete it from there too
-    if (video.githubUrl) {
-        try {
-            // Extract the file path from the GitHub URL
-            // URL format: https://github.com/username/repo/blob/video-uploads/folder/filename.mp4
-            const url = new URL(video.githubUrl);
-            const pathParts = url.pathname.split('/');
-            
-            // Find the index after "blob" and "video-uploads"
-            const blobIndex = pathParts.indexOf('blob');
-            if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
-                throw new Error('Invalid GitHub URL format');
-            }
-            
-            // Reconstruct the file path (skip username, repo, blob, and branch)
-            const filePath = pathParts.slice(blobIndex + 2).join('/');
-            
-            // Get the SHA of the file to delete
-            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=video-uploads`;
-            
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            
-            if (response.ok) {
-                const fileData = await response.json();
-                const sha = fileData.sha;
-                
-                // Delete the file from GitHub
-                const deleteResponse = await fetch(apiUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Delete workout video: ${video.name}`,
-                        sha: sha,
-                        branch: 'video-uploads'
-                    })
-                });
-                
-                if (deleteResponse.ok) {
-                    console.log('Video successfully deleted from GitHub');
-                } else {
-                    const errorData = await deleteResponse.json();
-                    console.error('Failed to delete video from GitHub:', errorData);
-                    alert('Video was removed from history but could not be deleted from GitHub. Error: ' + 
-                          (errorData.message || 'Unknown error'));
-                }
-            } else {
-                console.error('Failed to get file info from GitHub:', await response.json());
-                alert('Video was removed from history but could not be deleted from GitHub (file not found).');
-            }
-        } catch (error) {
-            console.error('Error deleting video from GitHub:', error);
-            alert('Video was removed from history but there was an error deleting it from GitHub: ' + error.message);
-        }
-    }
-    
-    // Remove the video from the workout
-    workout.videos.splice(videoIndex, 1);
-    
-    // Update the workout history
-    workoutHistory[workoutIndex] = workout;
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-    
-    // Refresh the workout details view
-    closeWorkoutDetails();
-    viewWorkoutDetails(workoutIndex);
-    
-    alert('Video deleted successfully!');
-}
-
-function viewVideo(videoUrl, videoName) {
-    // Create video modal
-    const videoModal = document.createElement('div');
-    videoModal.className = 'modal';
-    videoModal.id = 'videoModal';
-    videoModal.style.display = 'block';
-    videoModal.innerHTML = `
-        <div class="modal-content" style="max-width: 90%; max-height: 90%;">
-            <span class="close" onclick="closeVideoModal()">&times;</span>
-            <h3>${videoName}</h3>
-            <video controls autoplay style="width: 100%; max-height: 70vh;">
-                <source src="${videoUrl}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            <div style="margin-top: 15px; text-align: center;">
-                <a href="${videoUrl}" download="${videoName}" class="btn">Download Video</a>
-                <p style="margin-top: 10px; font-size: 0.9em; color: #aaa;">
-                    If the video doesn't play, try downloading it instead.
-                </p>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(videoModal);
-    
-    // Handle video loading errors
-    const videoElement = videoModal.querySelector('video');
-    videoElement.addEventListener('error', function() {
-        videoModal.querySelector('p').textContent = 
-            'Video cannot be played directly due to CORS restrictions. Please download the video to view it.';
-        videoModal.querySelector('p').style.color = '#ff416c';
-    });
-}
-
-function closeVideoModal() {
-    const modal = document.getElementById('videoModal');
-    if (modal) {
-        // Pause any playing video before closing
-        const video = modal.querySelector('video');
-        if (video) {
-            video.pause();
-        }
-        modal.remove();
-    }
-}
-
-function closeWorkoutDetails() {
-    const modal = document.getElementById('workoutDetailsModal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-function closeModal() {
-    document.getElementById('programModal').style.display = 'none';
-}
-
-function exportData() {
-    const data = {
-        programs: programs,
-        workoutHistory: workoutHistory,
-        exportDate: new Date().toISOString(),
-        version: "1.0"
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `training-data-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            
-            if (confirm('This will replace your current data. Are you sure?')) {
-                programs = data.programs || [];
-                workoutHistory = data.workoutHistory || [];
-                
-                localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-                localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-                
-                loadPrograms();
-                loadHistory();
-                updateStats();
-                alert('Data imported successfully!');
-            }
-        } catch (error) {
-            alert('Error importing data. Please check the file format.');
-        }
-    };
-    reader.readAsText(file);
-}
-
-function loadFromStorage() {
-    const savedPrograms = localStorage.getItem('trainingPrograms');
-    const savedHistory = localStorage.getItem('workoutHistory');
-    const savedVideos = localStorage.getItem('sessionVideos');
-    
-    if (savedPrograms) programs = JSON.parse(savedPrograms);
-    if (savedHistory) workoutHistory = JSON.parse(savedHistory);
-    if (savedVideos) sessionVideos = JSON.parse(savedVideos);
-}
-
-function saveToStorage() {
-    localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-    localStorage.setItem('sessionVideos', JSON.stringify(sessionVideos));
-    return true;
-}
-
-// Click outside modal to close
 window.onclick = function(event) {
     const modal = document.getElementById('programModal');
     if (event.target === modal) {
@@ -2476,5 +2306,3 @@ closeEditWorkout = function() {
         disableAutoSave();
     }
 };
-
-
