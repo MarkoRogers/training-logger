@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training Logger</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -18,6 +19,7 @@
             <button class="nav-btn" onclick="showTab('workout')">Current Workout</button>
             <button class="nav-btn" onclick="showTab('history')">History</button>
             <button class="nav-btn" onclick="showTab('stats')">Analytics</button>
+            <button class="nav-btn" onclick="showTab('measurements')">Progress</button>
             <button class="nav-btn" onclick="showTab('settings')">Settings</button>
         </nav>
 
@@ -109,6 +111,64 @@
                 </div>
             </div>
         </div>
+
+        <!-- Progress/Measurements Tab -->
+<div id="measurements" class="tab-content">
+    <h2>Progress Tracking</h2>
+    
+    <div class="measurements-section">
+        <h3>Body Measurements</h3>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="measurementDate" value="">
+        </div>
+        <div class="measurement-inputs">
+            <div class="form-group">
+                <label>Weight (kg)</label>
+                <input type="number" id="weight" step="0.1" placeholder="e.g., 75.5">
+            </div>
+            <div class="form-group">
+                <label>Body Fat % (optional)</label>
+                <input type="number" id="bodyFat" step="0.1" placeholder="e.g., 12.5">
+            </div>
+            <div class="form-group">
+                <label>Muscle Mass (kg, optional)</label>
+                <input type="number" id="muscleMass" step="0.1" placeholder="e.g., 45.2">
+            </div>
+        </div>
+        <button class="btn btn-success" onclick="saveMeasurement()">Add Measurement</button>
+    </div>
+
+    <div class="progress-pictures-section">
+        <h3>Progress Pictures</h3>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="pictureDate" value="">
+        </div>
+        <div class="form-group">
+            <label>Upload Pictures</label>
+            <input type="file" id="progressPictures" accept="image/*" multiple onchange="handleProgressPictureUpload(event)">
+        </div>
+        <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea id="pictureNotes" rows="2" placeholder="Training phase, diet notes, etc."></textarea>
+        </div>
+        <div id="progressPicturePreview"></div>
+        <button class="btn btn-success" onclick="saveProgressPictures()">Save Progress Pictures</button>
+        <button class="btn btn-info" onclick="uploadProgressPicturesToGitHub()">Upload to GitHub</button>
+    </div>
+
+    <div class="measurements-history">
+        <h3>Measurement History</h3>
+        <canvas id="measurementChart" width="400" height="200"></canvas>
+        <div id="measurementsList"></div>
+    </div>
+
+    <div class="pictures-gallery">
+        <h3>Progress Pictures Gallery</h3>
+        <div id="picturesGallery"></div>
+    </div>
+</div>
 
         <!-- Settings Tab -->
         <div id="settings" class="tab-content">
