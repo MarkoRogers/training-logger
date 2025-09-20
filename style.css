@@ -771,3 +771,60 @@
         box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
     }
 }
+
+.measurements-section,
+.progress-pictures-section,
+.measurements-history,
+.pictures-gallery {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e8e8e8;
+}
+
+.measurement-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.measurement-item {
+    transition: all 0.15s ease;
+}
+
+.measurement-item:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.picture-entry {
+    transition: all 0.15s ease;
+}
+
+.picture-entry:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.pictures-grid img:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+#measurementChart,
+#volumeChart,
+#strengthChart {
+    max-height: 300px;
+}
+
+/* Mobile responsiveness for measurements */
+@media (max-width: 768px) {
+    .measurement-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .pictures-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+    }
+}
+
