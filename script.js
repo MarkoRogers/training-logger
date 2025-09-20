@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Try to load from GitHub first, fallback to localStorage
     await loadAllDataFromGitHub();
     
+    // Load programs from GitHub first, fallback to localStorage
+    await loadProgramsFromGitHub();
     loadPrograms();
     loadHistory();
     loadMeasurements();
@@ -179,6 +181,7 @@ async function loadAllDataFromGitHub() {
                 const progressData = await loadDataFromGitHub('progress-pictures', latestProgress.name);
                 if (progressData) progressPictures = progressData;
             }
+            await loadProgramsFromGitHub();
         }
     } catch (error) {
         console.error('Error loading data from GitHub, falling back to localStorage:', error);
@@ -831,7 +834,7 @@ function removeExercise(button) {
     button.closest('.exercise-card').remove();
 }
 
-function saveProgram() {
+async function saveProgram() {
     const name = document.getElementById('programName').value.trim();
     const description = document.getElementById('programDescription').value.trim();
     
@@ -864,18 +867,38 @@ function saveProgram() {
         description,
         exercises,
         created: currentProgramIndex >= 0 ? programs[currentProgramIndex].created : new Date().toISOString(),
-        lastUsed: null
+        lastUsed: currentProgramIndex >= 0 ? programs[currentProgramIndex].lastUsed : null,
+        lastModified: new Date().toISOString()
     };
 
-    if (currentProgramIndex >= 0) {
-        programs[currentProgramIndex] = program;
-    } else {
-        programs.push(program);
-    }
+    try {
+        // Save to GitHub first
+        const githubSuccess = await saveProgramToGitHub(program);
+        
+        if (currentProgramIndex >= 0) {
+            programs[currentProgramIndex] = program;
+        } else {
+            programs.push(program);
+        }
 
-    localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-    closeModal();
-    loadPrograms();
+        // Always save to localStorage as backup
+        localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+
+        closeModal();
+        loadPrograms();
+        
+        if (githubSuccess) {
+            alert('Program saved successfully to GitHub!');
+        } else if (githubConfig.token) {
+            alert('Program saved locally, but failed to upload to GitHub. Check your settings.');
+        } else {
+            alert('Program saved locally. Configure GitHub to sync across devices.');
+        }
+        
+    } catch (error) {
+        alert('Error saving program: ' + error.message);
+        console.error('Program save error:', error);
+    }
 }
 
 function loadPrograms() {
@@ -1609,11 +1632,37 @@ function editProgram(programIndex) {
     document.getElementById('programModal').style.display = 'block';
 }
 
-function deleteProgram(programIndex) {
-    if (confirm('Are you sure you want to delete this program? This cannot be undone.')) {
+async function deleteProgram(programIndex) {
+    const program = programs[programIndex];
+    
+    if (!confirm(`Are you sure you want to delete the program "${program.name}"? This cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        // Delete from GitHub first
+        const githubSuccess = await deleteProgramFromGitHub(program);
+        
+        // Remove from local array
         programs.splice(programIndex, 1);
+        
+        // Update localStorage
         localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+        
+        // Refresh UI
         loadPrograms();
+        
+        if (githubSuccess) {
+            alert('Program deleted successfully from GitHub!');
+        } else if (githubConfig.token) {
+            alert('Program deleted locally, but failed to delete from GitHub. Check your settings.');
+        } else {
+            alert('Program deleted locally.');
+        }
+        
+    } catch (error) {
+        alert('Error deleting program: ' + error.message);
+        console.error('Program delete error:', error);
     }
 }
 
@@ -3596,6 +3645,25 @@ async function syncDataWithGitHub() {
         console.error('Sync error:', error);
     } finally {
         if (syncButton) setButtonLoading(syncButton, false);
+    }
+}
+
+async function syncProgramsWithGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration first.');
+        return;
+    }
+    
+    try {
+        // Upload all local programs to GitHub
+        for (const program of programs) {
+            await saveProgramToGitHub(program);
+        }
+        
+        alert('All programs synchronized with GitHub successfully!');
+    } catch (error) {
+        alert('Error synchronizing programs with GitHub: ' + error.message);
+        console.error('Program sync error:', error);
     }
 }
 
