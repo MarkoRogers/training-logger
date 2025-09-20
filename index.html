@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training Logger</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -18,6 +19,7 @@
             <button class="nav-btn" onclick="showTab('workout')">Current Workout</button>
             <button class="nav-btn" onclick="showTab('history')">History</button>
             <button class="nav-btn" onclick="showTab('stats')">Analytics</button>
+            <button class="nav-btn" onclick="showTab('progress')">Progress</button>
             <button class="nav-btn" onclick="showTab('settings')">Settings</button>
         </nav>
 
@@ -81,7 +83,27 @@
         <!-- Analytics Tab -->
         <div id="stats" class="tab-content">
             <h2>Performance Analytics</h2>
-            <input type="text" class="search-bar" placeholder="Search exercises..." oninput="searchStats(this.value)">
+            
+            <!-- Exercise Filter -->
+            <div class="analytics-controls">
+                <div class="form-group">
+                    <label>Select Exercise</label>
+                    <select id="exerciseFilter" onchange="updateCharts()">
+                        <option value="">All Exercises</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Time Period</label>
+                    <select id="periodFilter" onchange="updateCharts()">
+                        <option value="30">Last 30 days</option>
+                        <option value="60">Last 60 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="180">Last 6 months</option>
+                        <option value="365">Last year</option>
+                        <option value="all">All time</option>
+                    </select>
+                </div>
+            </div>
             
             <div class="stats-grid">
                 <div class="stat-card">
@@ -92,14 +114,14 @@
                 <div class="stat-card">
                     <h3>Volume Trends</h3>
                     <div class="chart-container">
-                        <p>Volume trends chart will appear here</p>
+                        <canvas id="volumeChart" width="400" height="200"></canvas>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <h3>Strength Progress</h3>
                     <div class="chart-container">
-                        <p>Strength progress chart will appear here</p>
+                        <canvas id="strengthChart" width="400" height="200"></canvas>
                     </div>
                 </div>
                 
@@ -110,13 +132,134 @@
             </div>
         </div>
 
+        <!-- Progress Tab (New) -->
+        <div id="progress" class="tab-content">
+            <h2>Progress Tracking</h2>
+            
+            <div class="progress-tabs">
+                <button class="progress-tab-btn active" onclick="showProgressTab('measurements')">Body Measurements</button>
+                <button class="progress-tab-btn" onclick="showProgressTab('photos')">Progress Photos</button>
+            </div>
+
+            <!-- Measurements Section -->
+            <div id="measurements" class="progress-tab-content active">
+                <div class="measurements-input">
+                    <h3>Add New Measurements</h3>
+                    <div class="measurement-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" id="measurementDate" value="">
+                            </div>
+                            <div class="form-group">
+                                <label>Weight (kg)</label>
+                                <input type="number" id="weight" step="0.1" placeholder="e.g., 75.5">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Body Fat %</label>
+                                <input type="number" id="bodyFat" step="0.1" placeholder="e.g., 15.2">
+                            </div>
+                            <div class="form-group">
+                                <label>Muscle Mass (kg)</label>
+                                <input type="number" id="muscleMass" step="0.1" placeholder="e.g., 45.8">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Chest (cm)</label>
+                                <input type="number" id="chest" step="0.1" placeholder="e.g., 102.5">
+                            </div>
+                            <div class="form-group">
+                                <label>Waist (cm)</label>
+                                <input type="number" id="waist" step="0.1" placeholder="e.g., 82.0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Arms (cm)</label>
+                                <input type="number" id="arms" step="0.1" placeholder="e.g., 38.5">
+                            </div>
+                            <div class="form-group">
+                                <label>Thighs (cm)</label>
+                                <input type="number" id="thighs" step="0.1" placeholder="e.g., 58.2">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="measurementNotes" rows="2" placeholder="Any additional notes about this measurement session..."></textarea>
+                        </div>
+                        <button class="btn btn-success" onclick="saveMeasurement()">Save Measurements</button>
+                    </div>
+                </div>
+
+                <div class="measurements-history">
+                    <h3>Measurement History</h3>
+                    <div class="chart-container">
+                        <canvas id="measurementChart" width="400" height="200"></canvas>
+                    </div>
+                    <div id="measurementsList">
+                        <!-- Measurements list will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Photos Section -->
+            <div id="photos" class="progress-tab-content">
+                <div class="photo-upload">
+                    <h3>Add Progress Photos</h3>
+                    <div class="photo-upload-area">
+                        <input type="file" id="progressPhotoUpload" accept="image/*" multiple onchange="handleProgressPhotoUpload(event)">
+                        <div class="upload-instructions">
+                            <p>Upload progress photos (front, side, back views recommended)</p>
+                            <p>Supported formats: JPG, PNG, WebP</p>
+                        </div>
+                    </div>
+                    
+                    <div id="photoPreview" class="photo-preview-grid">
+                        <!-- Photo previews will appear here -->
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Photo Date</label>
+                        <input type="date" id="photoDate" value="">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="photoNotes" rows="2" placeholder="Notes about these photos (e.g., lighting conditions, time of day, etc.)..."></textarea>
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="saveProgressPhotos()">Save Progress Photos</button>
+                    <button class="btn btn-info" onclick="uploadPhotosToGitHub()">Upload Photos to GitHub</button>
+                </div>
+
+                <div class="photo-history">
+                    <h3>Progress Photo History</h3>
+                    <div class="photo-filter">
+                        <select id="photoDateFilter" onchange="filterPhotos()">
+                            <option value="all">All Photos</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="180">Last 6 months</option>
+                            <option value="365">Last year</option>
+                        </select>
+                    </div>
+                    <div id="photoHistory" class="photo-history-grid">
+                        <!-- Progress photos history will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Settings Tab -->
         <div id="settings" class="tab-content">
             <h2>App Settings</h2>
             
             <div class="github-config">
                 <h3>GitHub Integration</h3>
-                <p>Configure GitHub integration to upload your workout videos to a GitHub repository.</p>
+                <p>Configure GitHub integration to upload your workout videos and progress photos to a GitHub repository.</p>
                 
                 <div class="form-group">
                     <label>GitHub Personal Access Token</label>
@@ -131,13 +274,19 @@
                 
                 <div class="form-group">
                     <label>Repository Name</label>
-                    <input type="text" id="githubRepo" placeholder="training-videos" class="search-bar">
+                    <input type="text" id="githubRepo" placeholder="training-progress" class="search-bar">
                 </div>
                 
                 <div class="form-group">
-                    <label>Repository Folder (optional)</label>
+                    <label>Videos Folder (optional)</label>
                     <input type="text" id="githubFolder" placeholder="videos" class="search-bar">
                     <small>Folder within your repository where videos will be stored</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Photos Folder (optional)</label>
+                    <input type="text" id="githubPhotoFolder" placeholder="photos" class="search-bar">
+                    <small>Folder within your repository where progress photos will be stored</small>
                 </div>
                 
                 <button class="btn btn-success" onclick="saveGithubConfig()">Save GitHub Configuration</button>
@@ -147,7 +296,7 @@
             <div class="form-group">
                 <h3>Data Management</h3>
                 <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
-                <p style="margin-top: 10px; color: #ff416c;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
+                <p style="margin-top: 10px; color: #ff416c;"><small>Warning: This will delete all programs, workout history, measurements, photos, and settings.</small></p>
             </div>
         </div>
 
