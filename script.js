@@ -35,9 +35,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadProgressPictures();
     updateStats();
     updateMeasurementChart();
-    
-    // Update sync indicators
-    updateSyncStatus('global', 'complete');
 });
 
 // Tab management
@@ -148,8 +145,6 @@ async function loadAllDataFromGitHub() {
     }
 
     try {
-        updateSyncStatus('global', 'pending');
-        
         // Get all files in the data directory
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/data`;
         const response = await fetch(`${apiUrl}?ref=training-data`, {
@@ -164,45 +159,31 @@ async function loadAllDataFromGitHub() {
             const files = await response.json();
             
             // Load measurements
-            updateSyncStatus('measurements', 'pending');
             const measurementFiles = files.filter(f => f.name.startsWith('measurements-'));
             if (measurementFiles.length > 0) {
                 const latestMeasurements = measurementFiles.sort((a, b) => b.name.localeCompare(a.name))[0];
                 const measurementData = await loadDataFromGitHub('measurements', latestMeasurements.name);
                 if (measurementData) measurements = measurementData;
             }
-            updateSyncStatus('measurements', 'complete');
-            
+
             // Load workout history
-            updateSyncStatus('history', 'pending');
             const workoutFiles = files.filter(f => f.name.startsWith('workouts-'));
             if (workoutFiles.length > 0) {
                 const latestWorkouts = workoutFiles.sort((a, b) => b.name.localeCompare(a.name))[0];
                 const workoutData = await loadDataFromGitHub('workouts', latestWorkouts.name);
                 if (workoutData) workoutHistory = workoutData;
             }
-            updateSyncStatus('history', 'complete');
-            
+
             // Load progress pictures metadata
-            updateSyncStatus('pictures', 'pending');
             const progressFiles = files.filter(f => f.name.startsWith('progress-pictures-'));
             if (progressFiles.length > 0) {
                 const latestProgress = progressFiles.sort((a, b) => b.name.localeCompare(a.name))[0];
                 const progressData = await loadDataFromGitHub('progress-pictures', latestProgress.name);
                 if (progressData) progressPictures = progressData;
             }
-            updateSyncStatus('pictures', 'complete');
-            
-        } else if (response.status === 404) {
-            // Data directory doesn't exist yet, which is fine
-            console.log('Data directory not found on GitHub, starting fresh');
-            loadFromStorage();
-        } else {
-            throw new Error(`Failed to load data: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading data from GitHub, falling back to localStorage:', error);
-        showGitHubStatus('Error loading data from GitHub: ' + error.message, 'error');
         loadFromStorage();
     }
 }
@@ -231,7 +212,6 @@ async function loadDataFromGitHub(dataType, fileName) {
         }
     } catch (error) {
         console.error(`Error loading ${dataType} from GitHub:`, error);
-        throw error;
     }
 
     return null;
@@ -378,8 +358,6 @@ async function loadProgramsFromGitHub() {
     }
 
     try {
-        updateSyncStatus('programs', 'pending');
-        
         // Get all files in the programs directory
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/programs`;
         const response = await fetch(`${apiUrl}?ref=training-programs`, {
@@ -411,20 +389,16 @@ async function loadProgramsFromGitHub() {
             programs.sort((a, b) => new Date(a.created) - new Date(b.created));
             
             console.log(`Loaded ${programs.length} programs from GitHub`);
-            updateSyncStatus('programs', 'complete');
         } else if (response.status === 404) {
             // Programs directory doesn't exist yet, which is fine
             console.log('Programs directory not found on GitHub, starting fresh');
             programs = [];
-            updateSyncStatus('programs', 'complete');
         } else {
             throw new Error(`Failed to load programs: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading programs from GitHub, falling back to localStorage:', error);
-        showGitHubStatus('Error loading programs from GitHub: ' + error.message, 'error');
         loadProgramsFromStorage();
-        updateSyncStatus('programs', 'error');
     }
 }
 
@@ -455,7 +429,6 @@ async function loadProgramFromGitHub(fileName) {
         }
     } catch (error) {
         console.error(`Error loading program ${fileName} from GitHub:`, error);
-        throw error;
     }
 
     return null;
@@ -528,8 +501,6 @@ async function syncProgramsWithGitHub() {
     }
     
     try {
-        updateSyncStatus('programs', 'pending');
-        
         // Upload all local programs to GitHub
         let successCount = 0;
         let errorCount = 0;
@@ -549,104 +520,17 @@ async function syncProgramsWithGitHub() {
         }
         
         if (errorCount === 0) {
-            showGitHubStatus(`All ${successCount} programs synchronized with GitHub successfully!`, 'success');
+            alert(`All ${successCount} programs synchronized with GitHub successfully!`);
         } else {
-            showGitHubStatus(`Sync completed: ${successCount} successful, ${errorCount} failed. Check console for details.`, 'error');
+            alert(`Sync completed: ${successCount} successful, ${errorCount} failed. Check console for details.`);
         }
-        
-        updateSyncStatus('programs', 'complete');
     } catch (error) {
-        showGitHubStatus('Error synchronizing programs with GitHub: ' + error.message, 'error');
+        alert('Error synchronizing programs with GitHub: ' + error.message);
         console.error('Program sync error:', error);
-        updateSyncStatus('programs', 'error');
     } finally {
         if (syncButton) {
             syncButton.disabled = false;
             syncButton.textContent = 'Sync Programs with GitHub';
-        }
-    }
-}
-
-async function syncAllDataWithGitHub() {
-    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-        alert('Please configure GitHub integration first.');
-        return;
-    }
-    
-    const syncButton = document.querySelector('[onclick="syncAllDataWithGitHub()"]');
-    if (syncButton) {
-        syncButton.disabled = true;
-        syncButton.textContent = 'Syncing...';
-    }
-    
-    try {
-        updateSyncStatus('global', 'pending');
-        
-        // Save all data to GitHub
-        let successCount = 0;
-        let errorCount = 0;
-        
-        // Sync programs
-        try {
-            for (const program of programs) {
-                const success = await saveProgramToGitHub(program);
-                if (success) successCount++; else errorCount++;
-            }
-            updateSyncStatus('programs', 'complete');
-        } catch (error) {
-            console.error('Error syncing programs:', error);
-            errorCount++;
-            updateSyncStatus('programs', 'error');
-        }
-        
-        // Sync measurements
-        try {
-            await saveDataToGitHub('measurements', measurements);
-            successCount++;
-            updateSyncStatus('measurements', 'complete');
-        } catch (error) {
-            console.error('Error syncing measurements:', error);
-            errorCount++;
-            updateSyncStatus('measurements', 'error');
-        }
-        
-        // Sync workout history
-        try {
-            await saveDataToGitHub('workouts', workoutHistory);
-            successCount++;
-            updateSyncStatus('history', 'complete');
-        } catch (error) {
-            console.error('Error syncing workout history:', error);
-            errorCount++;
-            updateSyncStatus('history', 'error');
-        }
-        
-        // Sync progress pictures
-        try {
-            await saveDataToGitHub('progress-pictures', progressPictures);
-            successCount++;
-            updateSyncStatus('pictures', 'complete');
-        } catch (error) {
-            console.error('Error syncing progress pictures:', error);
-            errorCount++;
-            updateSyncStatus('pictures', 'error');
-        }
-        
-        if (errorCount === 0) {
-            showGitHubStatus(`All data synchronized with GitHub successfully!`, 'success');
-        } else {
-            showGitHubStatus(`Sync completed with ${errorCount} errors. Check console for details.`, 'error');
-        }
-        
-        updateSyncStatus('global', 'complete');
-    } catch (error) {
-        showGitHubStatus('Error synchronizing data with GitHub: ' + error.message, 'error');
-        console.error('Data sync error:', error);
-        updateSyncStatus('global', 'error');
-    } finally {
-        if (syncButton) {
-            syncButton.disabled = false;
-            syncButton.textContent = 'Sync All Data with GitHub';
         }
     }
 }
@@ -709,16 +593,14 @@ function saveGithubConfig() {
     };
     
     localStorage.setItem('githubConfig', JSON.stringify(githubConfig));
-    showGitHubStatus('GitHub configuration saved successfully!', 'success');
+    alert('GitHub configuration saved successfully!');
 }
 
 function testGithubConnection() {
     if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-        showGitHubStatus('Please complete all GitHub configuration fields first.', 'error');
+        alert('Please complete all GitHub configuration fields first.');
         return;
     }
-    
-    showGitHubStatus('Testing GitHub connection...', 'loading');
     
     // Test the connection by trying to list repositories
     fetch(`https://api.github.com/user/repos`, {
@@ -739,19 +621,19 @@ function testGithubConnection() {
                 }
             });
         } else {
-            showGitHubStatus('GitHub connection failed. Please check your credentials.', 'error');
+            alert('GitHub connection failed. Please check your credentials.');
             throw new Error('GitHub connection failed');
         }
     })
     .then(branchResponse => {
         if (branchResponse.ok) {
-            showGitHubStatus('GitHub connection successful! Video-uploads branch exists.', 'success');
+            alert('GitHub connection successful! Video-uploads branch exists.');
         } else {
-            showGitHubStatus('GitHub connection successful, but video-uploads branch does not exist. It will be created automatically when you upload your first video.', 'success');
+            alert('GitHub connection successful, but video-uploads branch does not exist. It will be created automatically when you upload your first video.');
         }
     })
     .catch(error => {
-        showGitHubStatus('Error testing GitHub connection: ' + error.message, 'error');
+        alert('Error testing GitHub connection: ' + error.message);
     });
 }
 
@@ -1057,15 +939,15 @@ async function saveProgram() {
         loadPrograms();
         
         if (githubSuccess) {
-            showGitHubStatus('Program saved successfully to GitHub!', 'success');
+            alert('Program saved successfully to GitHub!');
         } else if (githubConfig.token) {
-            showGitHubStatus('Program saved locally, but failed to upload to GitHub. Check your settings.', 'error');
+            alert('Program saved locally, but failed to upload to GitHub. Check your settings.');
         } else {
-            showGitHubStatus('Program saved locally. Configure GitHub to sync across devices.', 'success');
+            alert('Program saved locally. Configure GitHub to sync across devices.');
         }
         
     } catch (error) {
-        showGitHubStatus('Error saving program: ' + error.message, 'error');
+        alert('Error saving program: ' + error.message);
         console.error('Program save error:', error);
     }
 }
@@ -1164,15 +1046,15 @@ async function deleteProgram(programIndex) {
         loadPrograms();
         
         if (githubSuccess) {
-            showGitHubStatus('Program deleted successfully from GitHub!', 'success');
+            alert('Program deleted successfully from GitHub!');
         } else if (githubConfig.token) {
-            showGitHubStatus('Program deleted locally, but failed to delete from GitHub. Check your settings.', 'error');
+            alert('Program deleted locally, but failed to delete from GitHub. Check your settings.');
         } else {
-            showGitHubStatus('Program deleted locally.', 'success');
+            alert('Program deleted locally.');
         }
         
     } catch (error) {
-        showGitHubStatus('Error deleting program: ' + error.message, 'error');
+        alert('Error deleting program: ' + error.message);
         console.error('Program delete error:', error);
     }
 }
@@ -1328,20 +1210,20 @@ function handleVideoUpload(event) {
 
 async function uploadVideosToGitHub() {
     if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-        showGitHubStatus('Please configure GitHub integration in the Settings tab first.', 'error');
+        alert('Please configure GitHub integration in the Settings tab first.');
         showTab('settings');
         return;
     }
     
     if (sessionVideos.length === 0) {
-        showGitHubStatus('No videos to upload. Please select videos first.', 'error');
+        alert('No videos to upload. Please select videos first.');
         return;
     }
     
     // Ensure the video-uploads branch exists
     const branchExists = await ensureVideoUploadsBranch();
     if (!branchExists) {
-        showGitHubStatus('Could not create or access the video-uploads branch. Please check your GitHub permissions and try again.', 'error');
+        alert('Could not create or access the video-uploads branch. Please check your GitHub permissions and try again.');
         return;
     }
     
@@ -1427,7 +1309,7 @@ async function uploadVideosToGitHub() {
 }
 
 function readFileAsBase64(file) {
-    return new Promise((resolve, reject) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = error => reject(error);
@@ -1437,7 +1319,7 @@ function readFileAsBase64(file) {
 
 async function saveWorkout() {
     if (!currentWorkout) {
-        showGitHubStatus('No active workout to save', 'error');
+        alert('No active workout to save');
         return;
     }
 
@@ -1475,7 +1357,7 @@ async function saveWorkout() {
             localStorage.setItem('trainingPrograms', JSON.stringify(programs));
         }
 
-        showGitHubStatus('Workout saved successfully to GitHub!', 'success');
+        alert('Workout saved successfully to GitHub!');
         
         currentWorkout = null;
         sessionVideos = [];
@@ -1493,7 +1375,7 @@ async function saveWorkout() {
         updateStats();
         
     } catch (error) {
-        showGitHubStatus('Error saving workout to GitHub: ' + error.message, 'error');
+        alert('Error saving workout to GitHub: ' + error.message);
         console.error('Workout save error:', error);
     }
 }
@@ -1538,7 +1420,7 @@ async function saveMeasurement() {
     const muscleMass = document.getElementById('muscleMass').value;
 
     if (!date || !weight) {
-        showGitHubStatus('Please enter at least date and weight', 'error');
+        alert('Please enter at least date and weight');
         return;
     }
 
@@ -1565,9 +1447,9 @@ async function saveMeasurement() {
         
         loadMeasurements();
         updateMeasurementChart();
-        showGitHubStatus('Measurement saved successfully to GitHub!', 'success');
+        alert('Measurement saved successfully to GitHub!');
     } catch (error) {
-        showGitHubStatus('Error saving measurement to GitHub: ' + error.message, 'error');
+        alert('Error saving measurement to GitHub: ' + error.message);
         console.error('Measurement save error:', error);
     }
 }
@@ -1617,17 +1499,17 @@ function handleProgressPictureUpload(event) {
     });
 }
 
-async function saveProgressPictures() {
+function saveProgressPictures() {
     const date = document.getElementById('pictureDate').value;
     const notes = document.getElementById('pictureNotes').value;
 
     if (!date) {
-        showGitHubStatus('Please select a date', 'error');
+        alert('Please select a date');
         return;
     }
 
     if (progressPictureFiles.length === 0) {
-        showGitHubStatus('Please select at least one picture', 'error');
+        alert('Please select at least one picture');
         return;
     }
 
@@ -1648,40 +1530,34 @@ async function saveProgressPictures() {
     progressPictures.push(pictureEntry);
     progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
     
-    try {
-        await saveDataToGitHub('progress-pictures', progressPictures);
-        localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
-        
-        // Clear form
-        document.getElementById('pictureDate').value = '';
-        document.getElementById('pictureNotes').value = '';
-        document.getElementById('progressPicturePreview').innerHTML = '';
-        document.getElementById('progressPictures').value = '';
-        progressPictureFiles = [];
-        
-        loadProgressPictures();
-        showGitHubStatus('Progress pictures saved successfully to GitHub!', 'success');
-    } catch (error) {
-        showGitHubStatus('Error saving progress pictures to GitHub: ' + error.message, 'error');
-        console.error('Progress pictures save error:', error);
-    }
+    localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+    
+    // Clear form
+    document.getElementById('pictureDate').value = '';
+    document.getElementById('pictureNotes').value = '';
+    document.getElementById('progressPicturePreview').innerHTML = '';
+    document.getElementById('progressPictures').value = '';
+    progressPictureFiles = [];
+    
+    loadProgressPictures();
+    alert('Progress pictures saved successfully!');
 }
 
 async function uploadProgressPicturesToGitHub() {
     if (progressPictureFiles.length === 0) {
-        showGitHubStatus('No new pictures to upload. Please add pictures first.', 'error');
+        alert('No new pictures to upload. Please add pictures first.');
         return;
     }
 
     if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
-        showGitHubStatus('Please configure GitHub integration in the Settings tab first.', 'error');
+        alert('Please configure GitHub integration in the Settings tab first.');
         return;
     }
 
     // Ensure the progress-pictures branch exists
     const branchExists = await ensureProgressPicturesBranch();
     if (!branchExists) {
-        showGitHubStatus('Could not create or access the progress-pictures branch. Please check your GitHub permissions and try again.', 'error');
+        alert('Could not create or access the progress-pictures branch. Please check your GitHub permissions and try again.');
         return;
     }
 
@@ -1789,20 +1665,14 @@ async function uploadProgressPicturesToGitHub() {
 
             progressPictures.push(pictureEntry);
             progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
             
-            try {
-                await saveDataToGitHub('progress-pictures', progressPictures);
-                localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
-                
-                // Clear the upload queue
-                progressPictureFiles = [];
-                document.getElementById('progressPicturePreview').innerHTML = '';
-                document.getElementById('progressPictures').value = '';
-                
-                loadProgressPictures();
-            } catch (error) {
-                console.error('Error saving progress pictures after upload:', error);
-            }
+            // Clear the upload queue
+            progressPictureFiles = [];
+            document.getElementById('progressPicturePreview').innerHTML = '';
+            document.getElementById('progressPictures').value = '';
+            
+            loadProgressPictures();
         }
 
     } finally {
@@ -1947,50 +1817,20 @@ function updateMeasurementChart() {
     });
 }
 
-async function deleteMeasurement(index) {
-    if (!confirm('Are you sure you want to delete this measurement?')) {
-        return;
-    }
-    
-    try {
-        // Remove from local array
+function deleteMeasurement(index) {
+    if (confirm('Are you sure you want to delete this measurement?')) {
         measurements.splice(index, 1);
-        
-        // Update GitHub
-        await saveDataToGitHub('measurements', measurements);
-        
-        // Update localStorage
         localStorage.setItem('measurements', JSON.stringify(measurements));
-        
         loadMeasurements();
         updateMeasurementChart();
-        showGitHubStatus('Measurement deleted successfully from GitHub!', 'success');
-    } catch (error) {
-        showGitHubStatus('Error deleting measurement from GitHub: ' + error.message, 'error');
-        console.error('Measurement delete error:', error);
     }
 }
 
-async function deleteProgressPictureEntry(index) {
-    if (!confirm('Are you sure you want to delete this entire progress picture entry?')) {
-        return;
-    }
-    
-    try {
-        // Remove from local array
+function deleteProgressPictureEntry(index) {
+    if (confirm('Are you sure you want to delete this entire progress picture entry?')) {
         progressPictures.splice(index, 1);
-        
-        // Update GitHub
-        await saveDataToGitHub('progress-pictures', progressPictures);
-        
-        // Update localStorage
         localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
-        
         loadProgressPictures();
-        showGitHubStatus('Progress picture entry deleted successfully from GitHub!', 'success');
-    } catch (error) {
-        showGitHubStatus('Error deleting progress picture entry from GitHub: ' + error.message, 'error');
-        console.error('Progress picture delete error:', error);
     }
 }
 
@@ -2008,7 +1848,7 @@ function viewProgressPicture(imageUrl, imageName) {
     document.body.appendChild(imageModal);
 }
 
-async function deleteProgressPicture(entryIndex, pictureIndex) {
+function deleteProgressPicture(entryIndex, pictureIndex) {
     const entry = progressPictures[entryIndex];
     const picture = entry.pictures[pictureIndex];
     
@@ -2016,409 +1856,19 @@ async function deleteProgressPicture(entryIndex, pictureIndex) {
         return;
     }
     
-    try {
-        // Remove the picture from the entry
-        entry.pictures.splice(pictureIndex, 1);
-        
-        // If this was the last picture, remove the entire entry
-        if (entry.pictures.length === 0) {
-            progressPictures.splice(entryIndex, 1);
-        }
-        
-        // Update GitHub
-        await saveDataToGitHub('progress-pictures', progressPictures);
-        
-        // Update localStorage
-        localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
-        
-        // Refresh the display
-        loadProgressPictures();
-        
-        showGitHubStatus('Progress picture deleted successfully from GitHub!', 'success');
-    } catch (error) {
-        showGitHubStatus('Error deleting progress picture from GitHub: ' + error.message, 'error');
-        console.error('Progress picture delete error:', error);
-    }
-}
-
-// GitHub status functions
-function showGitHubStatus(message, type) {
-    const statusElement = document.getElementById('githubStatus');
-    statusElement.textContent = message;
-    statusElement.className = `github-status github-${type}`;
-    statusElement.style.display = 'block';
+    // Remove the picture from the entry
+    entry.pictures.splice(pictureIndex, 1);
     
-    if (type === 'loading') {
-        const spinner = document.createElement('span');
-        spinner.className = 'spinner';
-        statusElement.prepend(spinner);
+    // If this was the last picture, remove the entire entry
+    if (entry.pictures.length === 0) {
+        progressPictures.splice(entryIndex, 1);
     }
     
-    // Auto-hide success messages after 5 seconds
-    if (type === 'success') {
-        setTimeout(() => {
-            statusElement.style.display = 'none';
-        }, 5000);
-    }
-}
-
-function updateSyncStatus(type, status) {
-    const statusElement = document.getElementById(`${type}SyncStatus`);
-    if (statusElement) {
-        statusElement.className = `sync-indicator sync-${status}`;
-        statusElement.title = `${type.charAt(0).toUpperCase() + type.slice(1)} sync ${status}`;
-    }
-}
-
-// History functions
-async function clearAllHistory() {
-    if (!confirm('Are you sure you want to delete ALL workout history? This cannot be undone.')) {
-        return;
-    }
+    // Update localStorage
+    localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
     
-    try {
-        workoutHistory = [];
-        
-        // Update GitHub
-        await saveDataToGitHub('workouts', workoutHistory);
-        
-        // Update localStorage
-        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-        
-        loadHistory();
-        updateStats();
-        showGitHubStatus('All workout history deleted successfully from GitHub!', 'success');
-    } catch (error) {
-        showGitHubStatus('Error deleting workout history from GitHub: ' + error.message, 'error');
-        console.error('History delete error:', error);
-    }
-}
-
-function loadHistory() {
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = '';
-
-    if (workoutHistory.length === 0) {
-        historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No workout history yet.</p>';
-        return;
-    }
-
-    workoutHistory.slice().reverse().forEach((workout, index) => {
-        const actualIndex = workoutHistory.length - 1 - index;
-        const workoutItem = document.createElement('div');
-        workoutItem.className = 'history-item';
-        workoutItem.style.cssText = 'background: #f8f9fa; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #007bff;';
-        
-        workoutItem.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div>
-                    <h4>${workout.programName} - ${new Date(workout.completed).toLocaleDateString()}</h4>
-                    <p><strong>Duration:</strong> ${formatDuration(workout.duration)}</p>
-                    <p><strong>Exercises:</strong> ${workout.exercises.length}</p>
-                    ${workout.sessionNotes ? `<p><strong>Notes:</strong> ${workout.sessionNotes}</p>` : ''}
-                </div>
-                <div>
-                    <button class="btn btn-info" onclick="viewWorkoutDetails(${actualIndex})">View Details</button>
-                    <button class="btn btn-danger" onclick="deleteWorkout(${actualIndex})">Delete</button>
-                </div>
-            </div>
-        `;
-        historyList.appendChild(workoutItem);
-    });
-}
-
-async function deleteWorkout(index) {
-    if (!confirm('Are you sure you want to delete this workout?')) {
-        return;
-    }
-    
-    try {
-        // Remove from local array
-        workoutHistory.splice(index, 1);
-        
-        // Update GitHub
-        await saveDataToGitHub('workouts', workoutHistory);
-        
-        // Update localStorage
-        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-        
-        loadHistory();
-        updateStats();
-        showGitHubStatus('Workout deleted successfully from GitHub!', 'success');
-    } catch (error) {
-        showGitHubStatus('Error deleting workout from GitHub: ' + error.message, 'error');
-        console.error('Workout delete error:', error);
-    }
-}
-
-function formatDuration(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    } else {
-        return `${minutes}:${secs.toString().padStart(2, '0')}`;
-    }
-}
-
-function viewWorkoutDetails(index) {
-    const workout = workoutHistory[index];
-    
-    const detailsModal = document.createElement('div');
-    detailsModal.className = 'modal';
-    detailsModal.style.display = 'block';
-    detailsModal.innerHTML = `
-        <div class="modal-content" style="max-width: 800px;">
-            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            <h2>${workout.programName} - ${new Date(workout.completed).toLocaleDateString()}</h2>
-            <p><strong>Duration:</strong> ${formatDuration(workout.duration)}</p>
-            ${workout.sessionNotes ? `<p><strong>Session Notes:</strong> ${workout.sessionNotes}</p>` : ''}
-            
-            <h3>Exercises</h3>
-            ${workout.exercises.map(exercise => `
-                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <h4>${exercise.name}</h4>
-                    <p><strong>Target:</strong> ${exercise.sets.length} sets × ${exercise.reps} reps @ RPE ${exercise.rpe}</p>
-                    ${exercise.exerciseNotes ? `<p><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>` : ''}
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <thead>
-                            <tr style="background: rgba(0, 123, 255, 0.1);">
-                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Set</th>
-                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Weight</th>
-                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Reps</th>
-                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">RPE</th>
-                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${exercise.sets.map((set, setIndex) => `
-                                <tr>
-                                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${setIndex + 1}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${set.weight || '-'}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${set.reps || '-'}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${set.rpe || '-'}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${set.notes || '-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `).join('')}
-            
-            ${workout.videos && workout.videos.length > 0 ? `
-                <h3>Session Videos</h3>
-                <div>
-                    ${workout.videos.map(video => `
-                        <div style="margin: 10px 0;">
-                            ${video.githubUrl ? `
-                                <a href="${video.githubUrl}" target="_blank" style="color: #00d4ff;">${video.name}</a>
-                            ` : video.name}
-                        </div>
-                    `).join('')}
-                </div>
-            ` : ''}
-        </div>
-    `;
-    document.body.appendChild(detailsModal);
-}
-
-function closeWorkoutDetails() {
-    const modal = document.querySelector('.modal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-function updateStats() {
-    // Update personal records
-    const personalRecords = document.getElementById('personalRecords');
-    personalRecords.innerHTML = '';
-    
-    const prs = calculatePersonalRecords();
-    if (prs.length === 0) {
-        personalRecords.innerHTML = '<p>No personal records yet.</p>';
-        return;
-    }
-    
-    prs.forEach(pr => {
-        const prItem = document.createElement('div');
-        prItem.style.cssText = 'padding: 10px; margin: 5px 0; background: rgba(40, 167, 69, 0.1); border-radius: 4px;';
-        prItem.innerHTML = `<strong>${pr.exercise}</strong>: ${pr.weight}kg × ${pr.reps} (${new Date(pr.date).toLocaleDateString()})`;
-        personalRecords.appendChild(prItem);
-    });
-}
-
-function calculatePersonalRecords() {
-    const records = [];
-    const exerciseMap = {};
-    
-    workoutHistory.forEach(workout => {
-        workout.exercises.forEach(exercise => {
-            exercise.sets.forEach(set => {
-                if (set.weight && set.reps && set.completed) {
-                    const weight = parseFloat(set.weight);
-                    const reps = parseInt(set.reps);
-                    
-                    if (!exerciseMap[exercise.name] || 
-                        exerciseMap[exercise.name].weight < weight || 
-                        (exerciseMap[exercise.name].weight === weight && exerciseMap[exercise.name].reps < reps)) {
-                        
-                        exerciseMap[exercise.name] = {
-                            exercise: exercise.name,
-                            weight: weight,
-                            reps: reps,
-                            date: workout.completed
-                        };
-                    }
-                }
-            });
-        });
-    });
-    
-    for (const exercise in exerciseMap) {
-        records.push(exerciseMap[exercise]);
-    }
-    
-    return records.sort((a, b) => b.weight - a.weight);
-}
-
-// Search functions
-function searchPrograms(query) {
-    const programList = document.getElementById('programList');
-    const programCards = programList.querySelectorAll('.program-card');
-    
-    programCards.forEach(card => {
-        const programName = card.querySelector('h3').textContent.toLowerCase();
-        const programDescription = card.querySelector('p').textContent.toLowerCase();
-        
-        if (programName.includes(query.toLowerCase()) || programDescription.includes(query.toLowerCase())) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
-    });
-}
-
-function searchHistory(query) {
-    const historyList = document.getElementById('historyList');
-    const historyItems = historyList.querySelectorAll('.history-item');
-    
-    historyItems.forEach(item => {
-        const programName = item.querySelector('h4').textContent.toLowerCase();
-        const notes = item.querySelector('p:last-child')?.textContent.toLowerCase() || '';
-        
-        if (programName.includes(query.toLowerCase()) || notes.includes(query.toLowerCase())) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-
-function searchStats(query) {
-    // This would be implemented based on your specific analytics needs
-    console.log('Searching stats for:', query);
-}
-
-// Export/Import functions
-function exportData() {
-    const data = {
-        programs: programs,
-        workoutHistory: workoutHistory,
-        measurements: measurements,
-        progressPictures: progressPictures,
-        exportedAt: new Date().toISOString()
-    };
-    
-    const dataStr = JSON.stringify(data, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `training-logger-backup-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-}
-
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    if (!confirm('Importing data will replace all current data. Are you sure you want to continue?')) {
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            
-            if (data.programs) programs = data.programs;
-            if (data.workoutHistory) workoutHistory = data.workoutHistory;
-            if (data.measurements) measurements = data.measurements;
-            if (data.progressPictures) progressPictures = data.progressPictures;
-            
-            // Save to localStorage
-            localStorage.setItem('trainingPrograms', JSON.stringify(programs));
-            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-            localStorage.setItem('measurements', JSON.stringify(measurements));
-            localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
-            
-            // Update UI
-            loadPrograms();
-            loadHistory();
-            loadMeasurements();
-            loadProgressPictures();
-            updateStats();
-            updateMeasurementChart();
-            
-            showGitHubStatus('Data imported successfully!', 'success');
-            
-            // Sync with GitHub if configured
-            if (githubConfig.token && githubConfig.username && githubConfig.repo) {
-                syncAllDataWithGitHub();
-            }
-        } catch (error) {
-            showGitHubStatus('Error importing data: ' + error.message, 'error');
-            console.error('Import error:', error);
-        }
-    };
-    reader.readAsText(file);
-}
-
-function clearAllData() {
-    if (!confirm('Are you sure you want to delete ALL data? This will remove all programs, workout history, measurements, and progress pictures. This cannot be undone.')) {
-        return;
-    }
-    
-    programs = [];
-    workoutHistory = [];
-    measurements = [];
-    progressPictures = [];
-    
-    localStorage.removeItem('trainingPrograms');
-    localStorage.removeItem('workoutHistory');
-    localStorage.removeItem('measurements');
-    localStorage.removeItem('progressPictures');
-    localStorage.removeItem('sessionVideos');
-    
-    // Clear GitHub data if configured
-    if (githubConfig.token && githubConfig.username && githubConfig.repo) {
-        // This would require additional GitHub API calls to delete files
-        showGitHubStatus('Local data cleared. Note: GitHub data must be manually deleted from the repository.', 'success');
-    } else {
-        showGitHubStatus('All data cleared successfully!', 'success');
-    }
-    
-    // Update UI
-    loadPrograms();
-    loadHistory();
-    loadMeasurements();
+    // Refresh the display
     loadProgressPictures();
-    updateStats();
-    updateMeasurementChart();
+    
+    alert('Progress picture deleted successfully!');
 }
