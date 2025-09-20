@@ -21,12 +21,18 @@ let githubConfig = {
 };
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    loadFromStorage();
+document.addEventListener('DOMContentLoaded', async function() {
+    loadGithubConfig();
+    
+    // Try to load from GitHub first, fallback to localStorage
+    await loadAllDataFromGitHub();
+    
     loadPrograms();
     loadHistory();
+    loadMeasurements();
+    loadProgressPictures();
     updateStats();
-    loadGithubConfig();
+    updateMeasurementChart();
 });
 
 // Tab management
@@ -62,6 +68,151 @@ function showTab(tabName) {
     document.getElementById('measurementDate').value = today;
     document.getElementById('pictureDate').value = today;
 }    
+}
+
+// GitHub data management functions
+async function saveDataToGitHub(dataType, data, fileName = null) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        throw new Error('GitHub configuration required');
+    }
+
+    const branchExists = await ensureTrainingDataBranch();
+    if (!branchExists) {
+        throw new Error('Could not access training-data branch');
+    }
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    const actualFileName = fileName || `${dataType}-${timestamp}.json`;
+    const filePath = `data/${actualFileName}`;
+    const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+    const content = btoa(JSON.stringify({
+        type: dataType,
+        data: data,
+        lastUpdated: new Date().toISOString(),
+        version: "1.0"
+    }, null, 2));
+
+    // Check if file exists to get SHA
+    let sha = null;
+    try {
+        const existingResponse = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        
+        if (existingResponse.ok) {
+            const existingData = await existingResponse.json();
+            sha = existingData.sha;
+        }
+    } catch (error) {
+        // File doesn't exist, which is fine
+    }
+
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `token ${githubConfig.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message: sha ? `Update ${dataType} data` : `Add ${dataType} data`,
+            content: content,
+            branch: 'training-data',
+            ...(sha && { sha })
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save to GitHub');
+    }
+
+    return true;
+}
+
+async function loadAllDataFromGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        console.log('GitHub not configured, using localStorage as fallback');
+        loadFromStorage();
+        return;
+    }
+
+    try {
+        // Get all files in the data directory
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/data`;
+        const response = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const files = await response.json();
+            
+            // Load measurements
+            const measurementFiles = files.filter(f => f.name.startsWith('measurements-'));
+            if (measurementFiles.length > 0) {
+                const latestMeasurements = measurementFiles.sort((a, b) => b.name.localeCompare(a.name))[0];
+                const measurementData = await loadDataFromGitHub('measurements', latestMeasurements.name);
+                if (measurementData) measurements = measurementData;
+            }
+
+            // Load workout history
+            const workoutFiles = files.filter(f => f.name.startsWith('workouts-'));
+            if (workoutFiles.length > 0) {
+                const latestWorkouts = workoutFiles.sort((a, b) => b.name.localeCompare(a.name))[0];
+                const workoutData = await loadDataFromGitHub('workouts', latestWorkouts.name);
+                if (workoutData) workoutHistory = workoutData;
+            }
+
+            // Load progress pictures metadata
+            const progressFiles = files.filter(f => f.name.startsWith('progress-pictures-'));
+            if (progressFiles.length > 0) {
+                const latestProgress = progressFiles.sort((a, b) => b.name.localeCompare(a.name))[0];
+                const progressData = await loadDataFromGitHub('progress-pictures', latestProgress.name);
+                if (progressData) progressPictures = progressData;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading data from GitHub, falling back to localStorage:', error);
+        loadFromStorage();
+    }
+}
+
+async function loadDataFromGitHub(dataType, fileName) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return null;
+    }
+
+    try {
+        const filePath = `data/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const response = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const fileData = await response.json();
+            const content = JSON.parse(atob(fileData.content));
+            return content.data;
+        }
+    } catch (error) {
+        console.error(`Error loading ${dataType} from GitHub:`, error);
+    }
+
+    return null;
 }
 
 // Timer functions
@@ -904,13 +1055,12 @@ function handleVideoUpload(event) {
     });
 }
 
-function saveWorkout() {
+async function saveWorkout() {
     if (!currentWorkout) {
         alert('No active workout to save');
         return;
     }
 
-    // Validate that at least one set was completed
     const hasCompletedSets = currentWorkout.exercises.some(exercise => 
         exercise.sets.some(set => set.completed)
     );
@@ -933,40 +1083,44 @@ function saveWorkout() {
     currentWorkout.duration = timerSeconds;
 
     workoutHistory.push(currentWorkout);
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+    
+    try {
+        // Save to GitHub
+        await saveDataToGitHub('workouts', workoutHistory);
+        
+        // Also save individual workout
+        const workoutFileName = `workout-${currentWorkout.date.split('T')[0]}-${currentWorkout.programName.replace(/[^a-zA-Z0-9]/g, '-')}.json`;
+        await saveDataToGitHub('individual-workout', currentWorkout, workoutFileName);
+        
+        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
 
-    // Upload workout data to GitHub
-    uploadWorkoutDataToGitHub(currentWorkout).then(success => {
-        if (!success && githubConfig.token) {
-            console.warn('Failed to backup workout to GitHub');
+        const program = programs.find(p => p.id === currentWorkout.programId);
+        if (program) {
+            program.lastUsed = currentWorkout.completed;
+            localStorage.setItem('trainingPrograms', JSON.stringify(programs));
         }
-    });
 
-    // Update program last used date
-    const program = programs.find(p => p.id === currentWorkout.programId);
-    if (program) {
-        program.lastUsed = currentWorkout.completed;
-        localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+        alert('Workout saved successfully to GitHub!');
+        
+        currentWorkout = null;
+        sessionVideos = [];
+        document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
+        document.getElementById('sessionNotes').value = '';
+        document.getElementById('videoPreview').innerHTML = '';
+        document.getElementById('uploadStatus').innerHTML = '';
+        document.getElementById('uploadProgress').style.display = 'none';
+        
+        document.getElementById('timerContainer').style.display = 'none';
+        resetTimer();
+        
+        loadPrograms();
+        loadHistory();
+        updateStats();
+        
+    } catch (error) {
+        alert('Error saving workout to GitHub: ' + error.message);
+        console.error('Workout save error:', error);
     }
-
-    alert('Workout saved successfully!');
-    
-    // Reset current workout
-    currentWorkout = null;
-    sessionVideos = [];
-    document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
-    document.getElementById('sessionNotes').value = '';
-    document.getElementById('videoPreview').innerHTML = '';
-    document.getElementById('uploadStatus').innerHTML = '';
-    document.getElementById('uploadProgress').style.display = 'none';
-    
-    // Hide timer
-    document.getElementById('timerContainer').style.display = 'none';
-    resetTimer();
-    
-    loadPrograms();
-    loadHistory();
-    updateStats();
 }
 
 function loadHistory() {
@@ -2644,7 +2798,7 @@ closeEditWorkout = function() {
 };
 
 // Progress tracking functions
-function saveMeasurement() {
+async function saveMeasurement() {
     const date = document.getElementById('measurementDate').value;
     const weight = document.getElementById('weight').value;
     const bodyFat = document.getElementById('bodyFat').value;
@@ -2667,17 +2821,22 @@ function saveMeasurement() {
     measurements.push(measurement);
     measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
     
-    localStorage.setItem('measurements', JSON.stringify(measurements));
-    
-    // Clear form
-    document.getElementById('measurementDate').value = '';
-    document.getElementById('weight').value = '';
-    document.getElementById('bodyFat').value = '';
-    document.getElementById('muscleMass').value = '';
-    
-    loadMeasurements();
-    updateMeasurementChart();
-    alert('Measurement saved successfully!');
+    try {
+        await saveDataToGitHub('measurements', measurements);
+        localStorage.setItem('measurements', JSON.stringify(measurements));
+        
+        document.getElementById('measurementDate').value = '';
+        document.getElementById('weight').value = '';
+        document.getElementById('bodyFat').value = '';
+        document.getElementById('muscleMass').value = '';
+        
+        loadMeasurements();
+        updateMeasurementChart();
+        alert('Measurement saved successfully to GitHub!');
+    } catch (error) {
+        alert('Error saving measurement to GitHub: ' + error.message);
+        console.error('Measurement save error:', error);
+    }
 }
 
 function handleProgressPictureUpload(event) {
@@ -3415,6 +3574,29 @@ async function deleteProgressPicture(entryIndex, pictureIndex) {
     loadProgressPictures();
     
     alert('Progress picture deleted successfully!');
+}
+
+async function syncDataWithGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration first.');
+        return;
+    }
+    
+    const syncButton = document.querySelector('[onclick="syncDataWithGitHub()"]');
+    if (syncButton) setButtonLoading(syncButton, true);
+    
+    try {
+        await saveDataToGitHub('measurements', measurements);
+        await saveDataToGitHub('workouts', workoutHistory);
+        await saveDataToGitHub('progress-pictures', progressPictures);
+        
+        alert('All data synchronized with GitHub successfully!');
+    } catch (error) {
+        alert('Error synchronizing data with GitHub: ' + error.message);
+        console.error('Sync error:', error);
+    } finally {
+        if (syncButton) setButtonLoading(syncButton, false);
+    }
 }
 
 
