@@ -927,13 +927,20 @@ function saveWorkout() {
         name: v.name,
         size: v.size,
         type: v.type,
-        githubUrl: v.githubUrl || null // Store GitHub URL if available
+        githubUrl: v.githubUrl || null
     }));
     currentWorkout.completed = new Date().toISOString();
     currentWorkout.duration = timerSeconds;
 
     workoutHistory.push(currentWorkout);
     localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+
+    // Upload workout data to GitHub
+    uploadWorkoutDataToGitHub(currentWorkout).then(success => {
+        if (!success && githubConfig.token) {
+            console.warn('Failed to backup workout to GitHub');
+        }
+    });
 
     // Update program last used date
     const program = programs.find(p => p.id === currentWorkout.programId);
@@ -1018,14 +1025,22 @@ async function deleteWorkout(workoutIndex) {
     let confirmMessage = `Are you sure you want to delete the workout from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`;
     
     if (videosToDelete.length > 0) {
-        confirmMessage += `\n\nThis will also delete ${videosToDelete.length} video(s) from GitHub.`;
+        confirmMessage += `\n\nThis will also delete ${videosToDelete.length} video(s) and the workout data from GitHub.`;
     }
     
     if (!confirm(confirmMessage)) {
         return;
     }
     
-    // If there are videos to delete from GitHub, show progress
+    // Delete workout data from GitHub first
+    if (githubConfig.token) {
+        const dataDeleted = await uploadWorkoutDataToGitHub(workout, true);
+        if (!dataDeleted) {
+            console.warn('Failed to delete workout data from GitHub');
+        }
+    }
+    
+    // Rest of the existing delete logic for videos...
     if (videosToDelete.length > 0) {
         const deleteStatus = document.createElement('div');
         deleteStatus.style.cssText = `
@@ -1142,7 +1157,7 @@ async function deleteWorkout(workoutIndex) {
     loadHistory();
     updateStats();
     
-    alert(`Workout deleted successfully! ${videosToDelete.length > 0 ? `${videosToDelete.length} video(s) were also removed from GitHub.` : ''}`);
+    alert(`Workout deleted successfully! ${videosToDelete.length > 0 ? `${videosToDelete.length} video(s) and workout data were also removed from GitHub.` : 'Workout data was also removed from GitHub.'}`);
 }
 
 function clearAllHistory() {
@@ -2270,9 +2285,19 @@ function saveEditedWorkout() {
     if (editingWorkoutIndex >= 0) {
         const workout = workoutHistory[editingWorkoutIndex];
         
+        // Validate the workout data
+        const validation = validateWorkoutData(workout);
+        if (!validation.valid) {
+            alert(validation.message);
+            return;
+        }
+        
         // Update session notes
         const sessionNotes = document.getElementById('editSessionNotes').value;
         workout.sessionNotes = sessionNotes;
+        
+        // Update the last modified timestamp
+        workout.lastModified = new Date().toISOString();
         
         // Add any new videos that were uploaded
         newEditVideos.forEach(video => {
@@ -2289,6 +2314,13 @@ function saveEditedWorkout() {
         
         // Save to localStorage
         localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+        
+        // Update workout data on GitHub
+        uploadWorkoutDataToGitHub(workout).then(success => {
+            if (!success && githubConfig.token) {
+                console.warn('Failed to update workout backup on GitHub');
+            }
+        });
         
         // Reset new videos array
         newEditVideos = [];
@@ -2925,6 +2957,468 @@ function viewProgressPicture(imageUrl, imageName) {
     `;
     document.body.appendChild(imageModal);
 }
+
+// Enhanced picture upload to GitHub
+async function uploadProgressPicturesToGitHub() {
+    if (progressPictureFiles.length === 0) {
+        alert('No new pictures to upload. Please add pictures first.');
+        return;
+    }
+
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration in the Settings tab first.');
+        return;
+    }
+
+    // Ensure the progress-pictures branch exists
+    const branchExists = await ensureProgressPicturesBranch();
+    if (!branchExists) {
+        alert('Could not create or access the progress-pictures branch. Please check your GitHub permissions and try again.');
+        return;
+    }
+
+    const uploadButton = document.querySelector('[onclick="uploadProgressPicturesToGitHub()"]');
+    setButtonLoading(uploadButton, true);
+
+    const uploadStatus = document.createElement('div');
+    uploadStatus.id = 'pictureUploadStatus';
+    uploadStatus.style.cssText = 'margin-top: 15px;';
+    
+    // Remove existing status if present
+    const existingStatus = document.getElementById('pictureUploadStatus');
+    if (existingStatus) existingStatus.remove();
+    
+    uploadButton.parentNode.appendChild(uploadStatus);
+
+    try {
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < progressPictureFiles.length; i++) {
+            const picture = progressPictureFiles[i];
+
+            try {
+                uploadStatus.innerHTML = `<div>Uploading ${picture.name}... (${i + 1} of ${progressPictureFiles.length})</div>`;
+
+                const base64Data = await readFileAsBase64(picture.file);
+                
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const fileExtension = picture.name.split('.').pop();
+                const fileName = `progress-${timestamp}.${fileExtension}`;
+                const folderPath = githubConfig.folder ? `${githubConfig.folder}/progress-pictures` : 'progress-pictures';
+                const filePath = `${folderPath}/${fileName}`;
+
+                const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Upload progress picture: ${fileName}`,
+                        content: base64Data.split(',')[1],
+                        branch: 'progress-pictures'
+                    })
+                });
+
+                if (response.ok) {
+                    successCount++;
+                    picture.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/progress-pictures/${filePath}`;
+                    
+                    uploadStatus.innerHTML += `
+                        <div class="upload-success">
+                            ✓ Successfully uploaded: ${picture.name} 
+                            <a href="${picture.githubUrl}" target="_blank" style="color: #00d4ff;">View on GitHub</a>
+                        </div>
+                    `;
+                } else {
+                    errorCount++;
+                    const errorData = await response.json();
+                    uploadStatus.innerHTML += `
+                        <div class="upload-error">
+                            ✗ Failed to upload: ${picture.name} - ${errorData.message || 'Unknown error'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                errorCount++;
+                uploadStatus.innerHTML += `
+                    <div class="upload-error">
+                        ✗ Error uploading: ${picture.name} - ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        uploadStatus.innerHTML += `
+            <div class="upload-${errorCount === 0 ? 'success' : 'error'}">
+                Upload complete: ${successCount} successful, ${errorCount} failed
+            </div>
+        `;
+
+        // Update the current progress pictures with GitHub URLs
+        const currentDate = document.getElementById('pictureDate').value;
+        if (currentDate && successCount > 0) {
+            const pictureEntry = {
+                id: Date.now(),
+                date: currentDate,
+                notes: document.getElementById('pictureNotes').value,
+                pictures: progressPictureFiles.filter(p => p.githubUrl).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    size: p.size,
+                    type: p.type,
+                    githubUrl: p.githubUrl
+                })),
+                created: new Date().toISOString()
+            };
+
+            progressPictures.push(pictureEntry);
+            progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+            
+            // Clear the upload queue
+            progressPictureFiles = [];
+            document.getElementById('progressPicturePreview').innerHTML = '';
+            document.getElementById('progressPictures').value = '';
+            
+            loadProgressPictures();
+        }
+
+    } finally {
+        setButtonLoading(uploadButton, false);
+    }
+}
+
+// Ensure progress-pictures branch exists
+async function ensureProgressPicturesBranch() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+    
+    try {
+        // Check if the progress-pictures branch exists
+        const branchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/branches/progress-pictures`, 
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (branchResponse.ok) {
+            return true; // Branch exists
+        }
+        
+        // If branch doesn't exist, create it from the main branch
+        const mainBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs/heads/main`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (!mainBranchResponse.ok) {
+            console.error('Could not get main branch info');
+            return false;
+        }
+        
+        const mainBranchData = await mainBranchResponse.json();
+        const mainSha = mainBranchData.object.sha;
+        
+        // Create the progress-pictures branch
+        const createBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'refs/heads/progress-pictures',
+                    sha: mainSha
+                })
+            }
+        );
+        
+        return createBranchResponse.ok;
+    } catch (error) {
+        console.error('Error ensuring progress-pictures branch exists:', error);
+        return false;
+    }
+}
+
+// Ensure training-data branch exists
+async function ensureTrainingDataBranch() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+    
+    try {
+        // Check if the training-data branch exists
+        const branchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/branches/training-data`, 
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (branchResponse.ok) {
+            return true; // Branch exists
+        }
+        
+        // If branch doesn't exist, create it from the main branch
+        const mainBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs/heads/main`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (!mainBranchResponse.ok) {
+            console.error('Could not get main branch info');
+            return false;
+        }
+        
+        const mainBranchData = await mainBranchResponse.json();
+        const mainSha = mainBranchData.object.sha;
+        
+        // Create the training-data branch
+        const createBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'refs/heads/training-data',
+                    sha: mainSha
+                })
+            }
+        );
+        
+        return createBranchResponse.ok;
+    } catch (error) {
+        console.error('Error ensuring training-data branch exists:', error);
+        return false;
+    }
+}
+
+// Upload workout data to GitHub as JSON
+async function uploadWorkoutDataToGitHub(workout, isDelete = false) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+
+    try {
+        // Ensure the training-data branch exists
+        const branchExists = await ensureTrainingDataBranch();
+        if (!branchExists) {
+            console.error('Could not create or access the training-data branch');
+            return false;
+        }
+
+        const fileName = `workout-${workout.date.split('T')[0]}-${workout.programName.replace(/[^a-zA-Z0-9]/g, '-')}.json`;
+        const filePath = `workouts/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        if (isDelete) {
+            // Get the file SHA first, then delete
+            try {
+                const getResponse = await fetch(`${apiUrl}?ref=training-data`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (getResponse.ok) {
+                    const fileData = await getResponse.json();
+                    const deleteResponse = await fetch(apiUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `token ${githubConfig.token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Delete workout data: ${fileName}`,
+                            sha: fileData.sha,
+                            branch: 'training-data'
+                        })
+                    });
+                    return deleteResponse.ok;
+                }
+            } catch (error) {
+                console.error('Error deleting workout from GitHub:', error);
+                return false;
+            }
+        } else {
+            // Upload/update the workout
+            const workoutData = {
+                ...workout,
+                exportedAt: new Date().toISOString(),
+                version: "1.0"
+            };
+
+            const content = btoa(JSON.stringify(workoutData, null, 2));
+
+            // Check if file already exists
+            let sha = null;
+            try {
+                const existingResponse = await fetch(`${apiUrl}?ref=training-data`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (existingResponse.ok) {
+                    const existingData = await existingResponse.json();
+                    sha = existingData.sha;
+                }
+            } catch (error) {
+                // File doesn't exist, which is fine for new uploads
+            }
+
+            const uploadResponse = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: sha ? `Update workout data: ${fileName}` : `Add workout data: ${fileName}`,
+                    content: content,
+                    branch: 'training-data',
+                    ...(sha && { sha })
+                })
+            });
+
+            return uploadResponse.ok;
+        }
+    } catch (error) {
+        console.error('Error managing workout data on GitHub:', error);
+        return false;
+    }
+}
+
+// Delete progress picture from GitHub
+async function deleteProgressPicture(entryIndex, pictureIndex) {
+    const entry = progressPictures[entryIndex];
+    const picture = entry.pictures[pictureIndex];
+    
+    if (!confirm(`Are you sure you want to delete this progress picture "${picture.name}"?`)) {
+        return;
+    }
+    
+    // If the picture was uploaded to GitHub, delete it from there too
+    if (picture.githubUrl) {
+        try {
+            // Extract the file path from the GitHub URL
+            const url = new URL(picture.githubUrl);
+            const pathParts = url.pathname.split('/');
+            
+            // Find the index after "blob" and "progress-pictures"
+            const blobIndex = pathParts.indexOf('blob');
+            if (blobIndex === -1 || blobIndex + 2 >= pathParts.length) {
+                throw new Error('Invalid GitHub URL format');
+            }
+            
+            // Reconstruct the file path
+            const filePath = pathParts.slice(blobIndex + 2).join('/');
+            
+            // Get the SHA of the file to delete
+            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}?ref=progress-pictures`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (response.ok) {
+                const fileData = await response.json();
+                const sha = fileData.sha;
+                
+                // Delete the file from GitHub
+                const deleteResponse = await fetch(apiUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Delete progress picture: ${picture.name}`,
+                        sha: sha,
+                        branch: 'progress-pictures'
+                    })
+                });
+                
+                if (!deleteResponse.ok) {
+                    const errorData = await deleteResponse.json();
+                    console.error('Failed to delete picture from GitHub:', errorData);
+                    alert('Picture was removed locally but could not be deleted from GitHub. Error: ' + 
+                          (errorData.message || 'Unknown error'));
+                }
+            } else {
+                console.error('Failed to get file info from GitHub:', await response.json());
+                alert('Picture was removed locally but could not be deleted from GitHub (file not found).');
+            }
+        } catch (error) {
+            console.error('Error deleting picture from GitHub:', error);
+            alert('Picture was removed locally but there was an error deleting it from GitHub: ' + error.message);
+        }
+    }
+    
+    // Remove the picture from the entry
+    entry.pictures.splice(pictureIndex, 1);
+    
+    // If this was the last picture, remove the entire entry
+    if (entry.pictures.length === 0) {
+        progressPictures.splice(entryIndex, 1);
+    }
+    
+    // Update localStorage
+    localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+    
+    // Refresh the display
+    loadProgressPictures();
+    
+    alert('Progress picture deleted successfully!');
+}
+
+
+
 
 
 
