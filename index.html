@@ -73,6 +73,7 @@
                     <button class="btn" onclick="exportData()">Export Data</button>
                     <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display: none;">
                     <button class="btn" onclick="document.getElementById('importFile').click()">Import Data</button>
+                    <button class="btn btn-info" onclick="syncHistoryWithGitHub()">Sync with GitHub</button>
                 </div>
             </div>
             <div id="historyList">
@@ -94,14 +95,14 @@
                 <div class="stat-card">
                     <h3>Volume Trends</h3>
                     <div class="chart-container">
-                        <p>Volume trends chart will appear here</p>
+                        <canvas id="volumeChart"></canvas>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <h3>Strength Progress</h3>
                     <div class="chart-container">
-                        <p>Strength progress chart will appear here</p>
+                        <canvas id="strengthChart"></canvas>
                     </div>
                 </div>
                 
@@ -201,10 +202,11 @@
                 </div>
 
                 <div class="form-group">
-    <h3>Program Sync</h3>
-    <button class="btn btn-info" onclick="syncProgramsWithGitHub()">Sync Programs with GitHub</button>
-    <p style="margin-top: 10px;"><small>Manually sync programs with GitHub if automatic sync fails.</small></p>
-</div>
+                    <h3>Data Sync</h3>
+                    <button class="btn btn-info" onclick="syncProgramsWithGitHub()">Sync Programs with GitHub</button>
+                    <button class="btn btn-info" onclick="syncAllDataWithGitHub()">Full Data Sync</button>
+                    <p style="margin-top: 10px;"><small>Manually sync all data with GitHub if automatic sync fails.</small></p>
+                </div>
                 
                 <button class="btn btn-success" onclick="saveGithubConfig()">Save GitHub Configuration</button>
                 <button class="btn" onclick="testGithubConnection()">Test Connection</button>
@@ -240,6 +242,21 @@
                 
                 <button class="btn" onclick="addExercise()">Add Exercise</button>
                 <button class="btn btn-success" onclick="saveProgram()">Save Program</button>
+            </div>
+        </div>
+
+        <!-- Workout Details Modal -->
+        <div id="workoutDetailsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeWorkoutDetails()">&times;</span>
+                <h2 id="workoutDetailsTitle">Workout Details</h2>
+                <div id="workoutDetailsContent">
+                    <!-- Workout details will be loaded here -->
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-danger" onclick="deleteWorkoutFromDetails()">Delete Workout</button>
+                    <button class="btn" onclick="closeWorkoutDetails()">Close</button>
+                </div>
             </div>
         </div>
 
