@@ -199,6 +199,12 @@
                     <input type="text" id="githubFolder" placeholder="videos" class="search-bar">
                     <small>Folder within your repository where videos will be stored</small>
                 </div>
+
+                <div class="form-group">
+    <h3>Program Sync</h3>
+    <button class="btn btn-info" onclick="syncProgramsWithGitHub()">Sync Programs with GitHub</button>
+    <p style="margin-top: 10px;"><small>Manually sync programs with GitHub if automatic sync fails.</small></p>
+</div>
                 
                 <button class="btn btn-success" onclick="saveGithubConfig()">Save GitHub Configuration</button>
                 <button class="btn" onclick="testGithubConnection()">Test Connection</button>
