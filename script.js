@@ -3667,6 +3667,329 @@ async function syncProgramsWithGitHub() {
     }
 }
 
+async function syncProgramsWithGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration first.');
+        return;
+    }
+    
+    const syncButton = document.querySelector('[onclick="syncProgramsWithGitHub()"]');
+    if (syncButton) {
+        syncButton.disabled = true;
+        syncButton.textContent = 'Syncing...';
+    }
+    
+    try {
+        // Upload all local programs to GitHub
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const program of programs) {
+            try {
+                const success = await saveProgramToGitHub(program);
+                if (success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+            } catch (error) {
+                console.error(`Error syncing program ${program.name}:`, error);
+                errorCount++;
+            }
+        }
+        
+        if (errorCount === 0) {
+            alert(`All ${successCount} programs synchronized with GitHub successfully!`);
+        } else {
+            alert(`Sync completed: ${successCount} successful, ${errorCount} failed. Check console for details.`);
+        }
+    } catch (error) {
+        alert('Error synchronizing programs with GitHub: ' + error.message);
+        console.error('Program sync error:', error);
+    } finally {
+        if (syncButton) {
+            syncButton.disabled = false;
+            syncButton.textContent = 'Sync Programs with GitHub';
+        }
+    }
+}
+
+// Ensure training-programs branch exists
+async function ensureTrainingProgramsBranch() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+    
+    try {
+        // Check if the training-programs branch exists
+        const branchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/branches/training-programs`, 
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (branchResponse.ok) {
+            return true; // Branch exists
+        }
+        
+        // If branch doesn't exist, create it from the main branch
+        const mainBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs/heads/main`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (!mainBranchResponse.ok) {
+            console.error('Could not get main branch info');
+            return false;
+        }
+        
+        const mainBranchData = await mainBranchResponse.json();
+        const mainSha = mainBranchData.object.sha;
+        
+        // Create the training-programs branch
+        const createBranchResponse = await fetch(
+            `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/git/refs`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'refs/heads/training-programs',
+                    sha: mainSha
+                })
+            }
+        );
+        
+        return createBranchResponse.ok;
+    } catch (error) {
+        console.error('Error ensuring training-programs branch exists:', error);
+        return false;
+    }
+}
+
+// Save program to GitHub
+async function saveProgramToGitHub(program) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+
+    try {
+        // Ensure the training-programs branch exists
+        const branchExists = await ensureTrainingProgramsBranch();
+        if (!branchExists) {
+            console.error('Could not create or access the training-programs branch');
+            return false;
+        }
+
+        const fileName = `program-${program.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${program.id}.json`;
+        const filePath = `programs/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const programData = {
+            ...program,
+            exportedAt: new Date().toISOString(),
+            version: "1.0"
+        };
+
+        const content = btoa(JSON.stringify(programData, null, 2));
+
+        // Check if file already exists (for updates)
+        let sha = null;
+        try {
+            const existingResponse = await fetch(`${apiUrl}?ref=training-programs`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (existingResponse.ok) {
+                const existingData = await existingResponse.json();
+                sha = existingData.sha;
+            }
+        } catch (error) {
+            // File doesn't exist, which is fine for new programs
+        }
+
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: sha ? `Update program: ${program.name}` : `Add program: ${program.name}`,
+                content: content,
+                branch: 'training-programs',
+                ...(sha && { sha })
+            })
+        });
+
+        return response.ok;
+    } catch (error) {
+        console.error('Error saving program to GitHub:', error);
+        return false;
+    }
+}
+
+// Load all programs from GitHub
+async function loadProgramsFromGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        console.log('GitHub not configured, using localStorage for programs');
+        loadProgramsFromStorage();
+        return;
+    }
+
+    try {
+        // Get all files in the programs directory
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/programs`;
+        const response = await fetch(`${apiUrl}?ref=training-programs`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const files = await response.json();
+            const programFiles = files.filter(f => f.name.startsWith('program-') && f.name.endsWith('.json'));
+            
+            programs = []; // Clear existing programs
+            
+            for (const file of programFiles) {
+                try {
+                    const programData = await loadProgramFromGitHub(file.name);
+                    if (programData) {
+                        programs.push(programData);
+                    }
+                } catch (error) {
+                    console.error(`Error loading program file ${file.name}:`, error);
+                }
+            }
+            
+            // Sort programs by creation date or name
+            programs.sort((a, b) => new Date(a.created) - new Date(b.created));
+            
+            console.log(`Loaded ${programs.length} programs from GitHub`);
+        } else if (response.status === 404) {
+            // Programs directory doesn't exist yet, which is fine
+            console.log('Programs directory not found on GitHub, starting fresh');
+            programs = [];
+        } else {
+            throw new Error(`Failed to load programs: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Error loading programs from GitHub, falling back to localStorage:', error);
+        loadProgramsFromStorage();
+    }
+}
+
+// Load a single program from GitHub
+async function loadProgramFromGitHub(fileName) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return null;
+    }
+
+    try {
+        const filePath = `programs/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const response = await fetch(`${apiUrl}?ref=training-programs`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const fileData = await response.json();
+            const content = JSON.parse(atob(fileData.content));
+            
+            // Return just the program data, not the wrapper
+            const { exportedAt, version, ...programData } = content;
+            return programData;
+        }
+    } catch (error) {
+        console.error(`Error loading program ${fileName} from GitHub:`, error);
+    }
+
+    return null;
+}
+
+// Delete program from GitHub
+async function deleteProgramFromGitHub(program) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+
+    try {
+        const fileName = `program-${program.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${program.id}.json`;
+        const filePath = `programs/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        // Get the file SHA first
+        const getResponse = await fetch(`${apiUrl}?ref=training-programs`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            
+            const deleteResponse = await fetch(apiUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Delete program: ${program.name}`,
+                    sha: fileData.sha,
+                    branch: 'training-programs'
+                })
+            });
+
+            return deleteResponse.ok;
+        }
+    } catch (error) {
+        console.error('Error deleting program from GitHub:', error);
+    }
+    
+    return false;
+}
+
+// Load programs from localStorage (fallback)
+function loadProgramsFromStorage() {
+    const savedPrograms = localStorage.getItem('trainingPrograms');
+    if (savedPrograms) {
+        programs = JSON.parse(savedPrograms);
+    } else {
+        programs = [];
+    }
+}
+
 
 
 
