@@ -38,33 +38,6 @@
       "duration": 0
     },
     {
-      "programId": 1758379907370,
-      "programName": "Pull",
-      "date": "2025-09-20T16:32:01.306Z",
-      "exercises": [
-        {
-          "name": "Pulldown",
-          "sets": [
-            {
-              "weight": "110",
-              "reps": "8",
-              "rpe": "9",
-              "completed": true,
-              "notes": ""
-            }
-          ],
-          "reps": "6-8",
-          "rpe": 9,
-          "rest": 180,
-          "notes": ""
-        }
-      ],
-      "sessionNotes": "",
-      "videos": [],
-      "completed": "2025-09-20T16:32:12.960Z",
-      "duration": 0
-    },
-    {
       "programId": 1758447836643,
       "programName": "Push",
       "date": "2025-09-21T09:44:09.506Z",
@@ -93,6 +66,6 @@
       "duration": 0
     }
   ],
-  "lastUpdated": "2025-09-21T09:46:14.792Z",
+  "lastUpdated": "2025-09-21T09:47:30.942Z",
   "version": "1.0"
 }
