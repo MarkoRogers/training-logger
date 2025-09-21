@@ -1817,20 +1817,68 @@ function updateMeasurementChart() {
     });
 }
 
-function deleteMeasurement(index) {
-    if (confirm('Are you sure you want to delete this measurement?')) {
+async function deleteMeasurement(index) {
+    if (!confirm('Are you sure you want to delete this measurement?')) {
+        return;
+    }
+    
+    try {
+        // Remove from local array
         measurements.splice(index, 1);
+        
+        // Save updated measurements to GitHub and localStorage
+        await saveDataToGitHub('measurements', measurements);
         localStorage.setItem('measurements', JSON.stringify(measurements));
+        
+        // Refresh displays
         loadMeasurements();
         updateMeasurementChart();
+        
+        if (githubConfig.token) {
+            alert('Measurement deleted and synced to GitHub successfully!');
+        } else {
+            alert('Measurement deleted locally.');
+        }
+        
+    } catch (error) {
+        if (githubConfig.token) {
+            alert('Measurement deleted locally, but failed to sync to GitHub: ' + error.message);
+        } else {
+            alert('Measurement deleted locally.');
+        }
+        console.error('Measurement delete error:', error);
     }
 }
 
-function deleteProgressPictureEntry(index) {
-    if (confirm('Are you sure you want to delete this entire progress picture entry?')) {
+async function deleteProgressPictureEntry(index) {
+    if (!confirm('Are you sure you want to delete this entire progress picture entry?')) {
+        return;
+    }
+    
+    try {
+        // Remove from local array
         progressPictures.splice(index, 1);
+        
+        // Save updated progress pictures to GitHub and localStorage  
+        await saveDataToGitHub('progress-pictures', progressPictures);
         localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+        
+        // Refresh display
         loadProgressPictures();
+        
+        if (githubConfig.token) {
+            alert('Progress picture entry deleted and synced to GitHub successfully!');
+        } else {
+            alert('Progress picture entry deleted locally.');
+        }
+        
+    } catch (error) {
+        if (githubConfig.token) {
+            alert('Progress picture entry deleted locally, but failed to sync to GitHub: ' + error.message);
+        } else {
+            alert('Progress picture entry deleted locally.');
+        }
+        console.error('Progress picture delete error:', error);
     }
 }
 
@@ -1848,7 +1896,7 @@ function viewProgressPicture(imageUrl, imageName) {
     document.body.appendChild(imageModal);
 }
 
-function deleteProgressPicture(entryIndex, pictureIndex) {
+async function deleteProgressPicture(entryIndex, pictureIndex) {
     const entry = progressPictures[entryIndex];
     const picture = entry.pictures[pictureIndex];
     
@@ -1856,21 +1904,36 @@ function deleteProgressPicture(entryIndex, pictureIndex) {
         return;
     }
     
-    // Remove the picture from the entry
-    entry.pictures.splice(pictureIndex, 1);
-    
-    // If this was the last picture, remove the entire entry
-    if (entry.pictures.length === 0) {
-        progressPictures.splice(entryIndex, 1);
+    try {
+        // Remove the picture from the entry
+        entry.pictures.splice(pictureIndex, 1);
+        
+        // If this was the last picture, remove the entire entry
+        if (entry.pictures.length === 0) {
+            progressPictures.splice(entryIndex, 1);
+        }
+        
+        // Save updated progress pictures to GitHub and localStorage
+        await saveDataToGitHub('progress-pictures', progressPictures);
+        localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+        
+        // Refresh display
+        loadProgressPictures();
+        
+        if (githubConfig.token) {
+            alert('Progress picture deleted and synced to GitHub successfully!');
+        } else {
+            alert('Progress picture deleted locally.');
+        }
+        
+    } catch (error) {
+        if (githubConfig.token) {
+            alert('Progress picture deleted locally, but failed to sync to GitHub: ' + error.message);
+        } else {
+            alert('Progress picture deleted locally.');
+        }
+        console.error('Progress picture delete error:', error);
     }
-    
-    // Update localStorage
-    localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
-    
-    // Refresh the display
-    loadProgressPictures();
-    
-    alert('Progress picture deleted successfully!');
 }
 
 // History management functions
@@ -2010,14 +2073,39 @@ function viewWorkoutDetails(index) {
         detailsHTML += `
             <div style="margin-top: 20px;">
                 <h4>Session Videos (${workout.videos.length})</h4>
-                ${workout.videos.map(video => `
-                    <div style="margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 6px;">
-                        <span>${video.name}</span>
-                        ${video.githubUrl ? `<a href="${video.githubUrl}" target="_blank" style="margin-left: 12px; color: #00d4ff;">View on GitHub</a>` : '<span style="margin-left: 12px; color: #666;"> (Not uploaded)</span>'}
-                    </div>
-                `).join('')}
-            </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
         `;
+        
+        workout.videos.forEach(video => {
+            if (video.githubUrl) {
+                const videoUrl = video.githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                detailsHTML += `
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e8e8e8;">
+                        <video style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; cursor: pointer;" 
+                               onclick="viewWorkoutVideo('${videoUrl}', '${video.name}')"
+                               poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E">
+                            <source src="${videoUrl}" type="video/mp4">
+                        </video>
+                        <p style="margin-top: 8px; font-size: 0.9em; color: #666; text-align: center;">${video.name}</p>
+                        <div style="text-align: center; margin-top: 8px;">
+                            <button class="btn btn-sm" onclick="viewWorkoutVideo('${videoUrl}', '${video.name}')">Play Video</button>
+                            <a href="${video.githubUrl}" target="_blank" style="margin-left: 8px; color: #00d4ff; font-size: 0.85em;">GitHub</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                detailsHTML += `
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e8e8e8; text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #e0e0e0; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #666;">
+                            <span>Video not uploaded</span>
+                        </div>
+                        <p style="margin-top: 8px; font-size: 0.9em; color: #666;">${video.name}</p>
+                    </div>
+                `;
+            }
+        });
+        
+        detailsHTML += '</div></div>';
     }
     
     content.innerHTML = detailsHTML;
@@ -2025,6 +2113,28 @@ function viewWorkoutDetails(index) {
     
     // Store current workout index for delete function
     window.currentWorkoutDetailsIndex = index;
+}
+
+function viewWorkoutVideo(videoUrl, videoName) {
+    const videoModal = document.createElement('div');
+    videoModal.className = 'modal';
+    videoModal.style.display = 'block';
+    videoModal.innerHTML = `
+        <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h3>${videoName}</h3>
+            <video controls style="width: 100%; max-height: 70vh; border-radius: 8px;">
+                <source src="${videoUrl}" type="video/mp4">
+                <source src="${videoUrl}" type="video/webm">
+                <source src="${videoUrl}" type="video/mov">
+                Your browser does not support the video tag.
+            </video>
+            <p style="margin-top: 15px; text-align: center;">
+                <a href="${videoUrl}" target="_blank" style="color: #00d4ff;">Open in new tab</a>
+            </p>
+        </div>
+    `;
+    document.body.appendChild(videoModal);
 }
 
 function closeWorkoutDetails() {
@@ -2647,4 +2757,5 @@ function clearAllHistory() {
     loadHistory();
     updateStats();
 }
+
 
