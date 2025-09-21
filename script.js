@@ -40,6 +40,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateMeasurementChart();
 });
 
+// Add this helper function
+function addCacheBuster(url) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}_cb=${Date.now()}`;
+}
+
 // Tab management
 function showTab(tabName) {
     // Hide all tabs
@@ -312,7 +318,7 @@ async function loadProgramsFromGitHub() {
     try {
         // Get all files in the programs directory
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/programs`;
-        const response = await fetch(`${apiUrl}?ref=training-programs`, {
+        const response = await fetch(addCacheBuster(`${apiUrl}?ref=training-programs`), {
             method: 'GET',
             headers: {
                 'Authorization': `token ${githubConfig.token}`,
@@ -363,7 +369,7 @@ async function loadProgramFromGitHub(fileName) {
         const filePath = `programs/${fileName}`;
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
 
-        const response = await fetch(`${apiUrl}?ref=training-programs`, {
+        const response = await fetch(addCacheBuster(`${apiUrl}?ref=training-programs`), {
             method: 'GET',
             headers: {
                 'Authorization': `token ${githubConfig.token}`,
@@ -2791,7 +2797,7 @@ async function loadMeasurementsFromGitHub() {
 
     try {
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/measurements`;
-        const response = await fetch(`${apiUrl}?ref=training-data`, {
+        const response = await fetch(addCacheBuster(`${apiUrl}?ref=training-data`), {
             method: 'GET',
             headers: {
                 'Authorization': `token ${githubConfig.token}`,
@@ -2990,7 +2996,7 @@ async function loadProgressPicturesFromGitHub() {
 
     try {
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/progress-pictures`;
-        const response = await fetch(`${apiUrl}?ref=training-data`, {
+        const response = await fetch(addCacheBuster(`${apiUrl}?ref=training-data`), {
             method: 'GET',
             headers: {
                 'Authorization': `token ${githubConfig.token}`,
@@ -3039,7 +3045,7 @@ async function loadProgressPictureEntryFromGitHub(fileName) {
         const filePath = `progress-pictures/${fileName}`;
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
 
-        const response = await fetch(`${apiUrl}?ref=training-data`, {
+        const response = await fetch(addCacheBuster(`${apiUrl}?ref=training-data`), {
             method: 'GET',
             headers: {
                 'Authorization': `token ${githubConfig.token}`,
@@ -3123,7 +3129,7 @@ async function loadWorkoutHistoryFromGitHub() {
 
     try {
         const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/data`;
-        const response = await fetch(`${apiUrl}?ref=training-data`, {
+        const response = await fetch(addCacheBuster(`${apiUrl}?ref=training-data`), {
             method: 'GET',
             headers: {
                 'Authorization': `token ${githubConfig.token}`,
@@ -3161,6 +3167,7 @@ function loadWorkoutHistoryFromStorage() {
         workoutHistory = [];
     }
 }
+
 
 
 
