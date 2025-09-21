@@ -1,0 +1,20 @@
+{
+  "id": 1758447836643,
+  "name": "Push",
+  "description": "Push test",
+  "exercises": [
+    {
+      "name": "Bench",
+      "sets": 1,
+      "reps": "6-8",
+      "rpe": 9,
+      "rest": 180,
+      "notes": ""
+    }
+  ],
+  "created": "2025-09-21T09:43:56.643Z",
+  "lastUsed": null,
+  "lastModified": "2025-09-21T09:43:56.643Z",
+  "exportedAt": "2025-09-21T09:43:57.109Z",
+  "version": "1.0"
+}
