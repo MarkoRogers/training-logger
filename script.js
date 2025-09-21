@@ -1872,3 +1872,779 @@ function deleteProgressPicture(entryIndex, pictureIndex) {
     
     alert('Progress picture deleted successfully!');
 }
+
+// History management functions
+function loadHistory() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '';
+
+    if (workoutHistory.length === 0) {
+        historyList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No workout history found. Complete your first workout to see it here.</p>';
+        return;
+    }
+
+    const sortedHistory = [...workoutHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    sortedHistory.forEach((workout, index) => {
+        const actualIndex = workoutHistory.findIndex(w => w.date === workout.date && w.programId === workout.programId);
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        
+        const completedSets = workout.exercises.reduce((total, exercise) => 
+            total + exercise.sets.filter(set => set.completed).length, 0);
+        const totalSets = workout.exercises.reduce((total, exercise) => total + exercise.sets.length, 0);
+        
+        const duration = workout.duration ? formatDuration(workout.duration) : 'Not recorded';
+        
+        historyItem.innerHTML = `
+            <div style="display: flex; justify-content: between; align-items: start;">
+                <div style="flex: 1;">
+                    <h4>${workout.programName}</h4>
+                    <p><strong>Date:</strong> ${new Date(workout.date).toLocaleDateString()}</p>
+                    <p><strong>Duration:</strong> ${duration}</p>
+                    <p><strong>Sets Completed:</strong> ${completedSets}/${totalSets}</p>
+                    <p><strong>Exercises:</strong> ${workout.exercises.length}</p>
+                    ${workout.videos && workout.videos.length > 0 ? `<p><strong>Videos:</strong> ${workout.videos.length}</p>` : ''}
+                    ${workout.sessionNotes ? `<p><strong>Notes:</strong> ${workout.sessionNotes}</p>` : ''}
+                </div>
+                <div style="display: flex; gap: 8px; margin-left: 16px;">
+                    <button class="btn" onclick="viewWorkoutDetails(${actualIndex})">View Details</button>
+                    <button class="btn btn-danger" onclick="deleteWorkout(${actualIndex})">Delete</button>
+                </div>
+            </div>
+        `;
+        historyList.appendChild(historyItem);
+    });
+}
+
+async function deleteWorkout(index) {
+    const workout = workoutHistory[index];
+    
+    if (!confirm(`Are you sure you want to delete the workout "${workout.programName}" from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        // Remove from local array
+        workoutHistory.splice(index, 1);
+        
+        // Save updated history to GitHub and localStorage
+        await saveDataToGitHub('workouts', workoutHistory);
+        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+        
+        // Refresh displays
+        loadHistory();
+        updateStats();
+        
+        alert('Workout deleted successfully from GitHub!');
+        
+    } catch (error) {
+        if (githubConfig.token) {
+            alert('Workout deleted locally, but failed to delete from GitHub: ' + error.message);
+        } else {
+            alert('Workout deleted locally.');
+        }
+        console.error('Workout delete error:', error);
+    }
+}
+
+function formatDuration(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+        return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${secs}s`;
+    } else {
+        return `${secs}s`;
+    }
+}
+
+function viewWorkoutDetails(index) {
+    const workout = workoutHistory[index];
+    const modal = document.getElementById('workoutDetailsModal');
+    const title = document.getElementById('workoutDetailsTitle');
+    const content = document.getElementById('workoutDetailsContent');
+    
+    title.textContent = `${workout.programName} - ${new Date(workout.date).toLocaleDateString()}`;
+    
+    let detailsHTML = `
+        <div style="margin-bottom: 20px;">
+            <p><strong>Duration:</strong> ${workout.duration ? formatDuration(workout.duration) : 'Not recorded'}</p>
+            ${workout.sessionNotes ? `<p><strong>Session Notes:</strong> ${workout.sessionNotes}</p>` : ''}
+        </div>
+    `;
+    
+    workout.exercises.forEach((exercise, exerciseIndex) => {
+        detailsHTML += `
+            <div class="exercise-card" style="margin-bottom: 20px;">
+                <h4>${exercise.name}</h4>
+                <div class="sets-container">
+                    <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
+                        <div>Set</div>
+                        <div>Weight</div>
+                        <div>Reps</div>
+                        <div>RPE</div>
+                        <div>Notes</div>
+                        <div>✓</div>
+                    </div>
+                    ${exercise.sets.map((set, setIndex) => `
+                        <div class="set-row">
+                            <div>${setIndex + 1}</div>
+                            <div>${set.weight || '-'}</div>
+                            <div>${set.reps || '-'}</div>
+                            <div>${set.rpe || '-'}</div>
+                            <div>${set.notes || '-'}</div>
+                            <div>${set.completed ? '✓' : '✗'}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${exercise.exerciseNotes ? `<p style="margin-top: 12px;"><strong>Exercise Notes:</strong> ${exercise.exerciseNotes}</p>` : ''}
+            </div>
+        `;
+    });
+    
+    if (workout.videos && workout.videos.length > 0) {
+        detailsHTML += `
+            <div style="margin-top: 20px;">
+                <h4>Session Videos (${workout.videos.length})</h4>
+                ${workout.videos.map(video => `
+                    <div style="margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+                        <span>${video.name}</span>
+                        ${video.githubUrl ? `<a href="${video.githubUrl}" target="_blank" style="margin-left: 12px; color: #00d4ff;">View on GitHub</a>` : '<span style="margin-left: 12px; color: #666;"> (Not uploaded)</span>'}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    content.innerHTML = detailsHTML;
+    modal.style.display = 'block';
+    
+    // Store current workout index for delete function
+    window.currentWorkoutDetailsIndex = index;
+}
+
+function closeWorkoutDetails() {
+    document.getElementById('workoutDetailsModal').style.display = 'none';
+}
+
+function deleteWorkoutFromDetails() {
+    const index = window.currentWorkoutDetailsIndex;
+    if (index !== undefined) {
+        closeWorkoutDetails();
+        deleteWorkout(index);
+    }
+}
+
+async function syncMeasurementsWithGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration first.');
+        return;
+    }
+    
+    try {
+        await saveDataToGitHub('measurements', measurements);
+        alert('Measurements synchronized with GitHub successfully!');
+    } catch (error) {
+        alert('Error synchronizing measurements with GitHub: ' + error.message);
+        console.error('Measurements sync error:', error);
+    }
+}
+
+async function syncProgressPicturesWithGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration first.');
+        return;
+    }
+    
+    try {
+        await saveDataToGitHub('progress-pictures', progressPictures);
+        alert('Progress pictures metadata synchronized with GitHub successfully!');
+    } catch (error) {
+        alert('Error synchronizing progress pictures with GitHub: ' + error.message);
+        console.error('Progress pictures sync error:', error);
+    }
+}
+
+async function syncHistoryWithGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration first.');
+        return;
+    }
+    
+    const syncButton = document.querySelector('[onclick="syncHistoryWithGitHub()"]');
+    if (syncButton) {
+        syncButton.disabled = true;
+        syncButton.textContent = 'Syncing...';
+    }
+    
+    try {
+        await saveDataToGitHub('workouts', workoutHistory);
+        alert('Workout history synchronized with GitHub successfully!');
+    } catch (error) {
+        alert('Error synchronizing workout history with GitHub: ' + error.message);
+        console.error('History sync error:', error);
+    } finally {
+        if (syncButton) {
+            syncButton.disabled = false;
+            syncButton.textContent = 'Sync with GitHub';
+        }
+    }
+}
+
+// Search functions
+function searchPrograms(query) {
+    const programCards = document.querySelectorAll('.program-card');
+    const searchQuery = query.toLowerCase().trim();
+    
+    programCards.forEach(card => {
+        const programName = card.querySelector('h3').textContent.toLowerCase();
+        const programDescription = card.querySelector('p').textContent.toLowerCase();
+        
+        if (programName.includes(searchQuery) || programDescription.includes(searchQuery)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function searchHistory(query) {
+    const historyItems = document.querySelectorAll('.history-item');
+    const searchQuery = query.toLowerCase().trim();
+    
+    historyItems.forEach(item => {
+        const itemText = item.textContent.toLowerCase();
+        
+        if (itemText.includes(searchQuery)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function searchStats(query) {
+    // This will filter the personal records and other stats displays
+    const searchQuery = query.toLowerCase().trim();
+    updateStats(searchQuery);
+}
+
+// Analytics and stats functions
+function updateStats(searchFilter = '') {
+    updatePersonalRecords(searchFilter);
+    updateVolumeChart(searchFilter);
+    updateStrengthChart(searchFilter);
+    updateFrequencyAnalysis(searchFilter);
+}
+
+function updatePersonalRecords(searchFilter = '') {
+    const recordsContainer = document.getElementById('personalRecords');
+    
+    if (workoutHistory.length === 0) {
+        recordsContainer.innerHTML = '<p style="color: #666;">No workout data available for analysis.</p>';
+        return;
+    }
+    
+    const exerciseRecords = {};
+    
+    workoutHistory.forEach(workout => {
+        workout.exercises.forEach(exercise => {
+            const exerciseName = exercise.name.toLowerCase();
+            
+            // Apply search filter
+            if (searchFilter && !exerciseName.includes(searchFilter.toLowerCase())) {
+                return;
+            }
+            
+            if (!exerciseRecords[exercise.name]) {
+                exerciseRecords[exercise.name] = {
+                    maxWeight: 0,
+                    maxVolume: 0,
+                    maxReps: 0,
+                    bestSet: null
+                };
+            }
+            
+            exercise.sets.forEach(set => {
+                if (set.completed && set.weight && set.reps) {
+                    const weight = parseFloat(set.weight);
+                    const reps = parseInt(set.reps);
+                    const volume = weight * reps;
+                    
+                    if (weight > exerciseRecords[exercise.name].maxWeight) {
+                        exerciseRecords[exercise.name].maxWeight = weight;
+                        exerciseRecords[exercise.name].bestSet = {
+                            weight: weight,
+                            reps: reps,
+                            date: workout.date
+                        };
+                    }
+                    
+                    if (volume > exerciseRecords[exercise.name].maxVolume) {
+                        exerciseRecords[exercise.name].maxVolume = volume;
+                    }
+                    
+                    if (reps > exerciseRecords[exercise.name].maxReps) {
+                        exerciseRecords[exercise.name].maxReps = reps;
+                    }
+                }
+            });
+        });
+    });
+    
+    if (Object.keys(exerciseRecords).length === 0) {
+        recordsContainer.innerHTML = '<p style="color: #666;">No personal records found.</p>';
+        return;
+    }
+    
+    let recordsHTML = '<div style="max-height: 300px; overflow-y: auto;">';
+    
+    Object.entries(exerciseRecords).forEach(([exercise, records]) => {
+        if (records.bestSet) {
+            recordsHTML += `
+                <div style="margin-bottom: 15px; padding: 12px; background: #ffffff; border-radius: 8px; border-left: 4px solid #28a745;">
+                    <h4 style="margin-bottom: 8px; color: #1a1a1a;">${exercise}</h4>
+                    <p><strong>Max Weight:</strong> ${records.maxWeight}kg × ${records.bestSet.reps} reps</p>
+                    <p><strong>Date:</strong> ${new Date(records.bestSet.date).toLocaleDateString()}</p>
+                </div>
+            `;
+        }
+    });
+    
+    recordsHTML += '</div>';
+    recordsContainer.innerHTML = recordsHTML;
+}
+
+function updateVolumeChart(searchFilter = '') {
+    const ctx = document.getElementById('volumeChart');
+    if (!ctx) return;
+
+    if (volumeChart) {
+        volumeChart.destroy();
+    }
+
+    if (workoutHistory.length === 0) {
+        ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+        ctx.getContext('2d').fillStyle = '#666';
+        ctx.getContext('2d').textAlign = 'center';
+        ctx.getContext('2d').fillText('No data available', ctx.width / 2, ctx.height / 2);
+        return;
+    }
+
+    const volumeData = {};
+    
+    workoutHistory.forEach(workout => {
+        const date = new Date(workout.date).toLocaleDateString();
+        let totalVolume = 0;
+        
+        workout.exercises.forEach(exercise => {
+            const exerciseName = exercise.name.toLowerCase();
+            
+            // Apply search filter
+            if (searchFilter && !exerciseName.includes(searchFilter.toLowerCase())) {
+                return;
+            }
+            
+            exercise.sets.forEach(set => {
+                if (set.completed && set.weight && set.reps) {
+                    totalVolume += parseFloat(set.weight) * parseInt(set.reps);
+                }
+            });
+        });
+        
+        if (totalVolume > 0) {
+            volumeData[date] = (volumeData[date] || 0) + totalVolume;
+        }
+    });
+
+    const labels = Object.keys(volumeData).sort((a, b) => new Date(a) - new Date(b));
+    const data = labels.map(date => volumeData[date]);
+
+    volumeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Volume (kg)',
+                data: data,
+                borderColor: '#1a1a1a',
+                backgroundColor: 'rgba(26, 26, 26, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Volume (kg)' }
+                }
+            }
+        }
+    });
+}
+
+function updateStrengthChart(searchFilter = '') {
+    const ctx = document.getElementById('strengthChart');
+    if (!ctx) return;
+
+    if (strengthChart) {
+        strengthChart.destroy();
+    }
+
+    if (workoutHistory.length === 0) {
+        ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+        ctx.getContext('2d').fillStyle = '#666';
+        ctx.getContext('2d').textAlign = 'center';
+        ctx.getContext('2d').fillText('No data available', ctx.width / 2, ctx.height / 2);
+        return;
+    }
+
+    // Find the most frequently performed exercise (or use search filter)
+    const exerciseFrequency = {};
+    
+    workoutHistory.forEach(workout => {
+        workout.exercises.forEach(exercise => {
+            const exerciseName = exercise.name.toLowerCase();
+            
+            if (searchFilter && !exerciseName.includes(searchFilter.toLowerCase())) {
+                return;
+            }
+            
+            exerciseFrequency[exercise.name] = (exerciseFrequency[exercise.name] || 0) + 1;
+        });
+    });
+
+    if (Object.keys(exerciseFrequency).length === 0) {
+        ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+        ctx.getContext('2d').fillStyle = '#666';
+        ctx.getContext('2d').textAlign = 'center';
+        ctx.getContext('2d').fillText('No matching exercises found', ctx.width / 2, ctx.height / 2);
+        return;
+    }
+
+    const topExercise = Object.keys(exerciseFrequency).sort((a, b) => exerciseFrequency[b] - exerciseFrequency[a])[0];
+    
+    const strengthData = {};
+    
+    workoutHistory.forEach(workout => {
+        const matchingExercise = workout.exercises.find(ex => ex.name === topExercise);
+        if (matchingExercise) {
+            const date = new Date(workout.date).toLocaleDateString();
+            let maxWeight = 0;
+            
+            matchingExercise.sets.forEach(set => {
+                if (set.completed && set.weight) {
+                    maxWeight = Math.max(maxWeight, parseFloat(set.weight));
+                }
+            });
+            
+            if (maxWeight > 0) {
+                strengthData[date] = maxWeight;
+            }
+        }
+    });
+
+    const labels = Object.keys(strengthData).sort((a, b) => new Date(a) - new Date(b));
+    const data = labels.map(date => strengthData[date]);
+
+    strengthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `${topExercise} - Max Weight (kg)`,
+                data: data,
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Weight (kg)' }
+                }
+            }
+        }
+    });
+}
+
+function updateFrequencyAnalysis(searchFilter = '') {
+    const frequencyContainer = document.getElementById('frequencyAnalysis');
+    
+    if (workoutHistory.length === 0) {
+        frequencyContainer.innerHTML = '<p style="color: #666;">No workout data available for analysis.</p>';
+        return;
+    }
+    
+    const exerciseFrequency = {};
+    const weeklyFrequency = {};
+    
+    workoutHistory.forEach(workout => {
+        const date = new Date(workout.date);
+        const weekKey = getWeekKey(date);
+        
+        workout.exercises.forEach(exercise => {
+            const exerciseName = exercise.name.toLowerCase();
+            
+            // Apply search filter
+            if (searchFilter && !exerciseName.includes(searchFilter.toLowerCase())) {
+                return;
+            }
+            
+            exerciseFrequency[exercise.name] = (exerciseFrequency[exercise.name] || 0) + 1;
+        });
+        
+        if (!searchFilter || Object.keys(exerciseFrequency).length > 0) {
+            weeklyFrequency[weekKey] = (weeklyFrequency[weekKey] || 0) + 1;
+        }
+    });
+    
+    let analysisHTML = '<div style="max-height: 300px; overflow-y: auto;">';
+    
+    // Exercise frequency
+    const sortedExercises = Object.entries(exerciseFrequency)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5);
+    
+    if (sortedExercises.length > 0) {
+        analysisHTML += '<h4>Most Performed Exercises:</h4>';
+        sortedExercises.forEach(([exercise, count]) => {
+            analysisHTML += `<p><strong>${exercise}:</strong> ${count} sessions</p>`;
+        });
+    }
+    
+    // Weekly frequency
+    const weeklyAverage = Object.values(weeklyFrequency).reduce((sum, count) => sum + count, 0) / Object.keys(weeklyFrequency).length;
+    
+    analysisHTML += `<h4 style="margin-top: 20px;">Training Frequency:</h4>`;
+    analysisHTML += `<p><strong>Average workouts per week:</strong> ${weeklyAverage.toFixed(1)}</p>`;
+    analysisHTML += `<p><strong>Total workouts:</strong> ${workoutHistory.length}</p>`;
+    
+    analysisHTML += '</div>';
+    frequencyContainer.innerHTML = analysisHTML;
+}
+
+function getWeekKey(date) {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - startOfYear) / 86400000;
+    const weekNumber = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+    return `${date.getFullYear()}-W${weekNumber}`;
+}
+
+// Data export/import functions
+function exportData() {
+    const exportData = {
+        programs: programs,
+        workoutHistory: workoutHistory,
+        measurements: measurements,
+        progressPictures: progressPictures,
+        githubConfig: githubConfig,
+        exportDate: new Date().toISOString(),
+        version: "1.0"
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `training-logger-backup-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (!confirm('This will replace all current data with the imported data. Are you sure you want to continue?')) {
+                return;
+            }
+            
+            // Import data
+            if (importedData.programs) programs = importedData.programs;
+            if (importedData.workoutHistory) workoutHistory = importedData.workoutHistory;
+            if (importedData.measurements) measurements = importedData.measurements;
+            if (importedData.progressPictures) progressPictures = importedData.progressPictures;
+            
+            // Don't import GitHub config for security reasons
+            
+            // Save to localStorage
+            localStorage.setItem('trainingPrograms', JSON.stringify(programs));
+            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+            localStorage.setItem('measurements', JSON.stringify(measurements));
+            localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+            
+            // Refresh all displays
+            loadPrograms();
+            loadHistory();
+            loadMeasurements();
+            loadProgressPictures();
+            updateStats();
+            updateMeasurementChart();
+            
+            alert('Data imported successfully!');
+            
+        } catch (error) {
+            alert('Error importing data: ' + error.message);
+            console.error('Import error:', error);
+        }
+    };
+    reader.readAsText(file);
+}
+
+async function syncAllDataWithGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('Please configure GitHub integration first.');
+        return;
+    }
+    
+    const syncButton = document.querySelector('[onclick="syncAllDataWithGitHub()"]');
+    if (syncButton) {
+        syncButton.disabled = true;
+        syncButton.textContent = 'Syncing All Data...';
+    }
+    
+    try {
+        let successCount = 0;
+        let errorCount = 0;
+        let errors = [];
+        
+        // Sync programs
+        try {
+            for (const program of programs) {
+                await saveProgramToGitHub(program);
+            }
+            successCount++;
+        } catch (error) {
+            errorCount++;
+            errors.push('Programs: ' + error.message);
+        }
+        
+        // Sync workout history
+        try {
+            await saveDataToGitHub('workouts', workoutHistory);
+            successCount++;
+        } catch (error) {
+            errorCount++;
+            errors.push('Workout history: ' + error.message);
+        }
+        
+        // Sync measurements
+        try {
+            await saveDataToGitHub('measurements', measurements);
+            successCount++;
+        } catch (error) {
+            errorCount++;
+            errors.push('Measurements: ' + error.message);
+        }
+        
+        // Sync progress pictures metadata
+        try {
+            await saveDataToGitHub('progress-pictures', progressPictures);
+            successCount++;
+        } catch (error) {
+            errorCount++;
+            errors.push('Progress pictures: ' + error.message);
+        }
+        
+        if (errorCount === 0) {
+            alert('All data synchronized successfully with GitHub!');
+        } else {
+            alert(`Sync completed with ${successCount} successful and ${errorCount} failed operations.\n\nErrors:\n${errors.join('\n')}`);
+        }
+        
+    } catch (error) {
+        alert('Error during full sync: ' + error.message);
+        console.error('Full sync error:', error);
+    } finally {
+        if (syncButton) {
+            syncButton.disabled = false;
+            syncButton.textContent = 'Full Data Sync';
+        }
+    }
+}
+
+// Clear all data function
+function clearAllData() {
+    if (!confirm('This will permanently delete ALL data including programs, workout history, measurements, and progress pictures. This cannot be undone. Are you sure?')) {
+        return;
+    }
+    
+    if (!confirm('Last chance! This will delete everything. Are you absolutely sure?')) {
+        return;
+    }
+    
+    // Clear all data
+    programs = [];
+    workoutHistory = [];
+    measurements = [];
+    progressPictures = [];
+    sessionVideos = [];
+    progressPictureFiles = [];
+    currentWorkout = null;
+    
+    // Clear localStorage
+    localStorage.removeItem('trainingPrograms');
+    localStorage.removeItem('workoutHistory');
+    localStorage.removeItem('measurements');
+    localStorage.removeItem('progressPictures');
+    localStorage.removeItem('sessionVideos');
+    
+    // Refresh all displays
+    loadPrograms();
+    loadHistory();
+    loadMeasurements();
+    loadProgressPictures();
+    updateStats();
+    updateMeasurementChart();
+    
+    // Clear current workout display
+    document.getElementById('currentProgram').innerHTML = '<p>Select a program to start your workout</p>';
+    document.getElementById('sessionNotes').value = '';
+    document.getElementById('videoPreview').innerHTML = '';
+    document.getElementById('uploadStatus').innerHTML = '';
+    document.getElementById('uploadProgress').style.display = 'none';
+    
+    alert('All data has been cleared.');
+}
+
+function clearAllHistory() {
+    if (!confirm('This will permanently delete all workout history. This cannot be undone. Are you sure?')) {
+        return;
+    }
+    
+    workoutHistory = [];
+    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+    
+    // Try to sync the empty history to GitHub
+    if (githubConfig.token && githubConfig.username && githubConfig.repo) {
+        saveDataToGitHub('workouts', workoutHistory)
+            .then(() => {
+                alert('All workout history cleared and synced to GitHub.');
+            })
+            .catch(error => {
+                alert('History cleared locally, but failed to sync to GitHub: ' + error.message);
+            });
+    } else {
+        alert('All workout history cleared locally.');
+    }
+    
+    loadHistory();
+    updateStats();
+}
+
