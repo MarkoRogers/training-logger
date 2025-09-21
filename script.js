@@ -24,11 +24,12 @@ let githubConfig = {
 document.addEventListener('DOMContentLoaded', async function() {
     loadGithubConfig();
     
-    // Try to load from GitHub first, fallback to localStorage
-    await loadAllDataFromGitHub();
-    
-    // Load programs from GitHub first, fallback to localStorage
+    // Load all data from GitHub first, fallback to localStorage
     await loadProgramsFromGitHub();
+    await loadMeasurementsFromGitHub();
+    await loadProgressPicturesFromGitHub();
+    await loadAllDataFromGitHub(); // This loads workout history
+    
     loadPrograms();
     loadHistory();
     loadMeasurements();
@@ -1433,13 +1434,18 @@ async function saveMeasurement() {
         created: new Date().toISOString()
     };
 
-    measurements.push(measurement);
-    measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
     try {
-        await saveDataToGitHub('measurements', measurements);
+        // Save to GitHub first
+        const githubSuccess = await saveMeasurementToGitHub(measurement);
+        
+        // Add to local array
+        measurements.push(measurement);
+        measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // Always save to localStorage as backup
         localStorage.setItem('measurements', JSON.stringify(measurements));
         
+        // Clear form
         document.getElementById('measurementDate').value = '';
         document.getElementById('weight').value = '';
         document.getElementById('bodyFat').value = '';
@@ -1447,9 +1453,17 @@ async function saveMeasurement() {
         
         loadMeasurements();
         updateMeasurementChart();
-        alert('Measurement saved successfully to GitHub!');
+        
+        if (githubSuccess) {
+            alert('Measurement saved successfully to GitHub!');
+        } else if (githubConfig.token) {
+            alert('Measurement saved locally, but failed to upload to GitHub. Check your settings.');
+        } else {
+            alert('Measurement saved locally. Configure GitHub to sync across devices.');
+        }
+        
     } catch (error) {
-        alert('Error saving measurement to GitHub: ' + error.message);
+        alert('Error saving measurement: ' + error.message);
         console.error('Measurement save error:', error);
     }
 }
@@ -1522,25 +1536,22 @@ function saveProgressPictures() {
             name: p.name,
             size: p.size,
             type: p.type,
-            githubUrl: null
+            githubUrl: null // Will be set when uploaded
         })),
         created: new Date().toISOString()
     };
 
+    // Add to local array first (will be saved to GitHub when pictures are uploaded)
     progressPictures.push(pictureEntry);
     progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
     localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
     
-    // Clear form
+    // Clear form but keep files for uploading
     document.getElementById('pictureDate').value = '';
     document.getElementById('pictureNotes').value = '';
-    document.getElementById('progressPicturePreview').innerHTML = '';
-    document.getElementById('progressPictures').value = '';
-    progressPictureFiles = [];
     
     loadProgressPictures();
-    alert('Progress pictures saved successfully!');
+    alert('Progress pictures entry created! Upload to GitHub to save permanently.');
 }
 
 async function uploadProgressPicturesToGitHub() {
@@ -1554,7 +1565,7 @@ async function uploadProgressPicturesToGitHub() {
         return;
     }
 
-    // Ensure the progress-pictures branch exists
+    // Ensure the progress-pictures branch exists for actual image files
     const branchExists = await ensureProgressPicturesBranch();
     if (!branchExists) {
         alert('Could not create or access the progress-pictures branch. Please check your GitHub permissions and try again.');
@@ -1571,7 +1582,6 @@ async function uploadProgressPicturesToGitHub() {
     uploadStatus.id = 'pictureUploadStatus';
     uploadStatus.style.cssText = 'margin-top: 15px;';
     
-    // Remove existing status if present
     const existingStatus = document.getElementById('pictureUploadStatus');
     if (existingStatus) existingStatus.remove();
     
@@ -1646,13 +1656,15 @@ async function uploadProgressPicturesToGitHub() {
             </div>
         `;
 
-        // Update the current progress pictures with GitHub URLs
-        const currentDate = document.getElementById('pictureDate').value;
-        if (currentDate && successCount > 0) {
+        // Now save the entry with GitHub URLs to GitHub as JSON
+        if (successCount > 0) {
+            const currentDate = document.getElementById('pictureDate').value || new Date().toISOString().split('T')[0];
+            const currentNotes = document.getElementById('pictureNotes').value;
+            
             const pictureEntry = {
                 id: Date.now(),
                 date: currentDate,
-                notes: document.getElementById('pictureNotes').value,
+                notes: currentNotes,
                 pictures: progressPictureFiles.filter(p => p.githubUrl).map(p => ({
                     id: p.id,
                     name: p.name,
@@ -1663,14 +1675,29 @@ async function uploadProgressPicturesToGitHub() {
                 created: new Date().toISOString()
             };
 
-            progressPictures.push(pictureEntry);
-            progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
-            localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+            try {
+                const githubSuccess = await saveProgressPictureEntryToGitHub(pictureEntry);
+                
+                // Update local array
+                progressPictures.push(pictureEntry);
+                progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
+                localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+                
+                if (githubSuccess) {
+                    uploadStatus.innerHTML += `<div class="upload-success">Progress picture entry saved to GitHub successfully!</div>`;
+                } else {
+                    uploadStatus.innerHTML += `<div class="upload-error">Images uploaded but failed to save entry metadata to GitHub.</div>`;
+                }
+            } catch (error) {
+                uploadStatus.innerHTML += `<div class="upload-error">Images uploaded but failed to save entry: ${error.message}</div>`;
+            }
             
             // Clear the upload queue
             progressPictureFiles = [];
             document.getElementById('progressPicturePreview').innerHTML = '';
             document.getElementById('progressPictures').value = '';
+            document.getElementById('pictureDate').value = '';
+            document.getElementById('pictureNotes').value = '';
             
             loadProgressPictures();
         }
@@ -1818,66 +1845,70 @@ function updateMeasurementChart() {
 }
 
 async function deleteMeasurement(index) {
+    const measurement = measurements[index];
+    
     if (!confirm('Are you sure you want to delete this measurement?')) {
         return;
     }
     
     try {
+        // Delete from GitHub first
+        const githubSuccess = await deleteMeasurementFromGitHub(measurement);
+        
         // Remove from local array
         measurements.splice(index, 1);
         
-        // Save updated measurements to GitHub and localStorage
-        await saveDataToGitHub('measurements', measurements);
+        // Update localStorage
         localStorage.setItem('measurements', JSON.stringify(measurements));
         
         // Refresh displays
         loadMeasurements();
         updateMeasurementChart();
         
-        if (githubConfig.token) {
-            alert('Measurement deleted and synced to GitHub successfully!');
+        if (githubSuccess) {
+            alert('Measurement deleted successfully from GitHub!');
+        } else if (githubConfig.token) {
+            alert('Measurement deleted locally, but failed to delete from GitHub. Check your settings.');
         } else {
             alert('Measurement deleted locally.');
         }
         
     } catch (error) {
-        if (githubConfig.token) {
-            alert('Measurement deleted locally, but failed to sync to GitHub: ' + error.message);
-        } else {
-            alert('Measurement deleted locally.');
-        }
+        alert('Error deleting measurement: ' + error.message);
         console.error('Measurement delete error:', error);
     }
 }
 
 async function deleteProgressPictureEntry(index) {
+    const pictureEntry = progressPictures[index];
+    
     if (!confirm('Are you sure you want to delete this entire progress picture entry?')) {
         return;
     }
     
     try {
+        // Delete from GitHub first
+        const githubSuccess = await deleteProgressPictureEntryFromGitHub(pictureEntry);
+        
         // Remove from local array
         progressPictures.splice(index, 1);
         
-        // Save updated progress pictures to GitHub and localStorage  
-        await saveDataToGitHub('progress-pictures', progressPictures);
+        // Update localStorage
         localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
         
         // Refresh display
         loadProgressPictures();
         
-        if (githubConfig.token) {
-            alert('Progress picture entry deleted and synced to GitHub successfully!');
+        if (githubSuccess) {
+            alert('Progress picture entry deleted successfully from GitHub!');
+        } else if (githubConfig.token) {
+            alert('Progress picture entry deleted locally, but failed to delete from GitHub. Check your settings.');
         } else {
             alert('Progress picture entry deleted locally.');
         }
         
     } catch (error) {
-        if (githubConfig.token) {
-            alert('Progress picture entry deleted locally, but failed to sync to GitHub: ' + error.message);
-        } else {
-            alert('Progress picture entry deleted locally.');
-        }
+        alert('Error deleting progress picture entry: ' + error.message);
         console.error('Progress picture delete error:', error);
     }
 }
@@ -2757,5 +2788,405 @@ function clearAllHistory() {
     loadHistory();
     updateStats();
 }
+
+// Individual measurement GitHub functions
+async function saveMeasurementToGitHub(measurement) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+
+    try {
+        const branchExists = await ensureTrainingDataBranch();
+        if (!branchExists) {
+            console.error('Could not create or access the training-data branch');
+            return false;
+        }
+
+        const fileName = `measurement-${measurement.date}-${measurement.id}.json`;
+        const filePath = `measurements/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const measurementData = {
+            ...measurement,
+            exportedAt: new Date().toISOString(),
+            version: "1.0"
+        };
+
+        const content = btoa(JSON.stringify(measurementData, null, 2));
+
+        // Check if file already exists (for updates)
+        let sha = null;
+        try {
+            const existingResponse = await fetch(`${apiUrl}?ref=training-data`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (existingResponse.ok) {
+                const existingData = await existingResponse.json();
+                sha = existingData.sha;
+            }
+        } catch (error) {
+            // File doesn't exist, which is fine for new measurements
+        }
+
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: sha ? `Update measurement: ${measurement.date}` : `Add measurement: ${measurement.date}`,
+                content: content,
+                branch: 'training-data',
+                ...(sha && { sha })
+            })
+        });
+
+        return response.ok;
+    } catch (error) {
+        console.error('Error saving measurement to GitHub:', error);
+        return false;
+    }
+}
+
+async function loadMeasurementsFromGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        console.log('GitHub not configured, using localStorage for measurements');
+        loadMeasurementsFromStorage();
+        return;
+    }
+
+    try {
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/measurements`;
+        const response = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const files = await response.json();
+            const measurementFiles = files.filter(f => f.name.startsWith('measurement-') && f.name.endsWith('.json'));
+            
+            measurements = [];
+            
+            for (const file of measurementFiles) {
+                try {
+                    const measurementData = await loadMeasurementFromGitHub(file.name);
+                    if (measurementData) {
+                        measurements.push(measurementData);
+                    }
+                } catch (error) {
+                    console.error(`Error loading measurement file ${file.name}:`, error);
+                }
+            }
+            
+            measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+            console.log(`Loaded ${measurements.length} measurements from GitHub`);
+            
+        } else if (response.status === 404) {
+            console.log('Measurements directory not found on GitHub, starting fresh');
+            measurements = [];
+        } else {
+            throw new Error(`Failed to load measurements: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Error loading measurements from GitHub, falling back to localStorage:', error);
+        loadMeasurementsFromStorage();
+    }
+}
+
+async function loadMeasurementFromGitHub(fileName) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return null;
+    }
+
+    try {
+        const filePath = `measurements/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const response = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const fileData = await response.json();
+            const content = JSON.parse(atob(fileData.content));
+            
+            const { exportedAt, version, ...measurementData } = content;
+            return measurementData;
+        }
+    } catch (error) {
+        console.error(`Error loading measurement ${fileName} from GitHub:`, error);
+    }
+
+    return null;
+}
+
+async function deleteMeasurementFromGitHub(measurement) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+
+    try {
+        const fileName = `measurement-${measurement.date}-${measurement.id}.json`;
+        const filePath = `measurements/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const getResponse = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            
+            const deleteResponse = await fetch(apiUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Delete measurement: ${measurement.date}`,
+                    sha: fileData.sha,
+                    branch: 'training-data'
+                })
+            });
+
+            return deleteResponse.ok;
+        }
+    } catch (error) {
+        console.error('Error deleting measurement from GitHub:', error);
+    }
+    
+    return false;
+}
+
+function loadMeasurementsFromStorage() {
+    const savedMeasurements = localStorage.getItem('measurements');
+    if (savedMeasurements) {
+        measurements = JSON.parse(savedMeasurements);
+    } else {
+        measurements = [];
+    }
+}
+
+// Individual progress picture GitHub functions
+async function saveProgressPictureEntryToGitHub(pictureEntry) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+
+    try {
+        const branchExists = await ensureTrainingDataBranch();
+        if (!branchExists) {
+            console.error('Could not create or access the training-data branch');
+            return false;
+        }
+
+        const fileName = `progress-pictures-${pictureEntry.date}-${pictureEntry.id}.json`;
+        const filePath = `progress-pictures/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const pictureData = {
+            ...pictureEntry,
+            exportedAt: new Date().toISOString(),
+            version: "1.0"
+        };
+
+        const content = btoa(JSON.stringify(pictureData, null, 2));
+
+        // Check if file already exists (for updates)
+        let sha = null;
+        try {
+            const existingResponse = await fetch(`${apiUrl}?ref=training-data`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (existingResponse.ok) {
+                const existingData = await existingResponse.json();
+                sha = existingData.sha;
+            }
+        } catch (error) {
+            // File doesn't exist, which is fine for new entries
+        }
+
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: sha ? `Update progress pictures: ${pictureEntry.date}` : `Add progress pictures: ${pictureEntry.date}`,
+                content: content,
+                branch: 'training-data',
+                ...(sha && { sha })
+            })
+        });
+
+        return response.ok;
+    } catch (error) {
+        console.error('Error saving progress picture entry to GitHub:', error);
+        return false;
+    }
+}
+
+async function loadProgressPicturesFromGitHub() {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        console.log('GitHub not configured, using localStorage for progress pictures');
+        loadProgressPicturesFromStorage();
+        return;
+    }
+
+    try {
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/progress-pictures`;
+        const response = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const files = await response.json();
+            const pictureFiles = files.filter(f => f.name.startsWith('progress-pictures-') && f.name.endsWith('.json'));
+            
+            progressPictures = [];
+            
+            for (const file of pictureFiles) {
+                try {
+                    const pictureData = await loadProgressPictureEntryFromGitHub(file.name);
+                    if (pictureData) {
+                        progressPictures.push(pictureData);
+                    }
+                } catch (error) {
+                    console.error(`Error loading progress picture file ${file.name}:`, error);
+                }
+            }
+            
+            progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
+            console.log(`Loaded ${progressPictures.length} progress picture entries from GitHub`);
+            
+        } else if (response.status === 404) {
+            console.log('Progress pictures directory not found on GitHub, starting fresh');
+            progressPictures = [];
+        } else {
+            throw new Error(`Failed to load progress pictures: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Error loading progress pictures from GitHub, falling back to localStorage:', error);
+        loadProgressPicturesFromStorage();
+    }
+}
+
+async function loadProgressPictureEntryFromGitHub(fileName) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return null;
+    }
+
+    try {
+        const filePath = `progress-pictures/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const response = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (response.ok) {
+            const fileData = await response.json();
+            const content = JSON.parse(atob(fileData.content));
+            
+            const { exportedAt, version, ...pictureData } = content;
+            return pictureData;
+        }
+    } catch (error) {
+        console.error(`Error loading progress picture entry ${fileName} from GitHub:`, error);
+    }
+
+    return null;
+}
+
+async function deleteProgressPictureEntryFromGitHub(pictureEntry) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        return false;
+    }
+
+    try {
+        const fileName = `progress-pictures-${pictureEntry.date}-${pictureEntry.id}.json`;
+        const filePath = `progress-pictures/${fileName}`;
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        const getResponse = await fetch(`${apiUrl}?ref=training-data`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            
+            const deleteResponse = await fetch(apiUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Delete progress pictures: ${pictureEntry.date}`,
+                    sha: fileData.sha,
+                    branch: 'training-data'
+                })
+            });
+
+            return deleteResponse.ok;
+        }
+    } catch (error) {
+        console.error('Error deleting progress picture entry from GitHub:', error);
+    }
+    
+    return false;
+}
+
+function loadProgressPicturesFromStorage() {
+    const savedProgressPictures = localStorage.getItem('progressPictures');
+    if (savedProgressPictures) {
+        progressPictures = JSON.parse(savedProgressPictures);
+    } else {
+        progressPictures = [];
+    }
+}
+
+
 
 
