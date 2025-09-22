@@ -1368,6 +1368,21 @@ window.onclick = function(event) {
     if (event.target === workoutModal) {
         closeWorkoutDetails();
     }
+    
+    const editWorkoutModal = document.getElementById('editWorkoutModal');
+    if (event.target === editWorkoutModal) {
+        closeEditWorkout();
+    }
+    
+    const editMeasurementModal = document.getElementById('editMeasurementModal');
+    if (event.target === editMeasurementModal) {
+        closeEditMeasurement();
+    }
+    
+    const editProgressPicturesModal = document.getElementById('editProgressPicturesModal');
+    if (event.target === editProgressPicturesModal) {
+        closeEditProgressPictures();
+    }
 }
 
 // Progress tracking functions
@@ -1690,10 +1705,69 @@ function loadMeasurements() {
                     ${measurement.bodyFat ? `<p><strong>Body Fat:</strong> ${measurement.bodyFat}%</p>` : ''}
                     ${measurement.muscleMass ? `<p><strong>Muscle Mass:</strong> ${measurement.muscleMass}kg</p>` : ''}
                 </div>
-                <button class="btn btn-danger" onclick="deleteMeasurement(${actualIndex})">Delete</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-sm" onclick="editMeasurement(${actualIndex})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteMeasurement(${actualIndex})">Delete</button>
+                </div>
             </div>
         `;
         measurementsList.appendChild(measurementItem);
+    });
+}
+
+// Update loadProgressPictures function to include edit buttons
+function loadProgressPictures() {
+    const gallery = document.getElementById('picturesGallery');
+    gallery.innerHTML = '';
+
+    if (progressPictures.length === 0) {
+        gallery.innerHTML = '<p style="text-align: center; color: #666;">No progress pictures yet.</p>';
+        return;
+    }
+
+    progressPictures.slice().reverse().forEach((entry, index) => {
+        const actualIndex = progressPictures.length - 1 - index;
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'picture-entry';
+        entryDiv.style.cssText = 'background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 12px; border-left: 4px solid #17a2b8;';
+        
+        let entryHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div>
+                    <h4>${new Date(entry.date).toLocaleDateString()}</h4>
+                    ${entry.notes ? `<p><strong>Notes:</strong> ${entry.notes}</p>` : ''}
+                    <p><strong>Pictures:</strong> ${entry.pictures.length}</p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-sm" onclick="editProgressPictureEntry(${actualIndex})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteProgressPictureEntry(${actualIndex})">Delete</button>
+                </div>
+            </div>
+            <div class="pictures-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+        `;
+        
+        entry.pictures.forEach((picture, pictureIndex) => {
+            if (picture.githubUrl) {
+                const imageUrl = picture.githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                entryHTML += `
+                    <div style="position: relative;">
+                        <img src="${imageUrl}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="viewProgressPicture('${imageUrl}', '${picture.name}')">
+                        <button class="btn btn-danger btn-sm" onclick="deleteProgressPicture(${actualIndex}, ${pictureIndex})" style="position: absolute; top: 5px; right: 5px;">×</button>
+                    </div>
+                `;
+            } else {
+                entryHTML += `
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 8px; text-align: center;">
+                        <p>${picture.name}</p>
+                        <small>Not uploaded to GitHub</small>
+                    </div>
+                `;
+            }
+        });
+        
+        entryHTML += '</div>';
+        entryDiv.innerHTML = entryHTML;
+        gallery.appendChild(entryDiv);
     });
 }
 
@@ -1965,6 +2039,7 @@ function loadHistory() {
                     ${workout.sessionNotes ? `<p><strong>Notes:</strong> ${workout.sessionNotes}</p>` : ''}
                 </div>
                 <div style="display: flex; gap: 8px; margin-left: 16px;">
+                    <button class="btn btn-sm" onclick="editWorkout(${actualIndex})">Edit</button>
                     <button class="btn" onclick="viewWorkoutDetails(${actualIndex})">View Details</button>
                     <button class="btn btn-danger" onclick="deleteWorkout(${actualIndex})">Delete</button>
                 </div>
@@ -2019,6 +2094,7 @@ function formatDuration(seconds) {
     }
 }
 
+// Update the viewWorkoutDetails function to add Edit button
 function viewWorkoutDetails(index) {
     const workout = workoutHistory[index];
     const modal = document.getElementById('workoutDetailsModal');
@@ -2105,7 +2181,7 @@ function viewWorkoutDetails(index) {
     content.innerHTML = detailsHTML;
     modal.style.display = 'block';
     
-    // Store current workout index for delete function
+    // Store current workout index for delete and edit functions
     window.currentWorkoutDetailsIndex = index;
 }
 
@@ -2135,6 +2211,7 @@ function closeWorkoutDetails() {
     document.getElementById('workoutDetailsModal').style.display = 'none';
 }
 
+// Update the deleteWorkoutFromDetails function to also include edit option
 function deleteWorkoutFromDetails() {
     const index = window.currentWorkoutDetailsIndex;
     if (index !== undefined) {
@@ -2142,6 +2219,17 @@ function deleteWorkoutFromDetails() {
         deleteWorkout(index);
     }
 }
+
+// Add new function for editing from details modal
+function editWorkoutFromDetails() {
+    const index = window.currentWorkoutDetailsIndex;
+    if (index !== undefined) {
+        closeWorkoutDetails();
+        editWorkout(index);
+    }
+}
+
+
 
 async function syncHistoryWithGitHub() {
     if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
@@ -3166,6 +3254,594 @@ function loadWorkoutHistoryFromStorage() {
     } else {
         workoutHistory = [];
     }
+}
+
+// Edit workout functionality
+let currentEditWorkoutIndex = -1;
+let editWorkoutVideos = [];
+let newEditWorkoutVideos = [];
+
+function editWorkout(index) {
+    currentEditWorkoutIndex = index;
+    const workout = workoutHistory[index];
+    
+    // Populate modal with current workout data
+    document.getElementById('editWorkoutTitle').textContent = `Edit: ${workout.programName}`;
+    document.getElementById('editWorkoutDate').value = new Date(workout.date).toISOString().split('T')[0];
+    document.getElementById('editProgramName').value = workout.programName;
+    document.getElementById('editSessionNotes').value = workout.sessionNotes || '';
+    
+    // Load exercises
+    loadEditExercises(workout.exercises);
+    
+    // Load existing videos
+    editWorkoutVideos = [...(workout.videos || [])];
+    newEditWorkoutVideos = [];
+    loadEditWorkoutVideos();
+    
+    document.getElementById('editWorkoutModal').style.display = 'block';
+}
+
+function loadEditExercises(exercises) {
+    const exerciseList = document.getElementById('editExerciseList');
+    exerciseList.innerHTML = '';
+    
+    exercises.forEach((exercise, exerciseIndex) => {
+        const exerciseDiv = document.createElement('div');
+        exerciseDiv.className = 'exercise-card';
+        exerciseDiv.innerHTML = `
+            <div class="exercise-header">
+                <div class="exercise-name">${exercise.name}</div>
+                <button class="btn btn-danger btn-sm" onclick="removeEditExercise(${exerciseIndex})">Remove Exercise</button>
+            </div>
+            <div class="form-group">
+                <label>Exercise Notes</label>
+                <textarea onchange="updateEditExerciseNotes(${exerciseIndex}, this.value)" 
+                          placeholder="How did this exercise feel? Any adjustments needed...">${exercise.exerciseNotes || ''}</textarea>
+            </div>
+            <div class="sets-container">
+                <div class="set-row" style="font-weight: bold; background: rgba(0, 212, 255, 0.1);">
+                    <div>Set</div>
+                    <div>Weight</div>
+                    <div>Reps</div>
+                    <div>RPE</div>
+                    <div>Notes</div>
+                    <div>✓</div>
+                    <div>Action</div>
+                </div>
+                ${exercise.sets.map((set, setIndex) => `
+                    <div class="set-row">
+                        <div>${setIndex + 1}</div>
+                        <input type="number" class="set-input" value="${set.weight || ''}" step="0.5"
+                               onchange="updateEditSet(${exerciseIndex}, ${setIndex}, 'weight', this.value)">
+                        <input type="number" class="set-input" value="${set.reps || ''}"
+                               onchange="updateEditSet(${exerciseIndex}, ${setIndex}, 'reps', this.value)">
+                        <input type="number" class="set-input" value="${set.rpe || ''}" step="0.5" min="1" max="10"
+                               onchange="updateEditSet(${exerciseIndex}, ${setIndex}, 'rpe', this.value)">
+                        <input type="text" class="set-input" value="${set.notes || ''}"
+                               onchange="updateEditSet(${exerciseIndex}, ${setIndex}, 'notes', this.value)">
+                        <input type="checkbox" ${set.completed ? 'checked' : ''} 
+                               onchange="updateEditSet(${exerciseIndex}, ${setIndex}, 'completed', this.checked)">
+                        <button class="btn btn-danger btn-sm" onclick="removeEditSet(${exerciseIndex}, ${setIndex})">×</button>
+                    </div>
+                `).join('')}
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-sm" onclick="addEditSet(${exerciseIndex})">Add Set</button>
+                </div>
+            </div>
+        `;
+        exerciseList.appendChild(exerciseDiv);
+    });
+    
+    // Add button to add new exercise
+    const addExerciseButton = document.createElement('button');
+    addExerciseButton.className = 'btn';
+    addExerciseButton.textContent = 'Add New Exercise';
+    addExerciseButton.onclick = addEditExercise;
+    exerciseList.appendChild(addExerciseButton);
+}
+
+function updateEditSet(exerciseIndex, setIndex, field, value) {
+    const workout = workoutHistory[currentEditWorkoutIndex];
+    workout.exercises[exerciseIndex].sets[setIndex][field] = value;
+}
+
+function updateEditExerciseNotes(exerciseIndex, notes) {
+    const workout = workoutHistory[currentEditWorkoutIndex];
+    workout.exercises[exerciseIndex].exerciseNotes = notes;
+}
+
+function removeEditSet(exerciseIndex, setIndex) {
+    const workout = workoutHistory[currentEditWorkoutIndex];
+    workout.exercises[exerciseIndex].sets.splice(setIndex, 1);
+    loadEditExercises(workout.exercises);
+}
+
+function addEditSet(exerciseIndex) {
+    const workout = workoutHistory[currentEditWorkoutIndex];
+    workout.exercises[exerciseIndex].sets.push({
+        weight: '',
+        reps: '',
+        rpe: '',
+        completed: false,
+        notes: ''
+    });
+    loadEditExercises(workout.exercises);
+}
+
+function removeEditExercise(exerciseIndex) {
+    if (!confirm('Are you sure you want to remove this exercise?')) return;
+    
+    const workout = workoutHistory[currentEditWorkoutIndex];
+    workout.exercises.splice(exerciseIndex, 1);
+    loadEditExercises(workout.exercises);
+}
+
+function addEditExercise() {
+    const exerciseName = prompt('Enter exercise name:');
+    if (!exerciseName) return;
+    
+    const workout = workoutHistory[currentEditWorkoutIndex];
+    workout.exercises.push({
+        name: exerciseName,
+        sets: [{
+            weight: '',
+            reps: '',
+            rpe: '',
+            completed: false,
+            notes: ''
+        }],
+        exerciseNotes: ''
+    });
+    loadEditExercises(workout.exercises);
+}
+
+function loadEditWorkoutVideos() {
+    const videoList = document.getElementById('editVideoList');
+    videoList.innerHTML = '';
+    
+    if (editWorkoutVideos.length === 0) {
+        videoList.innerHTML = '<p style="color: #666;">No videos in this workout.</p>';
+        return;
+    }
+    
+    editWorkoutVideos.forEach((video, index) => {
+        const videoDiv = document.createElement('div');
+        videoDiv.style.cssText = 'background: #f8f9fa; border-radius: 8px; padding: 12px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center;';
+        
+        videoDiv.innerHTML = `
+            <div>
+                <strong>${video.name}</strong>
+                ${video.githubUrl ? `<a href="${video.githubUrl}" target="_blank" style="margin-left: 10px; color: #00d4ff;">View</a>` : '<span style="color: #666; margin-left: 10px;">(Not uploaded)</span>'}
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="removeEditVideo(${index})">Remove</button>
+        `;
+        
+        videoList.appendChild(videoDiv);
+    });
+}
+
+function removeEditVideo(index) {
+    if (!confirm('Are you sure you want to remove this video?')) return;
+    
+    editWorkoutVideos.splice(index, 1);
+    loadEditWorkoutVideos();
+}
+
+function handleEditVideoUpload(event) {
+    const files = Array.from(event.target.files);
+    const previewContainer = document.getElementById('editVideoPreview');
+    
+    files.forEach(file => {
+        if (file.type.startsWith('video/')) {
+            const videoId = Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const videoInfo = {
+                id: videoId,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                file: file,
+                lastModified: file.lastModified,
+                githubUrl: null
+            };
+            
+            newEditWorkoutVideos.push(videoInfo);
+            
+            // Create preview
+            const videoURL = URL.createObjectURL(file);
+            const videoContainer = document.createElement('div');
+            videoContainer.style.cssText = 'display: inline-block; margin: 10px; position: relative;';
+            
+            const videoElement = document.createElement('video');
+            videoElement.controls = true;
+            videoElement.style.cssText = 'width: 200px; height: 150px; object-fit: cover; border-radius: 8px;';
+            videoElement.src = videoURL;
+            videoElement.dataset.id = videoId;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'btn btn-danger btn-sm';
+            removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px;';
+            removeBtn.onclick = function() {
+                newEditWorkoutVideos = newEditWorkoutVideos.filter(v => v.id !== videoId);
+                videoContainer.remove();
+            };
+            
+            videoContainer.appendChild(videoElement);
+            videoContainer.appendChild(removeBtn);
+            previewContainer.appendChild(videoContainer);
+        }
+    });
+}
+
+async function saveWorkoutEdit() {
+    const workout = workoutHistory[currentEditWorkoutIndex];
+    
+    // Update basic workout info
+    workout.date = new Date(document.getElementById('editWorkoutDate').value + 'T12:00:00').toISOString();
+    workout.sessionNotes = document.getElementById('editSessionNotes').value;
+    workout.lastModified = new Date().toISOString();
+    
+    // Upload new videos if any
+    if (newEditWorkoutVideos.length > 0) {
+        const uploadSuccess = await uploadNewWorkoutVideos();
+        if (uploadSuccess) {
+            editWorkoutVideos = [...editWorkoutVideos, ...newEditWorkoutVideos.map(v => ({
+                id: v.id,
+                name: v.name,
+                size: v.size,
+                type: v.type,
+                githubUrl: v.githubUrl
+            }))];
+        }
+    }
+    
+    workout.videos = editWorkoutVideos;
+    
+    try {
+        // Save to GitHub
+        await saveDataToGitHub('workouts', workoutHistory);
+        
+        // Save to localStorage
+        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+        
+        // Refresh displays
+        loadHistory();
+        updateStats();
+        closeEditWorkout();
+        
+        alert('Workout updated successfully!');
+        
+    } catch (error) {
+        alert('Error saving workout changes: ' + error.message);
+        console.error('Workout edit save error:', error);
+    }
+}
+
+async function uploadNewWorkoutVideos() {
+    if (newEditWorkoutVideos.length === 0) return true;
+    
+    const branchExists = await ensureVideoUploadsBranch();
+    if (!branchExists) {
+        alert('Could not access video-uploads branch');
+        return false;
+    }
+    
+    try {
+        for (const video of newEditWorkoutVideos) {
+            const base64Data = await readFileAsBase64(video.file);
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileExtension = video.name.split('.').pop();
+            const fileName = `workout-video-${timestamp}.${fileExtension}`;
+            const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
+            
+            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Upload workout video: ${fileName}`,
+                    content: base64Data.split(',')[1],
+                    branch: 'video-uploads'
+                })
+            });
+            
+            if (response.ok) {
+                video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/video-uploads/${filePath}`;
+            } else {
+                throw new Error(`Failed to upload ${video.name}`);
+            }
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Error uploading new videos:', error);
+        return false;
+    }
+}
+
+function closeEditWorkout() {
+    document.getElementById('editWorkoutModal').style.display = 'none';
+    document.getElementById('editVideoPreview').innerHTML = '';
+    currentEditWorkoutIndex = -1;
+    editWorkoutVideos = [];
+    newEditWorkoutVideos = [];
+}
+
+// Edit measurement functionality
+let currentEditMeasurementIndex = -1;
+
+function editMeasurement(index) {
+    currentEditMeasurementIndex = index;
+    const measurement = measurements[index];
+    
+    document.getElementById('editMeasurementDate').value = measurement.date;
+    document.getElementById('editWeight').value = measurement.weight;
+    document.getElementById('editBodyFat').value = measurement.bodyFat || '';
+    document.getElementById('editMuscleMass').value = measurement.muscleMass || '';
+    
+    document.getElementById('editMeasurementModal').style.display = 'block';
+}
+
+async function saveMeasurementEdit() {
+    const measurement = measurements[currentEditMeasurementIndex];
+    const oldFileName = `measurement-${measurement.date}-${measurement.id}.json`;
+    
+    // Update measurement data
+    measurement.date = document.getElementById('editMeasurementDate').value;
+    measurement.weight = parseFloat(document.getElementById('editWeight').value);
+    measurement.bodyFat = document.getElementById('editBodyFat').value ? parseFloat(document.getElementById('editBodyFat').value) : null;
+    measurement.muscleMass = document.getElementById('editMuscleMass').value ? parseFloat(document.getElementById('editMuscleMass').value) : null;
+    measurement.lastModified = new Date().toISOString();
+    
+    try {
+        // If date changed, we need to delete old file and create new one
+        const newFileName = `measurement-${measurement.date}-${measurement.id}.json`;
+        
+        if (oldFileName !== newFileName) {
+            // Delete old file
+            await deleteMeasurementFromGitHub({...measurement, date: measurement.date});
+        }
+        
+        // Save updated measurement
+        await saveMeasurementToGitHub(measurement);
+        
+        // Sort measurements by date
+        measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // Save to localStorage
+        localStorage.setItem('measurements', JSON.stringify(measurements));
+        
+        // Refresh displays
+        loadMeasurements();
+        updateMeasurementChart();
+        closeEditMeasurement();
+        
+        alert('Measurement updated successfully!');
+        
+    } catch (error) {
+        alert('Error saving measurement changes: ' + error.message);
+        console.error('Measurement edit save error:', error);
+    }
+}
+
+function closeEditMeasurement() {
+    document.getElementById('editMeasurementModal').style.display = 'none';
+    currentEditMeasurementIndex = -1;
+}
+
+// Edit progress pictures functionality
+let currentEditProgressPicturesIndex = -1;
+let editProgressPictureFiles = [];
+
+function editProgressPictureEntry(index) {
+    currentEditProgressPicturesIndex = index;
+    const entry = progressPictures[index];
+    
+    document.getElementById('editProgressPictureDate').value = entry.date;
+    document.getElementById('editProgressPictureNotes').value = entry.notes || '';
+    
+    // Load current pictures
+    loadEditCurrentPictures(entry.pictures);
+    
+    document.getElementById('editProgressPicturesModal').style.display = 'block';
+}
+
+function loadEditCurrentPictures(pictures) {
+    const grid = document.getElementById('editCurrentPicturesGrid');
+    grid.innerHTML = '';
+    
+    pictures.forEach((picture, index) => {
+        const pictureDiv = document.createElement('div');
+        pictureDiv.style.cssText = 'position: relative;';
+        
+        if (picture.githubUrl) {
+            const imageUrl = picture.githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+            pictureDiv.innerHTML = `
+                <img src="${imageUrl}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="viewProgressPicture('${imageUrl}', '${picture.name}')">
+                <button class="btn btn-danger btn-sm" onclick="removeEditCurrentPicture(${index})" style="position: absolute; top: 5px; right: 5px;">×</button>
+                <p style="font-size: 0.8em; text-align: center; margin-top: 5px;">${picture.name}</p>
+            `;
+        } else {
+            pictureDiv.innerHTML = `
+                <div style="width: 100%; height: 150px; background: #e0e0e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666;">
+                    <span>Not uploaded</span>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="removeEditCurrentPicture(${index})" style="position: absolute; top: 5px; right: 5px;">×</button>
+                <p style="font-size: 0.8em; text-align: center; margin-top: 5px;">${picture.name}</p>
+            `;
+        }
+        
+        grid.appendChild(pictureDiv);
+    });
+}
+
+function removeEditCurrentPicture(index) {
+    if (!confirm('Are you sure you want to remove this picture?')) return;
+    
+    const entry = progressPictures[currentEditProgressPicturesIndex];
+    entry.pictures.splice(index, 1);
+    loadEditCurrentPictures(entry.pictures);
+}
+
+function handleEditProgressPictureUpload(event) {
+    const files = Array.from(event.target.files);
+    const previewContainer = document.getElementById('editProgressPicturePreview');
+    
+    files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const pictureId = Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const pictureInfo = {
+                id: pictureId,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                file: file,
+                lastModified: file.lastModified
+            };
+            
+            editProgressPictureFiles.push(pictureInfo);
+            
+            // Create preview
+            const imageURL = URL.createObjectURL(file);
+            const imageContainer = document.createElement('div');
+            imageContainer.style.cssText = 'display: inline-block; margin: 10px; position: relative;';
+            
+            const imageElement = document.createElement('img');
+            imageElement.src = imageURL;
+            imageElement.style.cssText = 'width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #e8e8e8;';
+            imageElement.dataset.id = pictureId;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'btn btn-danger btn-sm';
+            removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px;';
+            removeBtn.onclick = function() {
+                editProgressPictureFiles = editProgressPictureFiles.filter(p => p.id !== pictureId);
+                imageContainer.remove();
+            };
+            
+            imageContainer.appendChild(imageElement);
+            imageContainer.appendChild(removeBtn);
+            previewContainer.appendChild(imageContainer);
+        }
+    });
+}
+
+async function uploadEditedProgressPicturesToGitHub() {
+    if (editProgressPictureFiles.length === 0) {
+        alert('No new pictures to upload.');
+        return;
+    }
+    
+    const branchExists = await ensureProgressPicturesBranch();
+    if (!branchExists) {
+        alert('Could not access progress-pictures branch');
+        return;
+    }
+    
+    try {
+        for (const picture of editProgressPictureFiles) {
+            const base64Data = await readFileAsBase64(picture.file);
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileExtension = picture.name.split('.').pop();
+            const fileName = `progress-${timestamp}.${fileExtension}`;
+            const folderPath = githubConfig.folder ? `${githubConfig.folder}/progress-pictures` : 'progress-pictures';
+            const filePath = `${folderPath}/${fileName}`;
+            
+            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Upload progress picture: ${fileName}`,
+                    content: base64Data.split(',')[1],
+                    branch: 'progress-pictures'
+                })
+            });
+            
+            if (response.ok) {
+                picture.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/progress-pictures/${filePath}`;
+            } else {
+                throw new Error(`Failed to upload ${picture.name}`);
+            }
+        }
+        
+        // Add new pictures to entry
+        const entry = progressPictures[currentEditProgressPicturesIndex];
+        editProgressPictureFiles.forEach(newPic => {
+            entry.pictures.push({
+                id: newPic.id,
+                name: newPic.name,
+                size: newPic.size,
+                type: newPic.type,
+                githubUrl: newPic.githubUrl
+            });
+        });
+        
+        alert('New pictures uploaded successfully!');
+        loadEditCurrentPictures(entry.pictures);
+        
+        // Clear upload queue
+        editProgressPictureFiles = [];
+        document.getElementById('editProgressPicturePreview').innerHTML = '';
+        
+    } catch (error) {
+        alert('Error uploading pictures: ' + error.message);
+        console.error('Picture upload error:', error);
+    }
+}
+
+async function saveProgressPicturesEdit() {
+    const entry = progressPictures[currentEditProgressPicturesIndex];
+    
+    // Update entry data
+    entry.date = document.getElementById('editProgressPictureDate').value;
+    entry.notes = document.getElementById('editProgressPictureNotes').value;
+    entry.lastModified = new Date().toISOString();
+    
+    try {
+        // Save updated entry to GitHub
+        await saveProgressPictureEntryToGitHub(entry);
+        
+        // Sort entries by date
+        progressPictures.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // Save to localStorage
+        localStorage.setItem('progressPictures', JSON.stringify(progressPictures));
+        
+        // Refresh displays
+        loadProgressPictures();
+        closeEditProgressPictures();
+        
+        alert('Progress pictures entry updated successfully!');
+        
+    } catch (error) {
+        alert('Error saving progress pictures changes: ' + error.message);
+        console.error('Progress pictures edit save error:', error);
+    }
+}
+
+function closeEditProgressPictures() {
+    document.getElementById('editProgressPicturesModal').style.display = 'none';
+    currentEditProgressPicturesIndex = -1;
+    editProgressPictureFiles = [];
+    document.getElementById('editProgressPicturePreview').innerHTML = '';
 }
 
 
