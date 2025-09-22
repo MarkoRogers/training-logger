@@ -64,7 +64,7 @@ body::before {
     margin-bottom: 20px;
     color: #000;
     font-weight: 900;
-    letter-spacing: 0.3em; /* more spacing */
+    letter-spacing: 0.01em; /* more spacing */
     text-transform: uppercase;
     font-family: 'Impact', 'Arial Black', sans-serif;
     text-shadow: 4px 4px 0 rgba(0,0,0,0.1);
@@ -992,6 +992,7 @@ body::before {
 html {
     scroll-behavior: smooth;
 }
+
 
 
 
