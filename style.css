@@ -64,12 +64,15 @@ body::before {
     margin-bottom: 20px;
     color: #000;
     font-weight: 900;
-    letter-spacing: -0.05em;
+    letter-spacing: 0.1em; /* more spacing */
     text-transform: uppercase;
     font-family: 'Impact', 'Arial Black', sans-serif;
     text-shadow: 4px 4px 0 rgba(0,0,0,0.1);
     position: relative;
+    transform: scaleX(1.3); /* optional, stretches letters horizontally */
+    display: inline-block; /* required for transform to work properly */
 }
+
 
 .header p {
     color: #333;
@@ -989,5 +992,6 @@ body::before {
 html {
     scroll-behavior: smooth;
 }
+
 
 
