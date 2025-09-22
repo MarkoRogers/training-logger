@@ -138,6 +138,38 @@
             </div>
         </div>
         <button class="btn btn-success" onclick="saveMeasurement()">Add Measurement</button>
+        <!-- Edit Measurement Modal -->
+<div id="editMeasurementModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditMeasurement()">&times;</span>
+        <h2>Edit Measurement</h2>
+        
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="editMeasurementDate">
+        </div>
+        
+        <div class="measurement-inputs">
+            <div class="form-group">
+                <label>Weight (kg)</label>
+                <input type="number" id="editWeight" step="0.1" placeholder="e.g., 75.5">
+            </div>
+            <div class="form-group">
+                <label>Body Fat % (optional)</label>
+                <input type="number" id="editBodyFat" step="0.1" placeholder="e.g., 12.5">
+            </div>
+            <div class="form-group">
+                <label>Muscle Mass (kg, optional)</label>
+                <input type="number" id="editMuscleMass" step="0.1" placeholder="e.g., 45.2">
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <button class="btn btn-success" onclick="saveMeasurementEdit()">Save Changes</button>
+            <button class="btn btn-secondary" onclick="closeEditMeasurement()">Cancel</button>
+        </div>
+    </div>
+</div>
     </div>
 
     <div class="progress-pictures-section">
@@ -157,6 +189,40 @@
         <div id="progressPicturePreview"></div>
         <button class="btn btn-success" onclick="saveProgressPictures()">Save Progress Pictures</button>
         <button class="btn btn-info" onclick="uploadProgressPicturesToGitHub()">Upload to GitHub</button>
+        <!-- Edit Progress Pictures Modal -->
+<div id="editProgressPicturesModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditProgressPictures()">&times;</span>
+        <h2>Edit Progress Pictures Entry</h2>
+        
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="editProgressPictureDate">
+        </div>
+        
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea id="editProgressPictureNotes" rows="3" placeholder="Training phase, diet notes, etc."></textarea>
+        </div>
+        
+        <h3>Current Pictures</h3>
+        <div id="editCurrentPicturesGrid" class="pictures-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <!-- Current pictures will be loaded here -->
+        </div>
+        
+        <h3>Add New Pictures</h3>
+        <div class="form-group">
+            <input type="file" id="editProgressPicturesUpload" accept="image/*" multiple onchange="handleEditProgressPictureUpload(event)">
+        </div>
+        <div id="editProgressPicturePreview"></div>
+        
+        <div style="margin-top: 30px;">
+            <button class="btn btn-success" onclick="saveProgressPicturesEdit()">Save Changes</button>
+            <button class="btn btn-info" onclick="uploadEditedProgressPicturesToGitHub()">Upload New Pictures to GitHub</button>
+            <button class="btn btn-secondary" onclick="closeEditProgressPictures()">Cancel</button>
+        </div>
+    </div>
+</div>
     </div>
 
     <div class="measurements-history">
@@ -254,11 +320,57 @@
                     <!-- Workout details will be loaded here -->
                 </div>
                 <div style="margin-top: 20px;">
-                    <button class="btn btn-danger" onclick="deleteWorkoutFromDetails()">Delete Workout</button>
-                    <button class="btn" onclick="closeWorkoutDetails()">Close</button>
-                </div>
+    <button class="btn" onclick="editWorkoutFromDetails()">Edit Workout</button>
+    <button class="btn btn-danger" onclick="deleteWorkoutFromDetails()">Delete Workout</button>
+    <button class="btn btn-secondary" onclick="closeWorkoutDetails()">Close</button>
+</div>
             </div>
         </div>
+
+        <!-- Edit Workout Modal -->
+<div id="editWorkoutModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditWorkout()">&times;</span>
+        <h2 id="editWorkoutTitle">Edit Workout</h2>
+        
+        <div class="form-group">
+            <label>Workout Date</label>
+            <input type="date" id="editWorkoutDate">
+        </div>
+        
+        <div class="form-group">
+            <label>Program Name</label>
+            <input type="text" id="editProgramName" readonly style="background: #f5f5f5;">
+        </div>
+        
+        <div class="form-group">
+            <label>Session Notes</label>
+            <textarea id="editSessionNotes" rows="3" placeholder="How did the session feel? Any observations..."></textarea>
+        </div>
+        
+        <h3>Exercises</h3>
+        <div id="editExerciseList">
+            <!-- Exercises will be loaded here -->
+        </div>
+        
+        <h3>Session Videos</h3>
+        <div id="editVideoSection">
+            <div id="editVideoList"></div>
+            <div class="form-group">
+                <label>Add New Videos</label>
+                <input type="file" id="editVideoUpload" accept="video/*" multiple onchange="handleEditVideoUpload(event)">
+            </div>
+            <div id="editVideoPreview"></div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <button class="btn btn-success" onclick="saveWorkoutEdit()">Save Changes</button>
+            <button class="btn btn-secondary" onclick="closeEditWorkout()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+        
 
         <!-- Timer Widget -->
         <div id="timerContainer" class="timer-container" style="display: none;">
