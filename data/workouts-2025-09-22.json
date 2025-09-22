@@ -25,7 +25,15 @@
         },
         {
           "name": "Shoulderpress",
-          "sets": [],
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "9",
+              "completed": true,
+              "notes": ""
+            }
+          ],
           "exerciseNotes": ""
         }
       ],
@@ -41,7 +49,7 @@
       ],
       "completed": "2025-09-20T15:38:40.388Z",
       "duration": 0,
-      "lastModified": "2025-09-22T09:12:26.600Z"
+      "lastModified": "2025-09-22T09:13:01.279Z"
     },
     {
       "programId": 1758447836643,
@@ -72,6 +80,6 @@
       "duration": 0
     }
   ],
-  "lastUpdated": "2025-09-22T09:12:26.983Z",
+  "lastUpdated": "2025-09-22T09:13:01.283Z",
   "version": "1.0"
 }
