@@ -267,8 +267,8 @@ body::before {
 }
 
 .btn-info {
-    background: #00ffff;
-    border-color: #00ffff;
+    background: #027BCE;
+    border-color: #027BCE;
     color: #000;
 }
 
@@ -989,4 +989,5 @@ body::before {
 html {
     scroll-behavior: smooth;
 }
+
 
