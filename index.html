@@ -9,23 +9,19 @@
 </head>
 <body>
     <div class="container">
-        <div class="landing-page">
-    <nav class="top-nav">
-        <button class="nav-link" onclick="showTab('programs')">Programs</button>
-        <button class="nav-link" onclick="showTab('workout')">Workout</button>
-        <button class="nav-link" onclick="showTab('history')">History</button>
-        <button class="nav-link" onclick="showTab('stats')">Analytics</button>
-        <button class="nav-link" onclick="showTab('measurements')">Progress</button>
-        <button class="nav-link" onclick="showTab('settings')">Settings</button>
-    </nav>
-    
-    <div class="hero-content">
-        <h1 class="hero-title">NO LUCK</h1>
-        <p class="hero-subtitle">fuck balance, who the fuck wants balance, <em>be great</em></p>
-    </div>
-</div>
+        <div class="header">
+            <h1>No Luck</h1>
+            <p>fuck balance, who the fuck wants balance, be great</p>
+        </div>
 
-<!-- Remove the old .header and .nav sections -->
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showTab('programs')">Programs</button>
+            <button class="nav-btn" onclick="showTab('workout')">Current Workout</button>
+            <button class="nav-btn" onclick="showTab('history')">History</button>
+            <button class="nav-btn" onclick="showTab('stats')">Analytics</button>
+            <button class="nav-btn" onclick="showTab('measurements')">Progress</button>
+            <button class="nav-btn" onclick="showTab('settings')">Settings</button>
+        </nav>
 
         <!-- Programs Tab -->
         <div id="programs" class="tab-content active">
