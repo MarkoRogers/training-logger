@@ -8,14 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
-    <!-- Landing Page -->
-                <div class="landing" id="landing">
-        <h1>No Luck</h1>
-        <p>fuck balance, who the fuck wants balance, <em>be great</em></p>
-    </div>
-    <div class="app-wrapper" id="appWrapper">
-    <div class="container">
-            <nav class="nav-top">
+    <!-- Navbar - Always visible -->
+    <nav class="nav-top">
         <a href="#" class="nav-link" onclick="showLanding()">Home</a>
         <a href="#" class="nav-link" onclick="showTab('programs')">Programs</a>
         <a href="#" class="nav-link" onclick="showTab('workout')">Workout</a>
@@ -25,365 +19,249 @@
         <a href="#" class="nav-link" onclick="showTab('settings')">Settings</a>
     </nav>
 
-        <!-- Programs Tab -->
-        <div id="programs" class="tab-content active">
-            <h2>Workout Programs</h2>
-            <button class="btn btn-success" onclick="createProgram()">Create New Program</button>
-            
-            <div class="search-bar-container">
-                <input type="text" class="search-bar" placeholder="Search programs..." oninput="searchPrograms(this.value)">
-            </div>
+    <!-- Landing Page -->
+    <div class="landing" id="landing">
+        <h1>No Luck</h1>
+        <p>fuck balance, who the fuck wants balance, <em>be great</em></p>
+        <button class="btn btn-success" style="margin-top: 40px;" onclick="showApp()">Start Training</button>
+    </div>
 
-            <div id="programList" class="program-list">
-                <!-- Programs will be dynamically loaded here -->
-            </div>
-        </div>
-
-        <!-- Current Workout Tab -->
-        <div id="workout" class="tab-content">
-            <h2>Current Workout Session</h2>
-            <div id="currentProgram">
-                <p>Select a program to start your workout</p>
-            </div>
-            
-            <div class="video-upload">
-                <h3>Session Videos</h3>
-                <input type="file" id="videoUpload" accept="video/*" multiple onchange="handleVideoUpload(event)">
-                <div id="videoPreview"></div>
-                <div id="uploadProgress" class="upload-progress" style="display: none;">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                <div id="uploadStatus"></div>
-                <button class="btn btn-info" onclick="uploadVideosToGitHub()" style="margin-top: 15px;">Upload Videos to GitHub</button>
-            </div>
-
-            <div class="form-group">
-                <label>General Session Notes</label>
-                <textarea id="sessionNotes" rows="4" placeholder="How did the session feel? Any observations..."></textarea>
-            </div>
-
-            <button class="btn btn-success" onclick="saveWorkout()">Save Workout</button>
-        </div>
-
-        <!-- History Tab -->
-        <div id="history" class="tab-content">
-            <h2>Workout History</h2>
-            <div style="margin-bottom: 20px;">
-                <input type="text" class="search-bar" placeholder="Search history..." oninput="searchHistory(this.value)">
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn btn-danger" onclick="clearAllHistory()">Clear All History</button>
-                    <button class="btn" onclick="exportData()">Export Data</button>
-                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display: none;">
-                    <button class="btn" onclick="document.getElementById('importFile').click()">Import Data</button>
-                    <button class="btn btn-info" onclick="syncHistoryWithGitHub()">Sync with GitHub</button>
-                </div>
-            </div>
-            <div id="historyList">
-                <!-- History items will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Analytics Tab -->
-        <div id="stats" class="tab-content">
-            <h2>Performance Analytics</h2>
-            <input type="text" class="search-bar" placeholder="Search exercises..." oninput="searchStats(this.value)">
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Personal Records</h3>
-                    <div id="personalRecords"></div>
-                </div>
+    <!-- Main App -->
+    <div class="app-wrapper" id="appWrapper">
+        <div class="container">
+            <!-- Programs Tab -->
+            <div id="programs" class="tab-content">
+                <h2>Workout Programs</h2>
+                <button class="btn btn-success" onclick="createProgram()">Create New Program</button>
                 
-                <div class="stat-card">
-                    <h3>Volume Trends</h3>
-                    <div class="chart-container">
-                        <canvas id="volumeChart"></canvas>
+                <div class="search-bar-container" style="margin: 20px 0;">
+                    <input type="text" class="search-bar" placeholder="Search programs..." oninput="searchPrograms(this.value)">
+                </div>
+
+                <div id="programList" class="program-list">
+                    <div class="program-card" onclick="selectProgram('push-pull-legs')">
+                        <h3>Push/Pull/Legs</h3>
+                        <p>A balanced full-body split focusing on compound movements</p>
+                        <div style="margin-top: 15px;">
+                            <span class="btn btn-sm">6 exercises</span>
+                            <span class="btn btn-sm">3 days/week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="program-card" onclick="selectProgram('upper-lower')">
+                        <h3>Upper/Lower Split</h3>
+                        <p>Four-day split focusing on upper and lower body separately</p>
+                        <div style="margin-top: 15px;">
+                            <span class="btn btn-sm">8 exercises</span>
+                            <span class="btn btn-sm">4 days/week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="program-card" onclick="selectProgram('full-body')">
+                        <h3>Full Body</h3>
+                        <p>Complete full-body workout for overall strength development</p>
+                        <div style="margin-top: 15px;">
+                            <span class="btn btn-sm">5 exercises</span>
+                            <span class="btn btn-sm">3 days/week</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Current Workout Tab -->
+            <div id="workout" class="tab-content">
+                <h2>Current Workout Session</h2>
+                <div id="currentProgram">
+                    <p>Select a program to start your workout</p>
+                </div>
                 
-                <div class="stat-card">
-                    <h3>Strength Progress</h3>
-                    <div class="chart-container">
-                        <canvas id="strengthChart"></canvas>
+                <div class="video-upload" style="margin: 30px 0; padding: 20px; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px;">
+                    <h3>Session Videos</h3>
+                    <input type="file" id="videoUpload" accept="video/*" multiple onchange="handleVideoUpload(event)" style="margin: 15px 0;">
+                    <div id="videoPreview"></div>
+                    <button class="btn btn-info" onclick="uploadVideosToGitHub()" style="margin-top: 15px;">Upload Videos</button>
+                </div>
+
+                <div class="form-group">
+                    <label>General Session Notes</label>
+                    <textarea id="sessionNotes" rows="4" placeholder="How did the session feel? Any observations..."></textarea>
+                </div>
+
+                <button class="btn btn-success" onclick="saveWorkout()">Save Workout</button>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history" class="tab-content">
+                <h2>Workout History</h2>
+                <div style="margin-bottom: 20px;">
+                    <input type="text" class="search-bar" placeholder="Search history..." oninput="searchHistory(this.value)" style="margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-danger" onclick="clearAllHistory()">Clear All History</button>
+                        <button class="btn" onclick="exportData()">Export Data</button>
+                        <button class="btn" onclick="document.getElementById('importFile').click()">Import Data</button>
+                        <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display: none;">
                     </div>
                 </div>
-                
-                <div class="stat-card">
-                    <h3>Frequency Analysis</h3>
-                    <div id="frequencyAnalysis"></div>
+                <div id="historyList">
+                    <div class="history-item">
+                        <h4>Push Day - Dec 15, 2023</h4>
+                        <p><strong>Exercises:</strong> Bench Press, Shoulder Press, Tricep Extensions</p>
+                        <p><strong>Notes:</strong> Felt strong today, increased weight on bench press</p>
+                        <button class="btn btn-sm" onclick="viewWorkoutDetails('workout1')" style="margin-top: 10px;">View Details</button>
+                    </div>
+                    <div class="history-item">
+                        <h4>Pull Day - Dec 13, 2023</h4>
+                        <p><strong>Exercises:</strong> Deadlifts, Rows, Pull-ups</p>
+                        <p><strong>Notes:</strong> Focused on form, reduced weight slightly</p>
+                        <button class="btn btn-sm" onclick="viewWorkoutDetails('workout2')" style="margin-top: 10px;">View Details</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Progress/Measurements Tab -->
-<div id="measurements" class="tab-content">
-    <h2>Progress Tracking</h2>
-    
-    <div class="measurements-section">
-        <h3>Body Measurements</h3>
-        <div class="form-group">
-            <label>Date</label>
-            <input type="date" id="measurementDate" value="">
-        </div>
-        <div class="measurement-inputs">
-            <div class="form-group">
-                <label>Weight (kg)</label>
-                <input type="number" id="weight" step="0.1" placeholder="e.g., 75.5">
-            </div>
-            <div class="form-group">
-                <label>Body Fat % (optional)</label>
-                <input type="number" id="bodyFat" step="0.1" placeholder="e.g., 12.5">
-            </div>
-            <div class="form-group">
-                <label>Muscle Mass (kg, optional)</label>
-                <input type="number" id="muscleMass" step="0.1" placeholder="e.g., 45.2">
-            </div>
-        </div>
-        <button class="btn btn-success" onclick="saveMeasurement()">Add Measurement</button>
-        <!-- Edit Measurement Modal -->
-<div id="editMeasurementModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEditMeasurement()">&times;</span>
-        <h2>Edit Measurement</h2>
-        
-        <div class="form-group">
-            <label>Date</label>
-            <input type="date" id="editMeasurementDate">
-        </div>
-        
-        <div class="measurement-inputs">
-            <div class="form-group">
-                <label>Weight (kg)</label>
-                <input type="number" id="editWeight" step="0.1" placeholder="e.g., 75.5">
-            </div>
-            <div class="form-group">
-                <label>Body Fat % (optional)</label>
-                <input type="number" id="editBodyFat" step="0.1" placeholder="e.g., 12.5">
-            </div>
-            <div class="form-group">
-                <label>Muscle Mass (kg, optional)</label>
-                <input type="number" id="editMuscleMass" step="0.1" placeholder="e.g., 45.2">
-            </div>
-        </div>
-        
-        <div style="margin-top: 30px;">
-            <button class="btn btn-success" onclick="saveMeasurementEdit()">Save Changes</button>
-            <button class="btn btn-secondary" onclick="closeEditMeasurement()">Cancel</button>
-        </div>
-    </div>
-</div>
-    </div>
-
-    <div class="progress-pictures-section">
-        <h3>Progress Pictures</h3>
-        <div class="form-group">
-            <label>Date</label>
-            <input type="date" id="pictureDate" value="">
-        </div>
-        <div class="form-group">
-            <label>Upload Pictures</label>
-            <input type="file" id="progressPictures" accept="image/*" multiple onchange="handleProgressPictureUpload(event)">
-        </div>
-        <div class="form-group">
-            <label>Notes (optional)</label>
-            <textarea id="pictureNotes" rows="2" placeholder="Training phase, diet notes, etc."></textarea>
-        </div>
-        <div id="progressPicturePreview"></div>
-        <button class="btn btn-success" onclick="saveProgressPictures()">Save Progress Pictures</button>
-        <button class="btn btn-info" onclick="uploadProgressPicturesToGitHub()">Upload to GitHub</button>
-        <!-- Edit Progress Pictures Modal -->
-<div id="editProgressPicturesModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEditProgressPictures()">&times;</span>
-        <h2>Edit Progress Pictures Entry</h2>
-        
-        <div class="form-group">
-            <label>Date</label>
-            <input type="date" id="editProgressPictureDate">
-        </div>
-        
-        <div class="form-group">
-            <label>Notes</label>
-            <textarea id="editProgressPictureNotes" rows="3" placeholder="Training phase, diet notes, etc."></textarea>
-        </div>
-        
-        <h3>Current Pictures</h3>
-        <div id="editCurrentPicturesGrid" class="pictures-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
-            <!-- Current pictures will be loaded here -->
-        </div>
-        
-        <h3>Add New Pictures</h3>
-        <div class="form-group">
-            <input type="file" id="editProgressPicturesUpload" accept="image/*" multiple onchange="handleEditProgressPictureUpload(event)">
-        </div>
-        <div id="editProgressPicturePreview"></div>
-        
-        <div style="margin-top: 30px;">
-            <button class="btn btn-success" onclick="saveProgressPicturesEdit()">Save Changes</button>
-            <button class="btn btn-info" onclick="uploadEditedProgressPicturesToGitHub()">Upload New Pictures to GitHub</button>
-            <button class="btn btn-secondary" onclick="closeEditProgressPictures()">Cancel</button>
-        </div>
-    </div>
-</div>
-    </div>
-
-    <div class="measurements-history">
-        <h3>Measurement History</h3>
-        <canvas id="measurementChart" width="400" height="200"></canvas>
-        <div id="measurementsList"></div>
-    </div>
-
-    <div class="pictures-gallery">
-        <h3>Progress Pictures Gallery</h3>
-        <div id="picturesGallery"></div>
-    </div>
-</div>
-
-        <!-- Settings Tab -->
-        <div id="settings" class="tab-content">
-            <h2>App Settings</h2>
-            
-            <div class="github-config">
-                <h3>GitHub Integration</h3>
-                <p>Configure GitHub integration to upload your workout videos to a GitHub repository.</p>
+            <!-- Analytics Tab -->
+            <div id="stats" class="tab-content">
+                <h2>Performance Analytics</h2>
+                <input type="text" class="search-bar" placeholder="Search exercises..." oninput="searchStats(this.value)" style="margin-bottom: 20px;">
                 
-                <div class="form-group">
-                    <label>GitHub Personal Access Token</label>
-                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="search-bar">
-                    <small>Create a token with repo permissions at <a href="https://github.com/settings/tokens" target="_blank" style="color: #00d4ff;">github.com/settings/tokens</a></small>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Personal Records</h3>
+                        <div id="personalRecords">
+                            <p>Bench Press: 225 lbs (Dec 15, 2023)</p>
+                            <p>Deadlift: 315 lbs (Dec 10, 2023)</p>
+                            <p>Squat: 275 lbs (Dec 8, 2023)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Volume Trends</h3>
+                        <div class="chart-container">
+                            <canvas id="volumeChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Strength Progress</h3>
+                        <div class="chart-container">
+                            <canvas id="strengthChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Frequency Analysis</h3>
+                        <div id="frequencyAnalysis">
+                            <p>Training Days (Last 30 days): 18</p>
+                            <p>Most Frequent Exercise: Bench Press</p>
+                            <p>Average Session Duration: 75 min</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress/Measurements Tab -->
+            <div id="measurements" class="tab-content">
+                <h2>Progress Tracking</h2>
+                
+                <div class="measurements-section" style="margin: 30px 0; padding: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                    <h3>Body Measurements</h3>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="measurementDate" value="">
+                    </div>
+                    <div class="measurement-inputs">
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" id="weight" step="0.1" placeholder="e.g., 75.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Body Fat % (optional)</label>
+                            <input type="number" id="bodyFat" step="0.1" placeholder="e.g., 12.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Muscle Mass (kg, optional)</label>
+                            <input type="number" id="muscleMass" step="0.1" placeholder="e.g., 45.2">
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="saveMeasurement()">Add Measurement</button>
+                </div>
+
+                <div class="progress-pictures-section" style="margin: 30px 0; padding: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                    <h3>Progress Pictures</h3>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="pictureDate" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Pictures</label>
+                        <input type="file" id="progressPictures" accept="image/*" multiple onchange="handleProgressPictureUpload(event)">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes (optional)</label>
+                        <textarea id="pictureNotes" rows="2" placeholder="Training phase, diet notes, etc."></textarea>
+                    </div>
+                    <button class="btn btn-success" onclick="saveProgressPictures()">Save Progress Pictures</button>
+                </div>
+
+                <div class="measurements-history" style="margin: 30px 0; padding: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                    <h3>Measurement History</h3>
+                    <canvas id="measurementChart" width="400" height="200"></canvas>
+                    <div id="measurementsList" style="margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <span>Dec 15, 2023</span>
+                            <span>75.5 kg | 12.5% BF</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <span>Dec 8, 2023</span>
+                            <span>76.2 kg | 12.8% BF</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <h2>App Settings</h2>
+                
+                <div class="github-config" style="margin: 30px 0; padding: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+                    <h3>GitHub Integration</h3>
+                    <p>Configure GitHub integration to upload your workout data.</p>
+                    
+                    <div class="form-group">
+                        <label>GitHub Personal Access Token</label>
+                        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="search-bar">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>GitHub Username</label>
+                        <input type="text" id="githubUsername" placeholder="your-username" class="search-bar">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Repository Name</label>
+                        <input type="text" id="githubRepo" placeholder="training-data" class="search-bar">
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="saveGithubConfig()">Save GitHub Configuration</button>
+                    <button class="btn" onclick="testGithubConnection()">Test Connection</button>
                 </div>
                 
                 <div class="form-group">
-                    <label>GitHub Username</label>
-                    <input type="text" id="githubUsername" placeholder="your-username" class="search-bar">
+                    <h3>Data Management</h3>
+                    <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+                    <p style="margin-top: 10px; color: #ff6b7a;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
                 </div>
-                
-                <div class="form-group">
-                    <label>Repository Name</label>
-                    <input type="text" id="githubRepo" placeholder="training-videos" class="search-bar">
-                </div>
-                
-                <div class="form-group">
-                    <label>Repository Folder (optional)</label>
-                    <input type="text" id="githubFolder" placeholder="videos" class="search-bar">
-                    <small>Folder within your repository where videos will be stored</small>
-                </div>
-
-                <div class="form-group">
-                    <h3>Data Sync</h3>
-                    <button class="btn btn-info" onclick="syncProgramsWithGitHub()">Sync Programs with GitHub</button>
-                    <button class="btn btn-info" onclick="syncAllDataWithGitHub()">Full Data Sync</button>
-                    <p style="margin-top: 10px;"><small>Manually sync all data with GitHub if automatic sync fails.</small></p>
-                </div>
-                
-                <button class="btn btn-success" onclick="saveGithubConfig()">Save GitHub Configuration</button>
-                <button class="btn" onclick="testGithubConnection()">Test Connection</button>
-            </div>
-            
-            <div class="form-group">
-                <h3>Data Management</h3>
-                <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
-                <p style="margin-top: 10px; color: #ff416c;"><small>Warning: This will delete all programs, workout history, and settings.</small></p>
-            </div>
-        </div>
-
-        <!-- Modal for Program Creation/Editing -->
-        <div id="programModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h2 id="modalTitle">Create New Program</h2>
-                
-                <div class="form-group">
-                    <label>Program Name</label>
-                    <input type="text" id="programName" placeholder="e.g., Push/Pull/Legs">
-                </div>
-
-                <div class="form-group">
-                    <label>Program Description</label>
-                    <textarea id="programDescription" rows="3" placeholder="Brief description of the program..."></textarea>
-                </div>
-
-                <h3>Exercises</h3>
-                <div id="exerciseList">
-                    <!-- Exercises will be added here -->
-                </div>
-                
-                <button class="btn" onclick="addExercise()">Add Exercise</button>
-                <button class="btn btn-success" onclick="saveProgram()">Save Program</button>
-            </div>
-        </div>
-
-        <!-- Workout Details Modal -->
-        <div id="workoutDetailsModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeWorkoutDetails()">&times;</span>
-                <h2 id="workoutDetailsTitle">Workout Details</h2>
-                <div id="workoutDetailsContent">
-                    <!-- Workout details will be loaded here -->
-                </div>
-                <div style="margin-top: 20px;">
-    <button class="btn" onclick="editWorkoutFromDetails()">Edit Workout</button>
-    <button class="btn btn-danger" onclick="deleteWorkoutFromDetails()">Delete Workout</button>
-    <button class="btn btn-secondary" onclick="closeWorkoutDetails()">Close</button>
-</div>
-            </div>
-        </div>
-
-        <!-- Edit Workout Modal -->
-<div id="editWorkoutModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEditWorkout()">&times;</span>
-        <h2 id="editWorkoutTitle">Edit Workout</h2>
-        
-        <div class="form-group">
-            <label>Workout Date</label>
-            <input type="date" id="editWorkoutDate">
-        </div>
-        
-        <div class="form-group">
-            <label>Program Name</label>
-            <input type="text" id="editProgramName" readonly style="background: #f5f5f5;">
-        </div>
-        
-        <div class="form-group">
-            <label>Session Notes</label>
-            <textarea id="editSessionNotes" rows="3" placeholder="How did the session feel? Any observations..."></textarea>
-        </div>
-        
-        <h3>Exercises</h3>
-        <div id="editExerciseList">
-            <!-- Exercises will be loaded here -->
-        </div>
-        
-        <h3>Session Videos</h3>
-        <div id="editVideoSection">
-            <div id="editVideoList"></div>
-            <div class="form-group">
-                <label>Add New Videos</label>
-                <input type="file" id="editVideoUpload" accept="video/*" multiple onchange="handleEditVideoUpload(event)">
-            </div>
-            <div id="editVideoPreview"></div>
-        </div>
-        
-        <div style="margin-top: 30px;">
-            <button class="btn btn-success" onclick="saveWorkoutEdit()">Save Changes</button>
-            <button class="btn btn-secondary" onclick="closeEditWorkout()">Cancel</button>
-        </div>
-    </div>
-</div>
-
-        
-
-        <!-- Timer Widget -->
-        <div id="timerContainer" class="timer-container" style="display: none;">
-            <div class="timer-display" id="timerDisplay">00:00:00</div>
-            <div>
-                <button class="btn btn-info" id="startTimerBtn" onclick="startTimer()">Start Timer</button>
-                <button class="btn btn-warning" id="pauseTimerBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
-                <button class="btn btn-danger" onclick="resetTimer()">Reset</button>
             </div>
         </div>
     </div>
+
+    <!-- Timer Widget -->
+    <div id="timerContainer" class="timer-container" style="display: none;">
+        <div class="timer-display" id="timerDisplay">00:00:00</div>
+        <div>
+            <button class="btn btn-info" id="startTimerBtn" onclick="startTimer()">Start Timer</button>
+            <button class="btn" id="pauseTimerBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
+            <button class="btn btn-danger" onclick="resetTimer()">Reset</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
