@@ -166,15 +166,28 @@
           "rest": 180,
           "notes": "",
           "exerciseNotes": ""
+        },
+        {
+          "name": "hip abductor",
+          "sets": [
+            {
+              "weight": "90",
+              "reps": "7",
+              "rpe": "9",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "exerciseNotes": ""
         }
       ],
       "sessionNotes": "Amazing",
       "videos": [],
       "completed": "2025-09-21T13:59:00.000Z",
       "duration": 4320,
-      "lastModified": "2025-09-23T11:56:06.333Z"
+      "lastModified": "2025-09-23T12:02:24.978Z"
     }
   ],
-  "lastUpdated": "2025-09-23T11:58:58.839Z",
+  "lastUpdated": "2025-09-23T12:02:25.206Z",
   "version": "1.0"
 }
