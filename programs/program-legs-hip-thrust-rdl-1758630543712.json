@@ -1,0 +1,36 @@
+{
+  "id": 1758630543712,
+  "name": "Legs hip thrust rdl",
+  "description": "",
+  "exercises": [
+    {
+      "name": "Hip thrust",
+      "sets": 1,
+      "reps": "6-8",
+      "rpe": 9,
+      "rest": 180,
+      "notes": ""
+    },
+    {
+      "name": "Rdl",
+      "sets": 1,
+      "reps": "6-8",
+      "rpe": 9,
+      "rest": 180,
+      "notes": ""
+    },
+    {
+      "name": "Back extensions",
+      "sets": 1,
+      "reps": "6-8",
+      "rpe": 9,
+      "rest": 180,
+      "notes": ""
+    }
+  ],
+  "created": "2025-09-23T12:29:03.712Z",
+  "lastUsed": null,
+  "lastModified": "2025-09-23T12:29:03.712Z",
+  "exportedAt": "2025-09-23T12:29:04.274Z",
+  "version": "1.0"
+}
