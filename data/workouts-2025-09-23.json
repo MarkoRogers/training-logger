@@ -77,20 +77,13 @@
           "size": 12940080,
           "type": "video/mp4",
           "githubUrl": "https://github.com/MarkoRogers/training-logger/blob/video-uploads/videos/workout-video-2025-09-23T12-31-37-800Z.mp4"
-        },
-        {
-          "id": "1758644656120wkdu7",
-          "name": "TBarRow.mov",
-          "size": 39761072,
-          "type": "video/quicktime",
-          "githubUrl": "https://github.com/MarkoRogers/training-logger/blob/video-uploads/videos/workout-video-2025-09-23T16-24-19-860Z-hdb92r8c.mov"
         }
       ],
       "completed": "2025-09-23T12:32:32.769Z",
       "duration": 189,
-      "lastModified": "2025-09-23T16:24:19.325Z"
+      "lastModified": "2025-09-23T16:51:09.437Z"
     }
   ],
-  "lastUpdated": "2025-09-23T16:26:03.141Z",
+  "lastUpdated": "2025-09-23T16:51:09.975Z",
   "version": "1.0"
 }
