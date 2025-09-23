@@ -1,5 +1,4 @@
 // Global variables
-let isLandingPage = true;
 let measurements = [];
 let progressPictures = [];
 let progressPictureFiles = [];
@@ -22,8 +21,7 @@ let githubConfig = {
 };
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelector('.container').style.display = 'none';
+document.addEventListener('DOMContentLoaded', async function() {
     loadGithubConfig();
     
     // Load all data from GitHub first, fallback to localStorage
@@ -50,19 +48,12 @@ function addCacheBuster(url) {
 
 // Tab management
 function showTab(tabName) {
-    // Hide landing page and show main container
-    if (isLandingPage) {
-        document.querySelector('.landing-page').style.display = 'none';
-        document.querySelector('.container').style.display = 'block';
-        isLandingPage = false;
-    }
-    
     // Hide all tabs
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.classList.remove('active'));
     
     // Remove active class from all nav buttons
-    const navBtns = document.querySelectorAll('.nav-link');
+    const navBtns = document.querySelectorAll('.nav-btn');
     navBtns.forEach(btn => btn.classList.remove('active'));
     
     // Show selected tab
@@ -3852,10 +3843,3 @@ function closeEditProgressPictures() {
     editProgressPictureFiles = [];
     document.getElementById('editProgressPicturePreview').innerHTML = '';
 }
-
-
-
-
-
-
-
