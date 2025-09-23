@@ -70,47 +70,108 @@
           "rest": 180,
           "notes": "",
           "exerciseNotes": ""
+        },
+        {
+          "name": "Leg Extension (Machine)",
+          "sets": [
+            {
+              "weight": "165",
+              "reps": "6",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "165",
+              "reps": "5",
+              "rpe": "0",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "5.5",
+          "rpe": 9.25,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        },
+        {
+          "name": "Hip Adduction (Machine)",
+          "sets": [
+            {
+              "weight": "152.5",
+              "reps": "6",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "152.5",
+              "reps": "5",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "5.5",
+          "rpe": 9.5,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        },
+        {
+          "name": "Calf Extension (Machine)",
+          "sets": [
+            {
+              "weight": "145",
+              "reps": "10",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "152.5",
+              "reps": "7",
+              "rpe": "10",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "8.5",
+          "rpe": 9.75,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        },
+        {
+          "name": "Crunch (Machine)",
+          "sets": [
+            {
+              "weight": "55",
+              "reps": "6",
+              "rpe": "9",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "52.5",
+              "reps": "5",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "5.5",
+          "rpe": 9.25,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
         }
       ],
       "sessionNotes": "",
       "videos": [],
       "completed": "2025-09-21T13:59:00.000Z",
       "duration": 4320
-    },
-    {
-      "programId": 1000000000002,
-      "programName": "Push",
-      "date": "2025-09-20T12:32:00.000Z",
-      "exercises": [
-        {
-          "name": "Preacher Curl (Dumbbell)",
-          "sets": [
-            {
-              "weight": "28",
-              "reps": "6",
-              "rpe": "9.5",
-              "completed": true,
-              "notes": "Warmup more, forearms/reverse curls + wrist"
-            },
-            {
-              "weight": "26",
-              "reps": "6",
-              "rpe": "9.5",
-              "completed": true,
-              "notes": "Warmup more, forearms/reverse curls + wrist"
-            }
-          ],
-          "reps": "6",
-          "rpe": 9.5,
-          "rest": 180,
-          "notes": "",
-          "exerciseNotes": "Warmup more, forearms/reverse curls + wrist"
-        }
-      ],
-      "sessionNotes": "",
-      "videos": [],
-      "completed": "2025-09-20T13:39:00.000Z",
-      "duration": 4020
     }
   ],
   "lastUpdated": "2025-09-21T13:59:00.000Z",
