@@ -4,7 +4,7 @@
     {
       "programId": 1758630543712,
       "programName": "Legs hip thrust rdl",
-      "date": "2025-09-23T12:29:20.550Z",
+      "date": "2025-09-23T10:00:00.000Z",
       "exercises": [
         {
           "name": "Hip thrust",
@@ -80,9 +80,10 @@
         }
       ],
       "completed": "2025-09-23T12:32:32.769Z",
-      "duration": 189
+      "duration": 189,
+      "lastModified": "2025-09-23T12:54:02.469Z"
     }
   ],
-  "lastUpdated": "2025-09-23T12:32:33.045Z",
+  "lastUpdated": "2025-09-23T12:54:17.719Z",
   "version": "1.0"
 }
