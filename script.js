@@ -3421,11 +3421,91 @@ function loadEditWorkoutVideos() {
     });
 }
 
-function removeEditVideo(index) {
-    if (!confirm('Are you sure you want to remove this video?')) return;
+// Enhanced video deletion from GitHub
+async function deleteVideoFromGitHub(videoGithubUrl) {
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo || !videoGithubUrl) {
+        return false;
+    }
+
+    try {
+        // Extract file path from GitHub URL
+        const urlParts = videoGithubUrl.split('/');
+        const branchIndex = urlParts.findIndex(part => part === 'video-uploads');
+        if (branchIndex === -1) return false;
+        
+        const filePath = urlParts.slice(branchIndex + 1).join('/');
+        const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+
+        // Get file SHA first
+        const getResponse = await fetch(`${apiUrl}?ref=video-uploads`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            
+            const deleteResponse = await fetch(apiUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Delete workout video: ${filePath}`,
+                    sha: fileData.sha,
+                    branch: 'video-uploads'
+                })
+            });
+
+            return deleteResponse.ok;
+        }
+    } catch (error) {
+        console.error('Error deleting video from GitHub:', error);
+        return false;
+    }
     
-    editWorkoutVideos.splice(index, 1);
-    loadEditWorkoutVideos();
+    return false;
+}
+
+// Enhanced video removal with GitHub deletion
+async function removeEditVideo(index) {
+    if (!confirm('Are you sure you want to remove this video? This will also delete it from GitHub.')) return;
+    
+    const video = editWorkoutVideos[index];
+    
+    // Show loading state
+    const removeButton = event.target;
+    const originalText = removeButton.textContent;
+    removeButton.disabled = true;
+    removeButton.textContent = 'Deleting...';
+    
+    try {
+        // Delete from GitHub if it has a GitHub URL
+        if (video.githubUrl) {
+            const deleteSuccess = await deleteVideoFromGitHub(video.githubUrl);
+            if (!deleteSuccess) {
+                console.warn('Failed to delete video from GitHub, but removing from workout');
+            }
+        }
+        
+        // Remove from local array
+        editWorkoutVideos.splice(index, 1);
+        loadEditWorkoutVideos();
+        
+        alert('Video removed successfully!');
+        
+    } catch (error) {
+        alert('Error removing video: ' + error.message);
+        console.error('Video removal error:', error);
+    } finally {
+        removeButton.disabled = false;
+        removeButton.textContent = originalText;
+    }
 }
 
 function handleEditVideoUpload(event) {
@@ -3483,27 +3563,39 @@ async function saveWorkoutEdit() {
     workout.sessionNotes = document.getElementById('editSessionNotes').value;
     workout.lastModified = new Date().toISOString();
     
-    // Upload new videos if any
-    if (newEditWorkoutVideos.length > 0) {
-        const uploadSuccess = await uploadNewWorkoutVideos();
-        if (uploadSuccess) {
-            editWorkoutVideos = [...editWorkoutVideos, ...newEditWorkoutVideos.map(v => ({
+    // Disable save button to prevent double-clicks
+    const saveButton = document.querySelector('[onclick="saveWorkoutEdit()"]');
+    if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = 'Saving...';
+        saveButton.classList.add('loading');
+    }
+    
+    try {
+        // Upload new videos if any
+        let videoUploadSuccess = true;
+        if (newEditWorkoutVideos.length > 0) {
+            videoUploadSuccess = await uploadNewWorkoutVideos();
+        }
+        
+        // Update workout videos (combine existing and new)
+        if (videoUploadSuccess && newEditWorkoutVideos.length > 0) {
+            const newVideoData = newEditWorkoutVideos.map(v => ({
                 id: v.id,
                 name: v.name,
                 size: v.size,
                 type: v.type,
                 githubUrl: v.githubUrl
-            }))];
+            }));
+            editWorkoutVideos = [...editWorkoutVideos, ...newVideoData];
         }
-    }
-    
-    workout.videos = editWorkoutVideos;
-    
-    try {
+        
+        workout.videos = editWorkoutVideos;
+        
         // Save to GitHub
         await saveDataToGitHub('workouts', workoutHistory);
         
-        // Save to localStorage
+        // Save to localStorage as backup
         localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
         
         // Refresh displays
@@ -3511,69 +3603,147 @@ async function saveWorkoutEdit() {
         updateStats();
         closeEditWorkout();
         
-        alert('Workout updated successfully!');
+        if (!videoUploadSuccess && newEditWorkoutVideos.length > 0) {
+            alert('Workout updated successfully, but some videos failed to upload. Check your GitHub settings.');
+        } else {
+            alert('Workout updated successfully!');
+        }
         
     } catch (error) {
         alert('Error saving workout changes: ' + error.message);
         console.error('Workout edit save error:', error);
+    } finally {
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Save Changes';
+            saveButton.classList.remove('loading');
+        }
     }
 }
 
 async function uploadNewWorkoutVideos() {
     if (newEditWorkoutVideos.length === 0) return true;
     
-    const branchExists = await ensureVideoUploadsBranch();
-    if (!branchExists) {
-        alert('Could not access video-uploads branch');
+    if (!githubConfig.token || !githubConfig.username || !githubConfig.repo) {
+        alert('GitHub configuration required for video upload.');
         return false;
     }
     
+    const branchExists = await ensureVideoUploadsBranch();
+    if (!branchExists) {
+        alert('Could not access video-uploads branch. Check your GitHub permissions.');
+        return false;
+    }
+    
+    // Create progress indicator
+    const progressDiv = document.createElement('div');
+    progressDiv.id = 'editVideoUploadProgress';
+    progressDiv.style.cssText = 'margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 2px solid #007bff;';
+    progressDiv.innerHTML = '<div><strong>Uploading videos...</strong></div><div class="progress-bar" style="width: 100%; height: 20px; background: #e9ecef; border-radius: 10px; margin-top: 10px;"><div id="editVideoProgressBar" style="width: 0%; height: 100%; background: #007bff; border-radius: 10px; transition: width 0.3s ease;"></div></div><div id="editVideoProgressText">0%</div>';
+    
+    const editVideoSection = document.getElementById('editVideoSection');
+    const existingProgress = document.getElementById('editVideoUploadProgress');
+    if (existingProgress) existingProgress.remove();
+    editVideoSection.appendChild(progressDiv);
+    
     try {
-        for (const video of newEditWorkoutVideos) {
-            const base64Data = await readFileAsBase64(video.file);
+        let successCount = 0;
+        
+        for (let i = 0; i < newEditWorkoutVideos.length; i++) {
+            const video = newEditWorkoutVideos[i];
             
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileExtension = video.name.split('.').pop();
-            const fileName = `workout-video-${timestamp}.${fileExtension}`;
-            const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
-            
-            const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
-            
-            const response = await fetch(apiUrl, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: `Upload workout video: ${fileName}`,
-                    content: base64Data.split(',')[1],
-                    branch: 'video-uploads'
-                })
-            });
-            
-            if (response.ok) {
-                video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/video-uploads/${filePath}`;
-            } else {
-                throw new Error(`Failed to upload ${video.name}`);
+            try {
+                // Update progress
+                const progress = ((i / newEditWorkoutVideos.length) * 100).toFixed(0);
+                document.getElementById('editVideoProgressBar').style.width = `${progress}%`;
+                document.getElementById('editVideoProgressText').textContent = `${progress}% - Uploading ${video.name}`;
+                
+                const base64Data = await readFileAsBase64(video.file);
+                
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const fileExtension = video.name.split('.').pop();
+                const fileName = `workout-video-${timestamp}-${Math.random().toString(36).substr(2, 8)}.${fileExtension}`;
+                const filePath = githubConfig.folder ? `${githubConfig.folder}/${fileName}` : fileName;
+                
+                const apiUrl = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${filePath}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Upload workout video: ${fileName}`,
+                        content: base64Data.split(',')[1],
+                        branch: 'video-uploads'
+                    })
+                });
+                
+                if (response.ok) {
+                    video.githubUrl = `https://github.com/${githubConfig.username}/${githubConfig.repo}/blob/video-uploads/${filePath}`;
+                    successCount++;
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(`Upload failed for ${video.name}: ${errorData.message || 'Unknown error'}`);
+                }
+                
+            } catch (error) {
+                console.error(`Error uploading ${video.name}:`, error);
+                // Continue with other videos rather than failing completely
             }
+        }
+        
+        // Final progress update
+        document.getElementById('editVideoProgressBar').style.width = '100%';
+        document.getElementById('editVideoProgressText').textContent = `100% - Upload complete: ${successCount}/${newEditWorkoutVideos.length} successful`;
+        
+        if (successCount === 0) {
+            throw new Error('All video uploads failed');
+        }
+        
+        if (successCount < newEditWorkoutVideos.length) {
+            alert(`Warning: Only ${successCount} out of ${newEditWorkoutVideos.length} videos uploaded successfully. Check console for details.`);
         }
         
         return true;
         
     } catch (error) {
         console.error('Error uploading new videos:', error);
+        alert('Error uploading videos: ' + error.message);
         return false;
+    } finally {
+        // Remove progress indicator after a delay
+        setTimeout(() => {
+            const progressDiv = document.getElementById('editVideoUploadProgress');
+            if (progressDiv) progressDiv.remove();
+        }, 3000);
     }
 }
 
 function closeEditWorkout() {
+    // Check for unsaved changes
+    if (newEditWorkoutVideos.length > 0) {
+        if (!confirm('You have unsaved video uploads. Are you sure you want to close? Uploaded videos will be lost.')) {
+            return;
+        }
+    }
+    
+    // Clean up
     document.getElementById('editWorkoutModal').style.display = 'none';
     document.getElementById('editVideoPreview').innerHTML = '';
+    const progressDiv = document.getElementById('editVideoUploadProgress');
+    if (progressDiv) progressDiv.remove();
+    
+    // Reset variables
     currentEditWorkoutIndex = -1;
     editWorkoutVideos = [];
     newEditWorkoutVideos = [];
+    
+    // Reset file input
+    const fileInput = document.getElementById('editVideoUpload');
+    if (fileInput) fileInput.value = '';
 }
 
 // Edit measurement functionality
@@ -3843,4 +4013,5 @@ function closeEditProgressPictures() {
     editProgressPictureFiles = [];
     document.getElementById('editProgressPicturePreview').innerHTML = '';
 }
+
 
