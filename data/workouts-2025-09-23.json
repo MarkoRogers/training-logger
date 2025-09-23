@@ -186,8 +186,43 @@
       "completed": "2025-09-21T13:59:00.000Z",
       "duration": 4320,
       "lastModified": "2025-09-23T12:02:24.978Z"
+    },
+    {
+      "programId": 1758379907370,
+      "programName": "Pull",
+      "date": "2025-09-23T12:12:34.237Z",
+      "exercises": [
+        {
+          "name": "Pulldown",
+          "sets": [
+            {
+              "weight": "110",
+              "reps": "9",
+              "rpe": "9",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "6-8",
+          "rpe": 9,
+          "rest": 180,
+          "notes": ""
+        }
+      ],
+      "sessionNotes": "",
+      "videos": [
+        {
+          "id": "17586295655224pqd6",
+          "name": "TBarRow.mov",
+          "size": 39761072,
+          "type": "video/quicktime",
+          "githubUrl": null
+        }
+      ],
+      "completed": "2025-09-23T12:12:51.632Z",
+      "duration": 0
     }
   ],
-  "lastUpdated": "2025-09-23T12:02:25.206Z",
+  "lastUpdated": "2025-09-23T12:12:52.019Z",
   "version": "1.0"
 }
