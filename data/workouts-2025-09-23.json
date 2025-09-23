@@ -1,0 +1,96 @@
+{
+  "type": "workouts",
+  "data": [
+    {
+      "programId": 1758630543712,
+      "programName": "Legs hip thrust rdl",
+      "date": "2025-09-23T10:00:00.000Z",
+      "exercises": [
+        {
+          "name": "Hip thrust",
+          "sets": [
+            {
+              "weight": "200",
+              "reps": "5",
+              "rpe": "10",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "6-8",
+          "rpe": 9,
+          "rest": 180,
+          "notes": ""
+        },
+        {
+          "name": "Rdl",
+          "sets": [
+            {
+              "weight": "160",
+              "reps": "5",
+              "rpe": "9.5",
+              "completed": false,
+              "notes": ""
+            }
+          ],
+          "reps": "6-8",
+          "rpe": 9,
+          "rest": 180,
+          "notes": ""
+        },
+        {
+          "name": "Back extensions",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "4",
+              "rpe": "9.5",
+              "completed": false,
+              "notes": ""
+            }
+          ],
+          "reps": "6-8",
+          "rpe": 9,
+          "rest": 180,
+          "notes": ""
+        }
+      ],
+      "sessionNotes": "Amazing workout",
+      "videos": [
+        {
+          "id": "1758630604806wav2c",
+          "name": "VID_20250923135332.mp4",
+          "size": 15633770,
+          "type": "video/mp4",
+          "githubUrl": "https://github.com/MarkoRogers/training-logger/blob/video-uploads/videos/workout-video-2025-09-23T12-30-09-869Z.mp4"
+        },
+        {
+          "id": "1758630604840ih2cd",
+          "name": "VID_20250923135241.mp4",
+          "size": 19636865,
+          "type": "video/mp4",
+          "githubUrl": "https://github.com/MarkoRogers/training-logger/blob/video-uploads/videos/workout-video-2025-09-23T12-30-44-443Z.mp4"
+        },
+        {
+          "id": "1758630604864kr7fs",
+          "name": "VID_20250912180941.mp4",
+          "size": 12940080,
+          "type": "video/mp4",
+          "githubUrl": "https://github.com/MarkoRogers/training-logger/blob/video-uploads/videos/workout-video-2025-09-23T12-31-37-800Z.mp4"
+        },
+        {
+          "id": "1758632908564b8s5k",
+          "name": "TBarRow.mov",
+          "size": 39761072,
+          "type": "video/quicktime",
+          "githubUrl": "https://github.com/MarkoRogers/training-logger/blob/video-uploads/videos/workout-video-2025-09-23T13-08-31-113Z-39skbs33.mov"
+        }
+      ],
+      "completed": "2025-09-23T12:32:32.769Z",
+      "duration": 189,
+      "lastModified": "2025-09-23T13:08:30.710Z"
+    }
+  ],
+  "lastUpdated": "2025-09-23T13:08:41.300Z",
+  "version": "1.0"
+}
