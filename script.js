@@ -2052,11 +2052,38 @@ function loadHistory() {
 async function deleteWorkout(index) {
     const workout = workoutHistory[index];
     
-    if (!confirm(`Are you sure you want to delete the workout "${workout.programName}" from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete the workout "${workout.programName}" from ${new Date(workout.date).toLocaleDateString()}? This cannot be undone and will also delete ${workout.videos?.length || 0} associated videos from GitHub.`)) {
         return;
     }
     
+    // Show loading state
+    const deleteButtons = document.querySelectorAll(`[onclick="deleteWorkout(${index})"]`);
+    deleteButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.textContent = 'Deleting...';
+        btn.classList.add('loading');
+    });
+    
     try {
+        let videoDeleteErrors = [];
+        
+        // Delete associated videos from GitHub first
+        if (workout.videos && workout.videos.length > 0) {
+            for (const video of workout.videos) {
+                if (video.githubUrl) {
+                    try {
+                        const deleteSuccess = await deleteVideoFromGitHub(video.githubUrl);
+                        if (!deleteSuccess) {
+                            videoDeleteErrors.push(video.name);
+                        }
+                    } catch (error) {
+                        console.error(`Error deleting video ${video.name}:`, error);
+                        videoDeleteErrors.push(video.name);
+                    }
+                }
+            }
+        }
+        
         // Remove from local array
         workoutHistory.splice(index, 1);
         
@@ -2068,15 +2095,27 @@ async function deleteWorkout(index) {
         loadHistory();
         updateStats();
         
-        alert('Workout deleted successfully from GitHub!');
+        // Provide user feedback
+        if (videoDeleteErrors.length === 0) {
+            alert('Workout and all associated videos deleted successfully from GitHub!');
+        } else {
+            alert(`Workout deleted successfully, but failed to delete ${videoDeleteErrors.length} videos from GitHub: ${videoDeleteErrors.join(', ')}. You may need to manually clean these up.`);
+        }
         
     } catch (error) {
         if (githubConfig.token) {
-            alert('Workout deleted locally, but failed to delete from GitHub: ' + error.message);
+            alert('Workout deleted locally, but failed to sync with GitHub: ' + error.message);
         } else {
             alert('Workout deleted locally.');
         }
         console.error('Workout delete error:', error);
+    } finally {
+        // Restore button states
+        deleteButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+            btn.classList.remove('loading');
+        });
     }
 }
 
@@ -2785,29 +2824,104 @@ function clearAllData() {
     alert('All data has been cleared.');
 }
 
-function clearAllHistory() {
-    if (!confirm('This will permanently delete all workout history. This cannot be undone. Are you sure?')) {
+async function clearAllHistory() {
+    if (!confirm('This will permanently delete all workout history and associated videos from GitHub. This cannot be undone. Are you sure?')) {
         return;
     }
     
-    workoutHistory = [];
-    localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
-    
-    // Try to sync the empty history to GitHub
-    if (githubConfig.token && githubConfig.username && githubConfig.repo) {
-        saveDataToGitHub('workouts', workoutHistory)
-            .then(() => {
-                alert('All workout history cleared and synced to GitHub.');
-            })
-            .catch(error => {
-                alert('History cleared locally, but failed to sync to GitHub: ' + error.message);
-            });
-    } else {
-        alert('All workout history cleared locally.');
+    if (!confirm('Last chance! This will delete ALL workout history and videos. Are you absolutely sure?')) {
+        return;
     }
     
-    loadHistory();
-    updateStats();
+    const clearButton = document.querySelector('[onclick="clearAllHistory()"]');
+    if (clearButton) {
+        clearButton.disabled = true;
+        clearButton.textContent = 'Deleting All History...';
+        clearButton.classList.add('loading');
+    }
+    
+    try {
+        let totalVideos = 0;
+        let videoDeleteErrors = [];
+        
+        // Delete all videos from all workouts
+        for (const workout of workoutHistory) {
+            if (workout.videos && workout.videos.length > 0) {
+                totalVideos += workout.videos.length;
+                
+                for (const video of workout.videos) {
+                    if (video.githubUrl) {
+                        try {
+                            const deleteSuccess = await deleteVideoFromGitHub(video.githubUrl);
+                            if (!deleteSuccess) {
+                                videoDeleteErrors.push(`${workout.programName} - ${video.name}`);
+                            }
+                        } catch (error) {
+                            console.error(`Error deleting video ${video.name}:`, error);
+                            videoDeleteErrors.push(`${workout.programName} - ${video.name}`);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Clear workout history
+        workoutHistory = [];
+        localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+        
+        // Try to sync the empty history to GitHub
+        if (githubConfig.token && githubConfig.username && githubConfig.repo) {
+            await saveDataToGitHub('workouts', workoutHistory);
+        }
+        
+        loadHistory();
+        updateStats();
+        
+        // Provide comprehensive feedback
+        if (totalVideos === 0) {
+            alert('All workout history cleared successfully.');
+        } else if (videoDeleteErrors.length === 0) {
+            alert(`All workout history and ${totalVideos} videos deleted successfully from GitHub!`);
+        } else {
+            alert(`Workout history cleared. ${totalVideos - videoDeleteErrors.length}/${totalVideos} videos deleted successfully. Failed videos: ${videoDeleteErrors.join(', ')}`);
+        }
+        
+    } catch (error) {
+        alert('Error during history deletion: ' + error.message);
+        console.error('History deletion error:', error);
+    } finally {
+        if (clearButton) {
+            clearButton.disabled = false;
+            clearButton.textContent = 'Clear All History';
+            clearButton.classList.remove('loading');
+        }
+    }
+}
+
+async function deleteVideosInBatches(videoUrls, batchSize = 5) {
+    const errors = [];
+    
+    for (let i = 0; i < videoUrls.length; i += batchSize) {
+        const batch = videoUrls.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (url) => {
+            try {
+                return await deleteVideoFromGitHub(url);
+            } catch (error) {
+                console.error(`Batch delete error for ${url}:`, error);
+                errors.push(url);
+                return false;
+            }
+        });
+        
+        await Promise.allSettled(batchPromises);
+        
+        // Small delay between batches to respect rate limits
+        if (i + batchSize < videoUrls.length) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    
+    return errors;
 }
 
 // Individual measurement GitHub functions
@@ -4013,5 +4127,6 @@ function closeEditProgressPictures() {
     editProgressPictureFiles = [];
     document.getElementById('editProgressPicturePreview').innerHTML = '';
 }
+
 
 
