@@ -22,6 +22,7 @@ let githubConfig = {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async function() {
+    showLanding();
     loadGithubConfig();
     
     // Load all data from GitHub first, fallback to localStorage
@@ -40,6 +41,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateMeasurementChart();
 });
 
+function showLanding() {
+    document.body.classList.remove('app-active');
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    document.getElementById('landing').style.display = 'flex';
+    document.getElementById('appWrapper').style.display = 'none';
+}
+
 // Add this helper function
 function addCacheBuster(url) {
     const separator = url.includes('?') ? '&' : '?';
@@ -48,12 +57,16 @@ function addCacheBuster(url) {
 
 // Tab management
 function showTab(tabName) {
+    document.body.classList.add('app-active');
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('appWrapper').style.display = 'block';
+    
     // Hide all tabs
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.classList.remove('active'));
     
     // Remove active class from all nav buttons
-    const navBtns = document.querySelectorAll('.nav-btn');
+    const navBtns = document.querySelectorAll('.nav-link');
     navBtns.forEach(btn => btn.classList.remove('active'));
     
     // Show selected tab
@@ -3843,3 +3856,4 @@ function closeEditProgressPictures() {
     editProgressPictureFiles = [];
     document.getElementById('editProgressPicturePreview').innerHTML = '';
 }
+
