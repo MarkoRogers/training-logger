@@ -46,6 +46,30 @@
           "rest": 180,
           "notes": "",
           "exerciseNotes": "Up weight by 4kg"
+        },
+        {
+          "name": "Lying Leg Curl (Machine)",
+          "sets": [
+            {
+              "weight": "80",
+              "reps": "6",
+              "rpe": "9",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "80",
+              "reps": "6",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "6",
+          "rpe": 9.25,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
         }
       ],
       "sessionNotes": "",
@@ -87,89 +111,6 @@
       "videos": [],
       "completed": "2025-09-20T13:39:00.000Z",
       "duration": 4020
-    },
-    {
-      "programId": 1000000000003,
-      "programName": "Pull",
-      "date": "2025-09-19T17:19:00.000Z",
-      "exercises": [
-        {
-          "name": "JM Press (Barbell)",
-          "sets": [
-            {
-              "weight": "75",
-              "reps": "6",
-              "rpe": "9",
-              "completed": true,
-              "notes": ""
-            },
-            {
-              "weight": "70",
-              "reps": "7",
-              "rpe": "9",
-              "completed": true,
-              "notes": ""
-            }
-          ],
-          "reps": "6-7",
-          "rpe": 9,
-          "rest": 180,
-          "notes": "",
-          "exerciseNotes": ""
-        },
-        {
-          "name": "Lat Pulldown (Cable)",
-          "sets": [
-            {
-              "weight": "110",
-              "reps": "6",
-              "rpe": "9",
-              "completed": true,
-              "notes": ""
-            },
-            {
-              "weight": "110",
-              "reps": "5",
-              "rpe": "9.5",
-              "completed": true,
-              "notes": ""
-            }
-          ],
-          "reps": "5-6",
-          "rpe": 9.25,
-          "rest": 180,
-          "notes": "",
-          "exerciseNotes": ""
-        },
-        {
-          "name": "Single Arm Cable Row",
-          "sets": [
-            {
-              "weight": "44",
-              "reps": "8",
-              "rpe": "9.5",
-              "completed": true,
-              "notes": "Look at theory for doing pullover to lessen forearm fatigue, if fatigue impacting pulls"
-            },
-            {
-              "weight": "44",
-              "reps": "7",
-              "rpe": "9.5",
-              "completed": true,
-              "notes": "Look at theory for doing pullover to lessen forearm fatigue, if fatigue impacting pulls"
-            }
-          ],
-          "reps": "7-8",
-          "rpe": 9.5,
-          "rest": 180,
-          "notes": "",
-          "exerciseNotes": "Look at theory for doing pullover to lessen forearm fatigue, if fatigue impacting pulls"
-        }
-      ],
-      "sessionNotes": "",
-      "videos": [],
-      "completed": "2025-09-19T18:11:00.000Z",
-      "duration": 3120
     }
   ],
   "lastUpdated": "2025-09-21T13:59:00.000Z",
