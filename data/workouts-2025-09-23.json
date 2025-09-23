@@ -1,6 +1,180 @@
 {
   "type": "workouts",
-  "data": [],
-  "lastUpdated": "2025-09-23T11:50:59.043Z",
+  "data": [
+    {
+      "programId": 1000000000001,
+      "programName": "Leg day hip thrust",
+      "date": "2025-09-21T10:00:00.000Z",
+      "exercises": [
+        {
+          "name": "Back Extension (Weighted Hyperextension)",
+          "sets": [
+            {
+              "weight": "80",
+              "reps": "5",
+              "rpe": "9",
+              "completed": true,
+              "notes": "Try to push arms forward/up"
+            }
+          ],
+          "reps": "5",
+          "rpe": 9,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": "Try to push arms forward/up"
+        },
+        {
+          "name": "Hip Thrust (Machine)",
+          "sets": [
+            {
+              "weight": "144",
+              "reps": "6",
+              "rpe": "9",
+              "completed": true,
+              "notes": "Up weight by 4kg"
+            },
+            {
+              "weight": "144",
+              "reps": "6",
+              "rpe": "10",
+              "completed": true,
+              "notes": "Up weight by 4kg"
+            }
+          ],
+          "reps": "6",
+          "rpe": 9.5,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": "Up weight by 4kg"
+        },
+        {
+          "name": "Lying Leg Curl (Machine)",
+          "sets": [
+            {
+              "weight": "80",
+              "reps": "6",
+              "rpe": "9",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "80",
+              "reps": "6",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "6",
+          "rpe": 9.25,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        },
+        {
+          "name": "Leg Extension (Machine)",
+          "sets": [
+            {
+              "weight": "165",
+              "reps": "6",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "165",
+              "reps": "5",
+              "rpe": "0",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "5.5",
+          "rpe": 9.25,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        },
+        {
+          "name": "Hip Adduction (Machine)",
+          "sets": [
+            {
+              "weight": "152.5",
+              "reps": "6",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "152.5",
+              "reps": "5",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "5.5",
+          "rpe": 9.5,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        },
+        {
+          "name": "Calf Extension (Machine)",
+          "sets": [
+            {
+              "weight": "145",
+              "reps": "10",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "152.5",
+              "reps": "7",
+              "rpe": "10",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "8.5",
+          "rpe": 9.75,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        },
+        {
+          "name": "Crunch (Machine)",
+          "sets": [
+            {
+              "weight": "55",
+              "reps": "6",
+              "rpe": "9",
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "weight": "52.5",
+              "reps": "5",
+              "rpe": "9.5",
+              "completed": true,
+              "notes": ""
+            }
+          ],
+          "reps": "5.5",
+          "rpe": 9.25,
+          "rest": 180,
+          "notes": "",
+          "exerciseNotes": ""
+        }
+      ],
+      "sessionNotes": "",
+      "videos": [],
+      "completed": "2025-09-21T13:59:00.000Z",
+      "duration": 4320,
+      "lastModified": "2025-09-23T11:51:20.172Z"
+    }
+  ],
+  "lastUpdated": "2025-09-23T11:51:20.186Z",
   "version": "1.0"
 }
